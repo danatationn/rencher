@@ -5,6 +5,12 @@ from src.mods import paths
 
 
 class Mod:
+	name: str = None
+	codename: str = None
+	rpath: Path = None
+	apath: Path = None
+	type: int = None
+
 	def __init__(self, rpath: Path = None, apath: Path = None, name: str = None):
 		self.rpath = rpath  # relative path
 		self.apath = apath  # absolute path
@@ -21,10 +27,14 @@ class Mod:
 			self.apath = Path.cwd() / 'mods' / name
 			self.rpath = self.apath
 
-		if self.find_codename() == 'DDLC.py':
-			self.type = 'classic'  # ren'py 6
+		if not name:
+			self.name = rpath.name
+
+		self.codename = self.find_codename()
+		if self.codename == 'DDLC.py':
+			self.type = 0  # ren'py 6
 		else:
-			self.type = 'modern'  # ren'py 7/8
+			self.type = 1  # ren'py 7/8
 
 	def find_codename(self) -> str | None:
 		"""
@@ -75,7 +85,7 @@ class Mod:
 		"""
 
 		args = [self.find_exec_path()]
-		if self.type == 'classic':
+		if not self.type:
 			args.extend(['-EO', self.apath / 'DDLC.py'])
 
 		subprocess.run(args)
