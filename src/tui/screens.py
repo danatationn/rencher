@@ -1,8 +1,7 @@
 from textual.app import ComposeResult, Screen
 from textual.widgets import OptionList, Footer
 
-from src.tui.widgets.main_pane import MainPane
-from src.tui.widgets.sidebar import LibrarySidebar
+from src.tui.widgets.entry import Entry
 
 
 class DossierScreen(Screen):
@@ -26,12 +25,11 @@ class DossierScreen(Screen):
 
 
 class LibraryScreen(DossierScreen):
-	CSS_PATH = 'tcss/library.tcss'
+	CSS_PATH = 'tcss/entry.tcss'
 
 	def compose(self) -> ComposeResult:
 		yield from super().compose()
-		yield LibrarySidebar()
-		yield MainPane()
+		yield Entry()
 
 class ImportScreen(DossierScreen):
 	def compose(self) -> ComposeResult:
