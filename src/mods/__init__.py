@@ -93,13 +93,13 @@ class Game:
 			# 				return parts[1]
 			# 			except ValueError:
 			# 				pass
+		vc_dict = {}
 		if vc_path.exists():
 			with open(vc_path, 'r') as f:
-				vc_dict = {}
 				exec(f.read(), {}, vc_dict)
 				if vc_dict.get('version'):
 					return vc_dict['version']
-		elif init_path.exists():
+		if init_path.exists():
 			with open(init_path, 'r') as f:
 				"""
 					we can't exec() here because the file actually has code in it and has imports
@@ -107,10 +107,11 @@ class Game:
 				"""
 				text = f.read().splitlines()
 				for line in text:
-					if 'version_tuple = ' in line.lstrip():
+					if 'version_tuple' in line.strip():
 						try:
-							version_tuple = eval(line[2])
-							self.version = '.'.join(str(i) for i in version_tuple)  # code ironically stolen from __init__
+							if vc_dict.get('vc_version'):
+								version_tuple = eval(line.split(' = ')[1], {}, vc_dict)
+								return '.'.join(str(i) for i in version_tuple)  # code ironically stolen from __init__
 						except ValueError:
 							pass
 		else:
@@ -133,22 +134,23 @@ class Mod(Game):
 	codename: str = None
 	rpath: Path = None
 	apath: Path = None
-	type: int = None
+	is_independent: bool = None
 	version: str = None
 
 	def __init__(self, rpath: Path = None, apath: Path = None, name: str = None):
 		if not apath and not rpath and name:
-			self.rpath = Path.cwd() / 'mods' / name
-			self.apath = paths.find_absolute_path(self.rpath)
+			rpath = Path.cwd() / 'mods' / name
+			apath = paths.find_absolute_path(rpath)
 
 		super().__init__(rpath=rpath, apath=apath, name=name)
 
+		self.version = self.return_renpy_version()
 		self.codename = self.return_codename()
 
 		if self.codename != super().return_codename():
-			self.type = 0  # ren'py 6
+			self.is_independent = True  # ren'py 7/8
 		else:
-			self.type = 1  # ren'py 7/8
+			self.is_independent = False  # ren'py 6
 
 	def return_codename(self) -> str | None:
 		"""

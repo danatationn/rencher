@@ -11,8 +11,10 @@ if __name__ == '__main__':
 
 	print('\n')
 
-	mod = Mod(name='Exit Music Redux 1.1')
+	mod = Mod(name='A Date With Monika')
 	print(mod.apath)
 	print(mod.version)
 	print(mod.codename)
-	print(mod.type)
+	print(mod.is_independent)
+
+	mod.run()
