@@ -1,19 +1,18 @@
 import sys
+from pathlib import Path
 
-import src.tui.app
+from src.mods import Game, Mod
 
-
-def start_textual() -> None:
-	app = src.tui.app.Dossier()
-	app.run()
-
-
-def start_kirigami() -> None:
-	# print("Not implemented yet!")
-	start_textual()
 
 if __name__ == '__main__':
-	if sys.stdin.isatty():
-		start_textual()
-	else:
-		start_kirigami()
+	game = Game(name='Hydrangea-1.5.1-pc')
+	print(game.version)
+	print(game.codename)
+
+	print('\n')
+
+	mod = Mod(name='Exit Music Redux 1.1')
+	print(mod.apath)
+	print(mod.version)
+	print(mod.codename)
+	print(mod.type)

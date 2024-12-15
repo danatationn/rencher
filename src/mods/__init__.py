@@ -4,52 +4,43 @@ from pathlib import Path
 from src.mods import paths
 
 
-class Mod:
+class Game:
 	name: str = None
 	codename: str = None
 	rpath: Path = None
 	apath: Path = None
-	type: int = None
+	version: str = None
 
 	def __init__(self, rpath: Path = None, apath: Path = None, name: str = None):
 		self.rpath = rpath  # relative path
-		self.apath = apath  # absolute path
+		self.apath = apath  # absolute path (cwd)
 		self.name = name
 
 		if not rpath and apath:
 			self.rpath = apath
 		if not apath and rpath:
-			self.apath = paths.find_relative_path(self.rpath)
+			self.apath = paths.find_absolute_path(self.rpath)
 			if self.apath is None:
-				raise FileNotFoundError('The mod is a lie.')
+				raise FileNotFoundError('The game is a lie.')
 
 		if not apath and not rpath and name:
-			self.apath = Path.cwd() / 'mods' / name
-			self.rpath = self.apath
+			self.rpath = Path.cwd() / 'games' / name
+			self.apath = paths.find_absolute_path(self.rpath)
 
 		if not name:
 			self.name = rpath.name
 
-		self.codename = self.find_codename()
-		if self.codename == 'DDLC.py':
-			self.type = 0  # ren'py 6
-		else:
-			self.type = 1  # ren'py 7/8
+		self.version = self.return_renpy_version()
+		self.codename = self.return_codename()
 
-	def find_codename(self) -> str | None:
+	def return_codename(self) -> str | None:
 		"""
 			returns a name based off of the .py scripts located in apath
-			useful to quickly tell if a mod is ren'py 6 or 7/8
 		"""
-		py_names = [
-			py_path.name for py_path in sorted(self.apath.glob('*.py'))
-			if py_path.name not in {'DDLC.py', 'LinuxLauncher.py'}
-		]
+		py_names = [py_path.stem for py_path in sorted(self.apath.glob('*.py'))]
 
-		if len(py_names) > 0:
+		if py_names:
 			return py_names[0]
-		else:
-			return 'DDLC.py'
 
 	def find_exec_path(self) -> Path | None:
 		"""
@@ -62,13 +53,13 @@ class Mod:
 			f'py3-{os}-{arch}',
 			f'py2-{os}-{arch}',
 			f'{os}-{arch}',
-			f'{os}-i686'  # ddlc is 32-bit only on windows; ren'py 6 mods are 32-bit only
+			f'{os}-i686'  # last resort
 		)
 
 		if os == 'windows':
 			exec_name = 'python.exe'
 		elif os == 'linux':
-			codename = self.find_codename()
+			codename = self.return_codename()
 			exec_name = Path(codename).stem
 		else:
 			raise NotImplemented('Your OS is not yet implemented.')
@@ -79,13 +70,98 @@ class Mod:
 				return exec_path
 		return None
 
+	def return_renpy_version(self) -> str | None:
+		"""
+			tries to retrieve the game's ren'py version from multiple known locations:
+
+			- the log file* (it's the third line but it's not always present)
+			- renpy/__init__.py (only present in versions below 8 i believe)
+			- renpy/vc_version.py (only present in versions above 8)
+
+			*ok so i don't even need it lol! if i find a game that doesn't use any of these i will bring it back
+		"""
+		# log_path = self.apath / 'log.txt'
+		vc_path = self.apath / 'renpy' / 'vc_version.py'
+		init_path = self.apath / 'renpy' / '__init__.py'
+		# if log_path.exists():
+			# with open(log_path, 'r') as f:
+			# 	text = f.read().splitlines()
+			# 	for line in text:
+			# 		if 'Ren\'Py' in line:
+			# 			try:
+			# 				parts = line.split()
+			# 				return parts[1]
+			# 			except ValueError:
+			# 				pass
+		if vc_path.exists():
+			with open(vc_path, 'r') as f:
+				vc_dict = {}
+				exec(f.read(), {}, vc_dict)
+				if vc_dict.get('version'):
+					return vc_dict['version']
+		elif init_path.exists():
+			with open(init_path, 'r') as f:
+				"""
+					we can't exec() here because the file actually has code in it and has imports
+					instead we'll just do it the basic way (log file 😊) and look for version_tuple
+				"""
+				text = f.read().splitlines()
+				for line in text:
+					if 'version_tuple = ' in line.lstrip():
+						try:
+							version_tuple = eval(line[2])
+							self.version = '.'.join(str(i) for i in version_tuple)  # code ironically stolen from __init__
+						except ValueError:
+							pass
+		else:
+			return None  # yo shit broken boy
+
+
 	def run(self) -> None:
 		"""
 			this will be handled by the ui but for now it's nice to daydream
 		"""
 
 		args = [self.find_exec_path()]
-		if not self.type:
+		if self.version[0] == '6':
 			args.extend(['-EO', self.apath / 'DDLC.py'])
 
 		subprocess.run(args)
+
+class Mod(Game):
+	name: str = None
+	codename: str = None
+	rpath: Path = None
+	apath: Path = None
+	type: int = None
+	version: str = None
+
+	def __init__(self, rpath: Path = None, apath: Path = None, name: str = None):
+		if not apath and not rpath and name:
+			self.rpath = Path.cwd() / 'mods' / name
+			self.apath = paths.find_absolute_path(self.rpath)
+
+		super().__init__(rpath=rpath, apath=apath, name=name)
+
+		self.codename = self.return_codename()
+
+		if self.codename != super().return_codename():
+			self.type = 0  # ren'py 6
+		else:
+			self.type = 1  # ren'py 7/8
+
+	def return_codename(self) -> str | None:
+		"""
+			returns a name based off of the .py scripts located in apath
+
+			function modified as mods tend to be independent of their base games
+		"""
+		py_names = [
+			py_path.stem for py_path in sorted(self.apath.glob('*.py'))
+			if py_path.stem not in 'DDLC'
+		]
+
+		if len(py_names) > 0:
+			return py_names[0]
+		else:
+			return 'DDLC'

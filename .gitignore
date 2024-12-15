@@ -155,8 +155,8 @@ dmypy.json
 # Cython debug symbols
 cython_debug/
 
-# Dossier
-base/
+# Ren'cher
+/games/
 /mods/
 
 # PyCharm
