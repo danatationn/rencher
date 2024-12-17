@@ -1,4 +1,9 @@
 ### Python template
+# Ren'cher
+/games/
+/mods/
+*.ui
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
@@ -154,10 +159,6 @@ dmypy.json
 
 # Cython debug symbols
 cython_debug/
-
-# Ren'cher
-/games/
-/mods/
 
 # PyCharm
 #  JetBrains specific template is maintained in a separate JetBrains.gitignore that can

@@ -1,7 +1,7 @@
 import subprocess
 import platform
 from pathlib import Path
-from src.mods import paths
+from src.renpy import paths
 
 
 class Game:
@@ -74,7 +74,7 @@ class Game:
 		"""
 			tries to retrieve the game's ren'py version from multiple known locations:
 
-			- the log file* (it's the third line but it's not always present)
+			- the log file* (it's the third line, but it's not always present)
 			- renpy/__init__.py (only present in versions below 8 i believe)
 			- renpy/vc_version.py (only present in versions above 8)
 
@@ -119,6 +119,7 @@ class Game:
 
 
 	def run(self) -> None:
+		# TODO de-ddlc this
 		"""
 			this will be handled by the ui but for now it's nice to daydream
 		"""
@@ -139,7 +140,7 @@ class Mod(Game):
 
 	def __init__(self, rpath: Path = None, apath: Path = None, name: str = None):
 		if not apath and not rpath and name:
-			rpath = Path.cwd() / 'mods' / name
+			rpath = Path.cwd() / 'renpy' / name
 			apath = paths.find_absolute_path(rpath)
 
 		super().__init__(rpath=rpath, apath=apath, name=name)
@@ -148,15 +149,16 @@ class Mod(Game):
 		self.codename = self.return_codename()
 
 		if self.codename != super().return_codename():
-			self.is_independent = True  # ren'py 7/8
+			self.is_independent = True
 		else:
-			self.is_independent = False  # ren'py 6
+			self.is_independent = False
 
 	def return_codename(self) -> str | None:
+		# TODO de-ddlc this
 		"""
 			returns a name based off of the .py scripts located in apath
 
-			function modified as mods tend to be independent of their base games
+			function modified as renpy tend to be independent of their base games
 		"""
 		py_names = [
 			py_path.stem for py_path in sorted(self.apath.glob('*.py'))
