@@ -1,3 +1,7 @@
+"""
+	random functions that are not either ren'py or gtk related
+"""
+
 import subprocess, shutil
 from pathlib import Path
 
