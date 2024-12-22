@@ -1,6 +1,7 @@
 import subprocess
 import platform
 from pathlib import Path
+
 from src.renpy import paths
 
 
@@ -169,3 +170,13 @@ class Mod(Game):
 			return py_names[0]
 		else:
 			return 'DDLC'
+
+
+def return_games() -> list[Game]:
+	games_path = Path.cwd() / 'games'
+	mods_path = Path.cwd() / 'mods'
+
+	games = [Game(rpath=path) for path in games_path.glob('*') if path.is_dir()]
+	mods = [Mod(rpath=path) for path in mods_path.glob('*') if path.is_dir()]
+
+	return games + mods

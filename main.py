@@ -1,9 +1,10 @@
-import sys
-
-from src import blp2ui
-blp2ui()
-from src.gtk import RencherApplication
-
 if __name__ == '__main__':
+	import sys
+
+	from src.gtk import blp2ui
+	blp2ui()
+
+	from src.gtk.application import RencherApplication
+
 	app = RencherApplication()
 	app.run(sys.argv)
