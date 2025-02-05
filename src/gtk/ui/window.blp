@@ -64,20 +64,18 @@ template $RencherWindow : Adw.ApplicationWindow {
 
 								Adw.ActionRow last_played_row {
 									title: _("Last Played");
-									subtitle: "Value";
-
 									styles ["property"]
 								}
 								Adw.ActionRow playtime_row {
 									title: _("Playtime");
-									subtitle: "Value";
-
+									styles ["property"]
+								}
+								Adw.ActionRow added_on_row {
+									title: _("Added On");
 									styles ["property"]
 								}
 								Adw.ActionRow size_row {
 									title: _("Size");
-									subtitle: "Value";
-
 									styles ["property"]
 								}
 							}
@@ -88,7 +86,6 @@ template $RencherWindow : Adw.ApplicationWindow {
 
 								Adw.ActionRow rpath_row {
 									title: _("Folder Location");
-									subtitle: "Value";
 
 									[suffix]
 									Button {
@@ -103,14 +100,10 @@ template $RencherWindow : Adw.ApplicationWindow {
 								}
 								Adw.ActionRow version_row {
 									title: _("Engine Version");
-									subtitle: "Value";
-
 									styles ["property"]
 								}
 								Adw.ActionRow codename_row {
 									title: _("Codename");
-									subtitle: "Value";
-
 									styles ["property"]
 								}
 							}

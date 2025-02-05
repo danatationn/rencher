@@ -1,3 +1,5 @@
+import logging
+
 import gi
 
 gi.require_version('Gtk', '4.0')
@@ -16,7 +18,11 @@ class RencherApplication(Gtk.Application):
 	def do_startup(self):
 		Gtk.Application.do_startup(self)
 
+		logging.basicConfig(format='(%(relativeCreated)d) %(levelname)s: %(msg)s', level=logging.NOTSET)
+
 	def do_activate(self):
 		Gtk.Application.do_activate(self)
+
 		self.window = RencherWindow(application=self)
 		self.window.present()
+		logging.debug('Application started...')

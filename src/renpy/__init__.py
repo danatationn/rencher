@@ -2,7 +2,7 @@ import subprocess
 import platform
 from pathlib import Path
 
-from src.renpy import paths
+from src.renpy import paths, config
 
 
 class Game:
@@ -11,6 +11,8 @@ class Game:
 	rpath: Path = None
 	apath: Path = None
 	version: str = None
+	config: dict = None
+
 
 	def __init__(self, rpath: Path = None, apath: Path = None, name: str = None):
 		self.rpath = rpath  # relative path
@@ -33,6 +35,8 @@ class Game:
 
 		self.version = self.return_renpy_version()
 		self.codename = self.return_codename()
+		self.config = config.read_game_config(self)
+
 
 	def return_codename(self) -> str | None:
 		"""
@@ -42,6 +46,7 @@ class Game:
 
 		if py_names:
 			return py_names[0]
+
 
 	def find_exec_path(self) -> Path | None:
 		"""
@@ -70,6 +75,7 @@ class Game:
 			if exec_path.exists():
 				return exec_path
 		return None
+
 
 	def return_renpy_version(self) -> str | None:
 		"""
@@ -131,6 +137,8 @@ class Game:
 
 		subprocess.run(args)
 
+
+
 class Mod(Game):
 	name: str = None
 	codename: str = None
@@ -138,6 +146,8 @@ class Mod(Game):
 	apath: Path = None
 	is_independent: bool = None
 	version: str = None
+	config: dict = None
+
 
 	def __init__(self, rpath: Path = None, apath: Path = None, name: str = None):
 		if not apath and not rpath and name:
@@ -153,6 +163,7 @@ class Mod(Game):
 			self.is_independent = True
 		else:
 			self.is_independent = False
+
 
 	def return_codename(self) -> str | None:
 		# TODO de-ddlc this
@@ -170,13 +181,3 @@ class Mod(Game):
 			return py_names[0]
 		else:
 			return 'DDLC'
-
-
-def return_games() -> list[Game]:
-	games_path = Path.cwd() / 'games'
-	mods_path = Path.cwd() / 'mods'
-
-	games = [Game(rpath=path) for path in games_path.glob('*') if path.is_dir()]
-	mods = [Mod(rpath=path) for path in mods_path.glob('*') if path.is_dir()]
-
-	return games + mods
