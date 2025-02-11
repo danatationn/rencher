@@ -9,7 +9,7 @@ def main():
 	PyInstaller.__main__.run([
 		str(main_path),
 		'-F',
-		'-n rencher'
+		'-nrencher'
 	])
 	
 	
