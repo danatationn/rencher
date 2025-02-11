@@ -8,8 +8,8 @@ def main():
 
 	PyInstaller.__main__.run([
 		str(main_path),
-		'--onefile',
-		'--name rencher'
+		'-F',
+		'-n rencher'
 	])
 	
 	
