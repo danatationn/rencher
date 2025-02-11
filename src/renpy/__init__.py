@@ -132,8 +132,9 @@ class Game:
 		"""
 
 		args = [self.find_exec_path()]
+		py_path = self.apath / f'{self.return_codename()}.py'
 		if self.version[0] == '6':
-			args.extend(['-EO', self.apath / 'DDLC.py'])
+			args.extend(['-EO', py_path])
 
 		subprocess.run(args)
 

@@ -2,28 +2,9 @@
 	random functions that are not either ren'py or gtk related
 """
 
-import logging
+import platform
 
-from pathlib import Path
-
-from watchdog.events import FileSystemEvent, FileSystemEventHandler, DirModifiedEvent, FileModifiedEvent
-from watchdog.observers import Observer
-from gi.repository import GLib
-
-
-class GameEventHandler(FileSystemEventHandler):
-	def on_modified(self, event: DirModifiedEvent | FileModifiedEvent) -> None:
-		logging.info('game was modified ..')
-
-
-class GameUpdater:
-	game_path = Path.cwd() / 'games'
-	mod_path = Path.cwd() / 'mods'
-	event_handler = GameEventHandler()
-	observer = Observer()
-
-	def __init__(self):
-		self.observer.schedule(self.event_handler, )
+from gi.repository import GLib, Gio
 
 
 def format_gdatetime(date: GLib.DateTime, style: str) -> str:
@@ -48,3 +29,8 @@ def format_gdatetime(date: GLib.DateTime, style: str) -> str:
 		formatted_date = date.format('%A, %d %B %Y, %H:%M:%S')
 
 	return formatted_date
+
+
+def open_file_manager(path: str):
+	if platform.system() == 'Linux':
+		Gio.AppInfo.launch_default_for_uri('file:///' + path)
