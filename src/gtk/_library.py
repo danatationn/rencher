@@ -22,5 +22,6 @@ def update_library_view(self) -> None:
 
 	if not games:  # ps5 view
 		logging.debug('I HAVE NOTHING !!')
+		logging.debug(f'root_path: {root_path}')
 		self.library_view_stack.set_visible_child_name('empty')
 		self.split_view.set_show_sidebar(False)

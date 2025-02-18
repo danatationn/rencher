@@ -1,6 +1,8 @@
+import logging
 import platform
 import subprocess
 import shutil
+import sys
 from pathlib import Path
 
 from src import root_path
@@ -14,6 +16,9 @@ def blp2ui() -> None:
 	"""
 		converts all .blp files in usable .ui files using blueprint-compiler (provided you have it installed)
 	"""
+
+	if getattr(sys, 'frozen', False):
+		return  # you can't build blp files if they don't exist 🤷
 
 	comp_path = shutil.which('blueprint-compiler')
 	if not comp_path:
