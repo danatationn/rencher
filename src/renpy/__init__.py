@@ -2,6 +2,7 @@ import subprocess
 import platform
 from pathlib import Path
 
+from src import root_path
 from src.renpy import paths, config
 
 
@@ -27,7 +28,7 @@ class Game:
 				raise FileNotFoundError('The game is a lie.')
 
 		if not apath and not rpath and name:
-			self.rpath = Path.cwd() / 'games' / name
+			self.rpath = root_path / 'games' / name
 			self.apath = paths.find_absolute_path(self.rpath)
 
 		if not name:
@@ -152,7 +153,7 @@ class Mod(Game):
 
 	def __init__(self, rpath: Path = None, apath: Path = None, name: str = None):
 		if not apath and not rpath and name:
-			rpath = Path.cwd() / 'renpy' / name
+			rpath = root_path / 'renpy' / name
 			apath = paths.find_absolute_path(rpath)
 
 		super().__init__(rpath=rpath, apath=apath, name=name)
