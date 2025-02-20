@@ -1,1 +1,13 @@
 using Gtk 4.0;
+using Adw 1;
+
+template $RencherImport: Adw.Dialog {
+	child: Adw.ToolbarView {
+		[top]
+		HeaderBar {
+			title-widget: Adw.ViewSwitcher {
+				
+			};
+		}
+	};
+}

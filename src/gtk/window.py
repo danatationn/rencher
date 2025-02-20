@@ -4,6 +4,7 @@ from gi.repository import Gtk, Adw
 
 from src.gtk import open_file_manager
 from src.gtk.settings import RencherSettings
+from src.gtk.rimport import RencherImport
 from src.gtk._library import update_library_view
 from src.renpy import Game, Mod
 
@@ -12,7 +13,8 @@ from src.renpy import Game, Mod
 class RencherWindow(Adw.ApplicationWindow):
 	__gtype_name__ = 'RencherWindow'
 
-	settings_dialog = RencherSettings()
+	settings_dialog: Adw.PreferencesDialog = RencherSettings()
+	import_dialog: Adw.Dialog = RencherImport()
 
 	split_view: Adw.OverlaySplitView = Gtk.Template.Child()
 	library_list_box: Gtk.ListBox = Gtk.Template.Child()
@@ -38,7 +40,7 @@ class RencherWindow(Adw.ApplicationWindow):
 
 	@Gtk.Template.Callback()
 	def on_import_clicked(self, _widget: Gtk.Button) -> None:
-		print('not implemented!')
+		self.import_dialog.present(self)
 
 
 	@Gtk.Template.Callback()

@@ -30,6 +30,10 @@ import configparser
 from gi.repository import GLib
 from pathlib import Path
 
+
+class GameConfig(configparser.ConfigParser):
+	...
+
 def create_config() -> None:
 	config = configparser.ConfigParser()
 
