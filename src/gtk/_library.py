@@ -12,14 +12,15 @@ def update_library_view(self) -> None:
 	mods_path = root_path / 'mods'
 	games = [Game(rpath=path) for path in games_path.glob('*') if path.is_dir()]
 	mods = [Mod(rpath=path) for path in mods_path.glob('*') if path.is_dir()]
-	games += mods
+	self.projects = games
+	self.projects += mods
 
-	for game in games:
+	for game in self.projects:
 		button = Adw.ButtonRow(title=game.name)
 		button.game = game
 		button.connect('activated', self.on_game_activated)
 		self.library_list_box.append(button)
 
-	if not games:  # ps5 view
+	if not self.projects:  # ps5 view
 		self.library_view_stack.set_visible_child_name('empty')
 		self.split_view.set_show_sidebar(False)

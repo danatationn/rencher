@@ -13,9 +13,14 @@ from src.renpy import Game, Mod
 class RencherWindow(Adw.ApplicationWindow):
 	__gtype_name__ = 'RencherWindow'
 
-	settings_dialog: Adw.PreferencesDialog = RencherSettings()
-	import_dialog: Adw.Dialog = RencherImport()
+	""" variables """
+	projects: list[Game] = []
 
+	""" classes """
+	settings_dialog: Adw.PreferencesDialog = RencherSettings()
+	# import_dialog: Adw.Dialog = RencherImport(projects)
+
+	""" templates """
 	split_view: Adw.OverlaySplitView = Gtk.Template.Child()
 	library_list_box: Gtk.ListBox = Gtk.Template.Child()
 
@@ -40,7 +45,9 @@ class RencherWindow(Adw.ApplicationWindow):
 
 	@Gtk.Template.Callback()
 	def on_import_clicked(self, _widget: Gtk.Button) -> None:
-		self.import_dialog.present(self)
+		dialog = RencherImport(self.projects)
+		dialog.present(self)
+		# self.import_dialog.present(self)
 
 
 	@Gtk.Template.Callback()
