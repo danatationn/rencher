@@ -1,13 +1,61 @@
 using Gtk 4.0;
 using Adw 1;
 
-template $RencherImport: Adw.Dialog {
+template $RencherImport: Adw.PreferencesDialog {
+	title: _("Import");
+	
 	child: Adw.ToolbarView {
 		[top]
-		HeaderBar {
-			title-widget: Adw.ViewSwitcher {
+		HeaderBar {}
+		
+		content: Adw.StatusPage {
+			child: Box {
+				orientation: vertical;
+				spacing: 16;
 				
+				ListBox {
+					selection-mode: none;
+					styles ["boxed-list"]
+					
+					Adw.EntryRow import_title {
+						title: _("Title");
+					}
+					Adw.EntryRow import_location {
+						title: _("Location");
+						
+						[suffix]
+						Button {
+							icon-name: "folder-symbolic";
+							
+//							clicked => $on_dir_clicked();
+							
+							styles ["flat", "circular"]
+						}
+					}
+				}
+				
+				ListBox {
+					selection-mode: none;
+					styles ["boxed-list"]
+					
+					Adw.SwitchRow import_mod_toggle {
+                        title: _("Mod");
+                    }
+                    Adw.ComboRow import_game_combo {
+                        title: _("Game");
+                        sensitive: bind import_mod_toggle.active;
+                    }
+				}
+				
+				ListBox {
+					selection-mode: none;
+					styles ["boxed-list"]
+				
+					Adw.ButtonRow {
+						title: _("Import");
+					}
+				}
 			};
-		}
+		};
 	};
 }

@@ -3,8 +3,8 @@ import logging
 from gi.repository import Gtk, Adw
 
 from src.gtk import open_file_manager
-from src.gtk.settings import RencherSettings
-from src.gtk.rimport import RencherImport
+from src.gtk.settings_dialog import RencherSettings
+from src.gtk.import_dialog import RencherImport
 from src.gtk._library import update_library_view
 from src.renpy import Game, Mod
 
