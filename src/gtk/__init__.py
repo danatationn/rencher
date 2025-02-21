@@ -61,3 +61,4 @@ def format_gdatetime(date: GLib.DateTime, style: str) -> str:
 def open_file_manager(path: str):
 	if platform.system() == 'Linux':
 		Gio.AppInfo.launch_default_for_uri('file:///' + path)
+

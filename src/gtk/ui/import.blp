@@ -41,6 +41,11 @@ template $RencherImport: Adw.PreferencesDialog {
                     }
                     Adw.ComboRow import_game_combo {
                         title: _("Game");
+                        enable-search: true;
+//						use-subtitle: true;
+                        
+                        notify::selected-item => $on_combo_change();
+                                                
                         sensitive: bind import_mod_toggle.active;
                     }
 				}
