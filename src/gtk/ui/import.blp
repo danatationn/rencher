@@ -23,11 +23,14 @@ template $RencherImport: Adw.PreferencesDialog {
 					Adw.EntryRow import_location {
 						title: _("Location");
 						
+						changed => $on_location_changed();
+						
 						[suffix]
 						Button {
 							icon-name: "folder-symbolic";
-							clicked => $on_picker_clicked();
 							styles ["flat"]
+							
+							clicked => $on_picker_clicked();
 						}
 					}
 				}
@@ -42,11 +45,9 @@ template $RencherImport: Adw.PreferencesDialog {
                     Adw.ComboRow import_game_combo {
                         title: _("Game");
                         enable-search: true;
-//						use-subtitle: true;
-                        
-                        notify::selected-item => $on_combo_change();
-                                                
                         sensitive: bind import_mod_toggle.active;
+                        
+                        notify::selected-item => $on_combo_change();                                                
                     }
 				}
 				
@@ -54,8 +55,10 @@ template $RencherImport: Adw.PreferencesDialog {
 					selection-mode: none;
 					styles ["boxed-list"]
 				
-					Adw.ButtonRow {
+					Adw.ButtonRow import_button {
 						title: _("Import");
+					
+						activated => $ on_import_clicked();
 					}
 				}
 			};

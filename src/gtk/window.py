@@ -1,3 +1,4 @@
+import sys
 import logging
 
 from gi.repository import Gtk, Adw
@@ -37,6 +38,9 @@ class RencherWindow(Adw.ApplicationWindow):
 
 	def __init__(self, *args, **kwargs):
 		super().__init__(*args, **kwargs)
+
+		if getattr(sys, 'frozen', True):
+			self.get_style_context().add_class('devel')
 
 		update_library_view(self)
 		
