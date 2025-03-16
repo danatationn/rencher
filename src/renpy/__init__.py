@@ -191,8 +191,12 @@ class Mod(Game):
 		super().cleanup()
 
 		# fix future.standard_library (ren'py 7+, linux)
-		if self.return_renpy_version()[0] == '7':
-			exec_path = self.find_exec_path()
-			libs_path = exec_path.parent / 'libs'
-			if libs_path.is_dir():
-				shutil.rmtree(libs_path)
+		ver_first_digit = self.return_renpy_version()[0]
+		try:
+			if int(ver_first_digit) > 6:
+				exec_path = self.find_exec_path()
+				libs_path = exec_path.parent / 'libs'
+				if libs_path.is_dir():
+					shutil.rmtree(libs_path)
+		except ValueError:
+			pass

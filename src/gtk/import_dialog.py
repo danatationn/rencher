@@ -1,3 +1,5 @@
+import logging
+import threading
 import patoolib
 from pathlib import Path
 
@@ -5,7 +7,7 @@ from src.gtk import GameItem
 from src.renpy import Game, Mod
 from src.gtk._import import import_game
 
-from gi.repository import Gtk, Adw, GObject, Gio
+from gi.repository import Gtk, Adw, GObject, Gio, GLib
 
 
 @Gtk.Template(filename='src/gtk/ui/import.ui')
@@ -16,13 +18,17 @@ class RencherImport(Adw.PreferencesDialog):
 	import_location: Adw.EntryRow = Gtk.Template.Child()
 	import_game_combo: Adw.ComboRow = Gtk.Template.Child()
 	import_button: Adw.ActionRow = Gtk.Template.Child()
+	import_progress_bar: Gtk.ProgressBar = Gtk.Template.Child()
+	
+	thread: threading.Thread = threading.Thread()
+	progress: int = 0
 
-	def __init__(self, projects: list[Game], *args, **kwargs):
+	def __init__(self, window, *args, **kwargs):
 		super().__init__(*args, **kwargs)
 		
 		string_list = Gio.ListStore.new(GameItem)
 		
-		for game in projects:
+		for game in window.projects:
 			if not isinstance(game, Mod):
 				game_item = GameItem(name=game.name, game=game)
 				string_list.append(game_item)
@@ -55,22 +61,26 @@ class RencherImport(Adw.PreferencesDialog):
 		...
 		
 	@Gtk.Template.Callback()
-	def on_import_clicked(self, button_row: Adw.ButtonRow) -> None:		
-		try:
-			patoolib.test_archive(self.import_location.get_text())
-		except patoolib.util.PatoolError:
-			dialog = Adw.AlertDialog(
-				heading=f'Error importing {self.import_title.get_text()}',
-				body='The archive supplied is not valid. Please re-download the file and try again.',
-				close_response='okay'
-			)
-			dialog.add_response('okay', 'Okay')
-			dialog.choose()
-		else:
-			import_game(self)
+	def on_import_clicked(self, button_row: Adw.ButtonRow) -> None:
+		def import_thread():
+			try:
+				import_game(self)
+			except patoolib.util.PatoolError:
+				dialog = Adw.AlertDialog(
+					heading=f'Error importing {self.import_title.get_text()}',
+					body='The archive supplied is not valid. Please re-download the file and try again.',
+					close_response='okay'
+				)
+				dialog.add_response('okay', 'Okay')
+				dialog.choose()
+		
+		self.thread = threading.Thread(target=import_thread)
+		self.thread.start()
+
+	
+	def update_progress(self, i) -> bool:
+		self.import_progress_bar.set_fraction(i)
 	
 	def on_file_selected(self, dialog: Gtk.FileDialog, result):
 		file = dialog.open_finish(result)
 		self.import_location.set_text(file.get_path())
-
-

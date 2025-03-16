@@ -21,14 +21,9 @@ class RencherWindow(Adw.ApplicationWindow):
 
 	""" classes """
 	settings_dialog: Adw.PreferencesDialog = RencherSettings()
+	import_dialog: Adw.PreferencesDialog = None  # lol
 
 	""" templates """
-	split_view: Adw.OverlaySplitView = Gtk.Template.Child()
-	library_list_box: Gtk.ListBox = Gtk.Template.Child()
-
-	library_view_stack: Adw.ViewStack = Gtk.Template.Child()
-	selected_status_page: Adw.ViewStackPage = Gtk.Template.Child()
-
 	last_played_row: Adw.ActionRow = Gtk.Template.Child()
 	playtime_row: Adw.ActionRow = Gtk.Template.Child()
 	size_row: Adw.ActionRow = Gtk.Template.Child()
@@ -36,6 +31,12 @@ class RencherWindow(Adw.ApplicationWindow):
 	rpath_row: Adw.ActionRow = Gtk.Template.Child()
 	version_row: Adw.ActionRow = Gtk.Template.Child()
 	codename_row: Adw.ActionRow = Gtk.Template.Child()
+	
+	split_view: Adw.OverlaySplitView = Gtk.Template.Child()
+	library_list_box: Gtk.ListBox = Gtk.Template.Child()
+	selected_status_page: Adw.ViewStackPage = Gtk.Template.Child()
+	library_view_stack: Adw.ViewStack = Gtk.Template.Child()
+
 
 	def __init__(self, *args, **kwargs):
 		super().__init__(*args, **kwargs)
@@ -44,16 +45,16 @@ class RencherWindow(Adw.ApplicationWindow):
 			self.get_style_context().add_class('devel')
 
 		update_library_sidebar(self)
-		
 		logging.debug('window init')
-
+		self.import_dialog = RencherImport(self)
 
 
 	@Gtk.Template.Callback()
 	def on_import_clicked(self, _widget: Gtk.Button) -> None:
-		dialog = RencherImport(self.projects)
-		dialog.present(self)
-
+		if not self.import_dialog.thread.is_alive():
+			self.import_dialog = RencherImport(self)
+				
+		self.import_dialog.present(self)
 
 	@Gtk.Template.Callback()
 	def on_settings_clicked(self, _widget: Gtk.Button) -> None:

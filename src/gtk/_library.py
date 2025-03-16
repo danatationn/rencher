@@ -1,7 +1,7 @@
 import logging
 from pathlib import Path
 
-from gi.repository import Adw, GObject
+from gi.repository import Adw, GObject, Gtk
 
 from src import root_path
 from src.renpy import Game, Mod
@@ -38,7 +38,7 @@ def update_library_view(self, project: Game) -> None:
 	self.playtime_row.set_subtitle(project.config['info']['playtime'])
 	self.added_on_row.set_subtitle(project.config['info']['added_on'])
 	self.size_row.set_subtitle(formatted_size)
-	
+
 	self.version_row.set_subtitle(project.version)
 	self.rpath_row.set_subtitle(str(project.rpath))
 	self.codename_row.set_subtitle(project.codename)

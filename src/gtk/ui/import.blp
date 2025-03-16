@@ -8,6 +8,11 @@ template $RencherImport: Adw.PreferencesDialog {
 		[top]
 		HeaderBar {}
 		
+		[bottom]
+		ProgressBar import_progress_bar {
+			styles ["osd"]
+		}
+		
 		content: Adw.StatusPage {
 			child: Box {
 				orientation: vertical;
