@@ -52,7 +52,7 @@ class RencherFSHandler(FileSystemEventHandler):
 		self.app = app
 	
 	def on_modified(self, event: DirModifiedEvent | FileModifiedEvent) -> None:
-		if self.app.window.project_is_running:
+		if self.app.window.process:
 			return
 		
 		for project in self.app.window.projects:

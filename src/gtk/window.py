@@ -1,6 +1,6 @@
 import sys
 import logging
-from multiprocessing import Process
+import subprocess
 
 from gi.repository import Gtk, Adw, GLib
 
@@ -17,7 +17,7 @@ class RencherWindow(Adw.ApplicationWindow):
 
 	""" variables """
 	projects: list[Game] = []
-	project_is_running: bool = False
+	process: subprocess.Popen | None = None
 
 	""" classes """
 	settings_dialog: Adw.PreferencesDialog = RencherSettings()
@@ -65,21 +65,19 @@ class RencherWindow(Adw.ApplicationWindow):
 		selected_button_row = self.library_list_box.get_selected_rows()[0]
 		game = getattr(selected_button_row, 'game', None)
 		
-		
-		p = Process(target=game.run)
-		p.start()
-		
-		self.project_is_running = True
-		_widget.set_sensitive(False)
-		
-		GLib.timeout_add_seconds(1, self.check_process, p, _widget)
-		
-	def check_process(self, p: Process, _widget: Gtk.Button):
-		if not p.is_alive():
-			self.project_is_running = False
-			_widget.set_sensitive(True)
-			return False
-		return True
+		if _widget.get_style_context().has_class('suggested-action'):
+			_widget.set_label('Stop')
+			_widget.get_style_context().remove_class('suggested-action')
+			_widget.get_style_context().add_class('destructive-action')
+			self.process = game.run()
+		else:
+			_widget.set_label('Play')
+			_widget.get_style_context().remove_class('destructive-action')
+			_widget.get_style_context().add_class('suggested-action')
+			if self.process:
+				self.process.terminate()
+			self.process = None
+			
 		
 	@Gtk.Template.Callback()
 	def on_dir_clicked(self, _widget: Gtk.Button) -> None:

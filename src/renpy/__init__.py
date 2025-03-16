@@ -123,22 +123,16 @@ class Game:
 						except ValueError:
 							pass
 		else:
-			return None  # yo shit broken boy
+			return 'N/A'  # yo shit broken boy
 
 
-	def run(self) -> None:
-		# TODO de-ddlc this
-		"""
-			this will be handled by the ui but for now it's nice to daydream
-		"""
-
+	def run(self) -> subprocess.Popen:
 		args = [self.find_exec_path()]
 		py_path = self.apath / f'{self.return_codename()}.py'
 		if self.version[0] == '6':
 			args.extend(['-EO', py_path])
 
-		subprocess.run(args)
-
+		return subprocess.Popen(args)		
 
 
 class Mod(Game):
