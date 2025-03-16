@@ -112,6 +112,8 @@ def open_file_manager(path: str):
 class GameItem(GObject.Object):
 	__gtype_name__ = 'GameItem'
 	
+	name = GObject.Property(type=str)
+	
 	def __init__(self, name, game):
 		super().__init__()
 		self.name = name

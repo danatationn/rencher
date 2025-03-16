@@ -61,9 +61,9 @@ class RencherFSHandler(FileSystemEventHandler):
 			if event_path.is_relative_to(project.rpath):
 				logging.debug(f'something changed in {project.name} ({project.codename})!')
 				
-				# if isinstance(project, Mod):
-				# 	new_project = Mod(rpath=project.rpath)
-				# else:
-				# 	new_project = Game(rpath=project.rpath)
+				if isinstance(project, Mod):
+					new_project = Mod(rpath=project.rpath)
+				else:
+					new_project = Game(rpath=project.rpath)
 
-				project.__init__()
+				project.__dict__.update(new_project.__dict__)

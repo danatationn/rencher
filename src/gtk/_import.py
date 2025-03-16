@@ -37,7 +37,7 @@ def import_game(self):
 			
 			if not target_path.exists():
 				logging.debug(target_path)
-				if target_path.is_file():
+				if file.is_file():
 					shutil.copy(file, target_path)
 				else:
 					target_path.mkdir()

@@ -1,3 +1,5 @@
+import stat
+import shutil
 import subprocess
 import platform
 from pathlib import Path
@@ -135,6 +137,12 @@ class Game:
 		return subprocess.Popen(args)		
 
 
+	def cleanup(self) -> None:
+		# make files executable (linux)
+		exec_path = self.find_exec_path()
+		exec_path.chmod(exec_path.stat().st_mode | stat.S_IEXEC)
+		
+
 class Mod(Game):
 	name: str = None
 	codename: str = None
@@ -177,3 +185,14 @@ class Mod(Game):
 			return py_names[0]
 		else:
 			return 'DDLC'
+
+
+	def cleanup(self) -> None:
+		super().cleanup()
+
+		# fix future.standard_library (ren'py 7+, linux)
+		if self.return_renpy_version()[0] == '7':
+			exec_path = self.find_exec_path()
+			libs_path = exec_path.parent / 'libs'
+			if libs_path.is_dir():
+				shutil.rmtree(libs_path)
