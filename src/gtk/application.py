@@ -1,6 +1,12 @@
 import logging
+from pathlib import Path
 
 import gi
+from watchdog.observers import Observer
+from watchdog.events import FileSystemEventHandler, DirModifiedEvent, FileModifiedEvent
+
+from src import root_path
+from src.renpy import Game, Mod
 
 gi.require_version('Gtk', '4.0')
 gi.require_version('Adw', '1')
@@ -19,6 +25,8 @@ class RencherApplication(Gtk.Application):
 		
 		patool_logger = logging.getLogger('patool')
 		patool_logger.propagate = False
+		watchdog_logger = logging.getLogger('watchdog')
+		watchdog_logger.propagate = False
 
 
 	def do_startup(self):
@@ -31,3 +39,31 @@ class RencherApplication(Gtk.Application):
 		self.window = RencherWindow(application=self)
 		self.window.present()
 		logging.debug('app activate')
+		
+		observer = Observer()
+		handler = RencherFSHandler(self)
+		observer.schedule(handler, root_path, recursive=True)
+		observer.start()
+
+
+class RencherFSHandler(FileSystemEventHandler):
+	def __init__(self, app):
+		super().__init__()
+		self.app = app
+	
+	def on_modified(self, event: DirModifiedEvent | FileModifiedEvent) -> None:
+		if self.app.window.project_is_running:
+			return
+		
+		for project in self.app.window.projects:
+			event_path = Path(event.src_path)
+			
+			if event_path.is_relative_to(project.rpath):
+				logging.debug(f'something changed in {project.name} ({project.codename})!')
+				
+				# if isinstance(project, Mod):
+				# 	new_project = Mod(rpath=project.rpath)
+				# else:
+				# 	new_project = Game(rpath=project.rpath)
+
+				project.__init__()

@@ -3,7 +3,7 @@ import platform
 from pathlib import Path
 
 from src import root_path
-from src.renpy import paths, config
+from src.renpy import paths, _config
 
 
 class Game:
@@ -36,7 +36,7 @@ class Game:
 
 		self.version = self.return_renpy_version()
 		self.codename = self.return_codename()
-		self.config = config.read_game_config(self)
+		self.config = _config.read_game_config(self)
 
 
 	def return_codename(self) -> str | None:
