@@ -40,10 +40,10 @@ template $RencherImport: Adw.PreferencesDialog {
 					styles ["boxed-list"]
 					
 					Adw.SwitchRow import_mod_toggle {
-                        title: _("Mod");
+                        title: _("Is A Mod");
                     }
                     Adw.ComboRow import_game_combo {
-                        title: _("Game");
+                        title: _("Game To Mod");
                         enable-search: true;
                         sensitive: bind import_mod_toggle.active;
                         
@@ -57,6 +57,7 @@ template $RencherImport: Adw.PreferencesDialog {
 				
 					Adw.ButtonRow import_button {
 						title: _("Import");
+						sensitive: false;
 					
 						activated => $ on_import_clicked();
 					}
