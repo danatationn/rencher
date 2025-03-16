@@ -9,7 +9,7 @@ from src import root_path
 
 import gi
 gi.require_version('Gtk', '4.0')
-from gi.repository import GLib, Gio  # noqa: E402
+from gi.repository import GLib, Gio, GObject  # noqa: E402
 
 
 def blp2ui() -> None:
@@ -62,3 +62,13 @@ def open_file_manager(path: str):
 	if platform.system() == 'Linux':
 		Gio.AppInfo.launch_default_for_uri('file:///' + path)
 
+
+class GameItem(GObject.Object):
+	__gtype_name__ = 'GameItem'
+	
+	name = GObject.Property(type=str)
+	
+	def __init__(self, name, game):
+		super().__init__()
+		self.name = name
+		self.game = game

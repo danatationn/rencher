@@ -1,7 +1,7 @@
-import logging
 import patoolib
 from pathlib import Path
 
+from src.gtk import GameItem
 from src.renpy import Game, Mod
 from src.gtk._import import import_game
 
@@ -35,12 +35,12 @@ class RencherImport(Adw.PreferencesDialog):
 	@Gtk.Template.Callback()
 	def on_location_changed(self, entry_row: Adw.EntryRow):
 		location_text = entry_row.get_text()
-		location_path = Path(location_text)
 				
-		if location_path.exists() and location_text != '':
+		if patoolib.is_archive(location_text) and location_text != '':
 			self.import_button.set_sensitive(True)
 			if not self.import_title.get_text():
-				self.import_title.set_text(location_path.stem)
+				name = Path(location_text).stem
+				self.import_title.set_text(name)
 		else:
 			self.import_button.set_sensitive(False)
 				
@@ -51,28 +51,26 @@ class RencherImport(Adw.PreferencesDialog):
 		
 	@Gtk.Template.Callback()
 	def on_combo_change(self, combo_row: Adw.ComboRow, _param: GObject.ParamSpec) -> None:
-		selected_game: GObject.Object | GameItem = self.import_game_combo.get_selected_item()
-		logging.debug(vars(selected_game.game))
+		# selected_game: GObject.Object | GameItem = self.import_game_combo.get_selected_item()
+		...
 		
 	@Gtk.Template.Callback()
-	def on_import_clicked(self, button_row: Adw.ButtonRow) -> None:
-		title_text = self.import_title.get_text()
-		location_text = self.import_location.get_text()
-		is_mod = self.import_game_combo.get_sensitive()
-		
-		import_game(title_text, Path(location_text), is_mod)
+	def on_import_clicked(self, button_row: Adw.ButtonRow) -> None:		
+		try:
+			patoolib.test_archive(self.import_location.get_text())
+		except patoolib.util.PatoolError:
+			dialog = Adw.AlertDialog(
+				heading=f'Error importing {self.import_title.get_text()}',
+				body='The archive supplied is not valid. Please re-download the file and try again.',
+				close_response='okay'
+			)
+			dialog.add_response('okay', 'Okay')
+			dialog.choose()
+		else:
+			import_game(self)
 	
 	def on_file_selected(self, dialog: Gtk.FileDialog, result):
 		file = dialog.open_finish(result)
 		self.import_location.set_text(file.get_path())
 
 
-class GameItem(GObject.Object):
-	__gtype_name__ = 'GameItem'
-	
-	name = GObject.Property(type=str)
-	
-	def __init__(self, name, game):
-		super().__init__()
-		self.name = name
-		self.game = game
