@@ -7,6 +7,7 @@ from watchdog.events import FileSystemEventHandler, DirModifiedEvent, FileModifi
 
 from src import root_path
 from src.renpy import Game, Mod
+from src.gtk._library import update_library_sidebar
 
 gi.require_version('Gtk', '4.0')
 gi.require_version('Adw', '1')
@@ -50,20 +51,23 @@ class RencherFSHandler(FileSystemEventHandler):
 	def __init__(self, app):
 		super().__init__()
 		self.app = app
+		self.times = []
 	
 	def on_modified(self, event: DirModifiedEvent | FileModifiedEvent) -> None:
 		if self.app.window.process:
 			return
 		
+		"""event_path = Path(event.src_path)
 		for project in self.app.window.projects:
-			event_path = Path(event.src_path)
-			
 			if event_path.is_relative_to(project.rpath):
-				logging.debug(f'something changed in {project.name} ({project.codename})!')
 				
-				if isinstance(project, Mod):
-					new_project = Mod(rpath=project.rpath)
-				else:
-					new_project = Game(rpath=project.rpath)
-
-				project.__dict__.update(new_project.__dict__)
+				try:
+					time = int(event_path.stat().st_mtime)
+					if time in self.times:
+						return
+					else:
+						self.times.append(time)			
+						logging.debug(f'something changed in {project.name} ({project.codename})!')
+						update_library_sidebar(self.app.window)
+				except FileNotFoundError:
+					pass  # file has been deleted"""

@@ -25,18 +25,12 @@ def import_game(self):
 	if name == '':
 		name = path.stem
 
-	if not is_mod:
-		target_path = root_path / 'games' / name
-	else:
-		target_path = root_path / 'mods' / name
+	target_path = root_path / ('mods' if is_mod else 'games') / name
 
 	patoolib.extract_archive(str(path), 0, str(target_path))
 
-	if not is_mod:
-		self.update_progress(1)
-	else:
-		self.update_progress(0.5)
-		
+	self.update_progress(0.5 if is_mod else 1)
+	if is_mod:
 		mod = Mod(rpath=target_path)
 		game = game_to_mod.game
 		

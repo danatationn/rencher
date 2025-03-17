@@ -23,12 +23,34 @@ template $RencherWindow : Adw.ApplicationWindow {
 				clicked => $on_settings_clicked();
 		    }
 	    }
+			ProgressBar {
+				styles ["osd"]
+				fraction: 1;
+			}
+			
 
 		content: Adw.OverlaySplitView split_view {
 			sidebar: ScrolledWindow {
-				ListBox library_list_box {				
-					show-separators: true;
+				Box {
+					orientation: vertical;
+				
+					Box {
+						//styles ["toolbar"]
+					
+						Adw.EntryRow {
+							title: _("Search");
+						}
+						Adw.ButtonRow {
+							end-icon-name: "view-refresh-symbolic";
+						}
+					}
+					
+					ListBox library_list_box {
+						show-separators: true;
+					}
+					
 				}
+				
 			};
 
 		    content: Adw.ViewStack library_view_stack {

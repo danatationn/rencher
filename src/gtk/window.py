@@ -63,7 +63,7 @@ class RencherWindow(Adw.ApplicationWindow):
 
 	@Gtk.Template.Callback()
 	def on_play_clicked(self, _widget: Gtk.Button) -> None:
-		selected_button_row = self.library_list_box.get_selected_rows()[0]
+		selected_button_row = self.library_list_box.get_selected_row()
 		game = getattr(selected_button_row, 'game', None)
 		
 		if _widget.get_style_context().has_class('suggested-action'):
