@@ -29,21 +29,19 @@ here's [a link to the trello board](https://trello.com/b/CGaqf0xx/rencher) lmao
 * vndb integration
 * other
 
-## "building"
-i am not at the stage where it's a good idea to compile this soooo
+## running/compiling
+**!! you're on your own here !!**
 
-here's how to run it :)
+first of all, this is **NOT** production ready whatsoever
 
-1. clone the repo (download zip or otherwise `git clone https://github.com/danatationn/rencher`)
-2. install the required python packages: `pip install -r requirements.txt`
-3. *install the `blueprint-compiler`
-4. run `main.py` :)
+you will encounter lots of weird errors that only i know how to circumvent, and it will generally be a pain trying to use this app, at its current stage
 
-\* now if you're on linux getting that is pretty easy you just install it a la package manager
+second of all, right now this is tailored to linux specifically
 
-HOWEVER i have no fucking clue how you can get it on windows
+while i will be forced to make this work on windows too, there are a lot of hiccups that happen on windows
 
-i'll improve this later but like rn if you're not using linux you're kinda fucked,
+for example, you cannot compile the .blp files used for the ui because [blueprint-compiler](https://jwestman.pages.gitlab.gnome.org/blueprint-compiler/) is [linux only](https://patorjk.com/software/taag/#p=display&f=Doom&t=lol!!!!) (for some fucking reason)
+
 
 ## license
 
