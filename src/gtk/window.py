@@ -41,7 +41,7 @@ class RencherWindow(Adw.ApplicationWindow):
 	def __init__(self, *args, **kwargs):
 		super().__init__(*args, **kwargs)
 
-		logging.debug('window init')
+		logging.debug('Window Init')
 
 		if getattr(sys, 'frozen', True):
 			self.get_style_context().add_class('devel')

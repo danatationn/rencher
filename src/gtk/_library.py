@@ -21,7 +21,7 @@ def return_projects() -> list[Game]:
 				project = Mod(rpath=path)
 			projects.append(project)
 		except FileNotFoundError:
-			logging.debug(f'{path.stem} is not a valid project!')
+			logging.debug(f'"{path.stem}" is not a valid project. Omitting...')
 	
 	return projects
 
@@ -34,14 +34,6 @@ def update_library_sidebar(self) -> None:
 	removed_projects = set(self.projects) - set(projects)
 	changed_projects = set(projects) - unchanged_projects - added_projects
 
-	logging.debug(
-		'\n'
-		f'unchanged_projects: {unchanged_projects}\n'
-		f'added_projects: {added_projects}\n'
-		f'removed_projects: {removed_projects}\n'
-		f'changed_projects: {changed_projects}\n'
-	)
-
 	buttons: list[Adw.ButtonRow] = []
 	for i, project in enumerate(self.projects):
 		button = self.library_list_box.get_row_at_index(i)
@@ -49,15 +41,10 @@ def update_library_sidebar(self) -> None:
 
 	for project in self.projects:
 		if project in removed_projects:
-			logging.debug(f'project    : {project.codename}')
 			for button in buttons:
-				logging.debug(f'button.game: {button.game.codename}')
-				logging.debug(f'eq         : {project.__eq__(button.game)}')
-				logging.debug(f'hash       : {project.__hash__()} vs {button.game.__hash__()}')
 				if project == button.game:
 					buttons.remove(button)
 					self.library_list_box.remove(button)
-					logging.debug(f'{project.name} has been found')
 					break
 			continue
 

@@ -22,7 +22,7 @@ class RencherApplication(Gtk.Application):
 		super().__init__(*args, **kwargs, application_id='com.github.danatationn.rencher')
 		self.window: RencherWindow | None = None  # type hinting :)
 		logging.basicConfig(format='(%(relativeCreated)d) %(levelname)s: %(msg)s', level=logging.NOTSET)
-		logging.debug('app init')
+		logging.debug('App Init')
 		
 		patool_logger = logging.getLogger('patool')
 		patool_logger.propagate = False
@@ -37,7 +37,7 @@ class RencherApplication(Gtk.Application):
 	def do_activate(self):
 		Gtk.Application.do_activate(self)
 
-		logging.debug('app activate')
+		logging.debug('App Activate')
 
 		self.window = RencherWindow(application=self)
 		self.window.present()

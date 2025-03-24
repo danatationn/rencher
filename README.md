@@ -40,9 +40,18 @@ second of all, right now this is tailored to linux specifically
 
 while i will be forced to make this work on windows too, there are a lot of hiccups that happen on windows
 
-for example, you cannot compile the .blp files used for the ui because [blueprint-compiler](https://jwestman.pages.gitlab.gnome.org/blueprint-compiler/) is [linux only](https://patorjk.com/software/taag/#p=display&f=Doom&t=lol!!!!) (for some fucking reason)
+for example, you cannot compile the .blp files used for the ui because [blueprint-compiler](https://jwestman.pages.gitlab.gnome.org/blueprint-compiler/) is [linux-only](https://patorjk.com/software/taag/#p=display&f=Doom&t=lol!!!!) (for some fucking reason)
 
+**if you really want to run it right now...**
+
+1. install [blueprint-compiler](https://jwestman.pages.gitlab.gnome.org/blueprint-compiler/) (linux-only right now!)
+2. install dependencies from `pyproject.toml`
+3. create the `games` and `mods` directories 
+4. run `main.py`
+5. try to avoid bugs
+
+note that **if you really want to build it right now** then you can run the `build.py` file
 
 ## license
 
-[GNU General Public License 3.0](https://github.com/danatationn/rencher/blob/main/LICENSE.txt) © 2007  Free Software Foundation
+[GNU General Public License 3.0](https://github.com/danatationn/rencher?tab=GPL-3.0-1-ov-file) © 2007  Free Software Foundation
