@@ -61,6 +61,12 @@ class RencherFSHandler(FileSystemEventHandler):
 			return
 
 		src_path = Path(event.src_path)
+		games_path = root_path / 'games'
+		mods_path = root_path / 'mods'
+
+		if not src_path.is_relative_to(games_path) or not src_path.is_relative_to(mods_path):
+			return
+
 		try:
 			mtime = int(src_path.stat().st_mtime)
 		except FileNotFoundError:
@@ -72,9 +78,6 @@ class RencherFSHandler(FileSystemEventHandler):
 		else:
 			self.mtimes.append(mtime)
 			update_library_sidebar(self.app.window)
-
-		games_path = root_path / 'games'
-		mods_path = root_path / 'mods'
 
 		if src_path.is_relative_to(games_path) or src_path.is_relative_to(mods_path):
 			logging.debug(self.mtimes)

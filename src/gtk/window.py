@@ -96,3 +96,13 @@ class RencherWindow(Adw.ApplicationWindow):
 
 			update_library_view(self, game)			
 			
+
+	def toggle_play_button(self, override: str | None = None) -> None:
+		"""
+		the play button has two states:
+			* play
+			* stop (when there's a game already playing)
+
+
+		"""
+		...

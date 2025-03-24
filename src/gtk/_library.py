@@ -1,7 +1,7 @@
 import logging
 from itertools import chain
 
-from gi.repository import Adw
+from gi.repository import Adw, GLib
 
 from src import root_path
 from src.renpy import Game, Mod
@@ -110,7 +110,10 @@ def update_library_view(self, project: Game) -> None:
 		self.playtime_row.set_subtitle('N/A')
 
 	try:
-		self.added_on_row.set_subtitle(project.config['info']['added_on'])
+		added_on = int(project.config['info']['added_on'])
+		datetime = GLib.DateTime.new_from_unix_utc(added_on)
+		formatted_datetime = format_gdatetime(datetime, 'neat')
+		self.added_on_row.set_subtitle(formatted_datetime)
 	except KeyError:
 		self.added_on_row.set_subtitle('N/A')
 
