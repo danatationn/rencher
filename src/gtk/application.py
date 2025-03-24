@@ -52,10 +52,12 @@ class RencherFSHandler(FileSystemEventHandler):
 	def __init__(self, app):
 		super().__init__()
 		self.app = app
-		self.times: list[int] = []  # for debouncing :)
+		self.mtimes: list[int] = []  # for debouncing :)
 	
 	def on_modified(self, event: DirModifiedEvent | FileModifiedEvent) -> None:
 		if self.app.window.process:
+			return
+		if self.app.window.import_dialog.thread.is_alive():
 			return
 
 		src_path = Path(event.src_path)
@@ -65,14 +67,14 @@ class RencherFSHandler(FileSystemEventHandler):
 			# something got deleted 🤷‍
 			mtime = 0
 
-		if mtime in self.times:
+		if mtime in self.mtimes:
 			return
 		else:
-			self.times.append(mtime)
+			self.mtimes.append(mtime)
 			update_library_sidebar(self.app.window)
 
 		games_path = root_path / 'games'
 		mods_path = root_path / 'mods'
 
 		if src_path.is_relative_to(games_path) or src_path.is_relative_to(mods_path):
-			logging.debug(self.times)
+			logging.debug(self.mtimes)

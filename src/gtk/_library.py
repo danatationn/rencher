@@ -43,25 +43,26 @@ def update_library_sidebar(self) -> None:
 	)
 
 	buttons: list[Adw.ButtonRow] = []
-	for i in enumerate(self.projects):
-		buttons.append(self.library_list_box.get_row_at_y(i[0]))
+	for i, project in enumerate(self.projects):
+		button = self.library_list_box.get_row_at_index(i)
+		buttons.append(button)
 
-	for project in projects:
-		if project in unchanged_projects:
-			logging.debug('U - ' + project.name)
-			continue
-			
+	for project in self.projects:
 		if project in removed_projects:
+			logging.debug(f'project    : {project.codename}')
 			for button in buttons:
-				if button.game == project:
-					buttons.remove(project)
+				logging.debug(f'button.game: {button.game.codename}')
+				logging.debug(f'eq         : {project.__eq__(button.game)}')
+				logging.debug(f'hash       : {project.__hash__()} vs {button.game.__hash__()}')
+				if project == button.game:
+					buttons.remove(button)
 					self.library_list_box.remove(button)
-					logging.debug('R - ' + project.name)
+					logging.debug(f'{project.name} has been found')
 					break
 			continue
-			
+
+	for project in projects:
 		if project in added_projects:
-			logging.debug('A - ' + project.name)
 			button = Adw.ButtonRow(title=project.name)
 			button.game = project
 			button.connect('activated', self.on_game_activated)
@@ -85,6 +86,7 @@ def update_library_sidebar(self) -> None:
 		self.split_view.set_show_sidebar(True)
 	
 	self.projects = projects
+
 
 def update_library_view(self, project: Game) -> None:
 	self.selected_status_page.set_title(project.name)
