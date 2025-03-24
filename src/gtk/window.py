@@ -1,14 +1,14 @@
-import sys
 import logging
 import subprocess
+import sys
 
-from gi.repository import Gtk, Adw, GLib
+from gi.repository import Adw, Gtk
 
 from src.gtk import open_file_manager
-from src.gtk.settings_dialog import RencherSettings
-from src.gtk.import_dialog import RencherImport
 from src.gtk._library import update_library_sidebar, update_library_view
-from src.renpy import Game, Mod
+from src.gtk.import_dialog import RencherImport
+from src.gtk.settings_dialog import RencherSettings
+from src.renpy import Game
 
 
 @Gtk.Template(filename='src/gtk/ui/window.ui')
@@ -41,11 +41,12 @@ class RencherWindow(Adw.ApplicationWindow):
 	def __init__(self, *args, **kwargs):
 		super().__init__(*args, **kwargs)
 
+		logging.debug('window init')
+
 		if getattr(sys, 'frozen', True):
 			self.get_style_context().add_class('devel')
 
 		update_library_sidebar(self)
-		logging.debug('window init')
 		self.import_dialog = RencherImport(self)
 
 

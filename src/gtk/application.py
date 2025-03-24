@@ -2,19 +2,19 @@ import logging
 from pathlib import Path
 
 import gi
+from watchdog.events import DirModifiedEvent, FileModifiedEvent, FileSystemEventHandler
 from watchdog.observers import Observer
-from watchdog.events import FileSystemEventHandler, DirModifiedEvent, FileModifiedEvent
 
 from src import root_path
-from src.renpy import Game, Mod
-from src.gtk._library import update_library_sidebar
 
 gi.require_version('Gtk', '4.0')
 gi.require_version('Adw', '1')
-from gi.repository import Gtk, Adw  # noqa: E402
+from gi.repository import Adw, Gtk  # noqa: E402
+
 Adw.init()
 
 from src.gtk.window import RencherWindow  # noqa: E402
+from src.gtk._library import update_library_sidebar  # noqa: E402
 
 
 class RencherApplication(Gtk.Application):
@@ -37,10 +37,11 @@ class RencherApplication(Gtk.Application):
 	def do_activate(self):
 		Gtk.Application.do_activate(self)
 
+		logging.debug('app activate')
+
 		self.window = RencherWindow(application=self)
 		self.window.present()
-		logging.debug('app activate')
-		
+
 		observer = Observer()
 		handler = RencherFSHandler(self)
 		observer.schedule(handler, root_path, recursive=True)
@@ -51,23 +52,27 @@ class RencherFSHandler(FileSystemEventHandler):
 	def __init__(self, app):
 		super().__init__()
 		self.app = app
-		self.times = []
+		self.times: list[int] = []  # for debouncing :)
 	
 	def on_modified(self, event: DirModifiedEvent | FileModifiedEvent) -> None:
 		if self.app.window.process:
 			return
-		
-		"""event_path = Path(event.src_path)
-		for project in self.app.window.projects:
-			if event_path.is_relative_to(project.rpath):
-				
-				try:
-					time = int(event_path.stat().st_mtime)
-					if time in self.times:
-						return
-					else:
-						self.times.append(time)			
-						logging.debug(f'something changed in {project.name} ({project.codename})!')
-						update_library_sidebar(self.app.window)
-				except FileNotFoundError:
-					pass  # file has been deleted"""
+
+		src_path = Path(event.src_path)
+		try:
+			mtime = int(src_path.stat().st_mtime)
+		except FileNotFoundError:
+			# something got deleted 🤷‍
+			mtime = 0
+
+		if mtime in self.times:
+			return
+		else:
+			self.times.append(mtime)
+			update_library_sidebar(self.app.window)
+
+		games_path = root_path / 'games'
+		mods_path = root_path / 'mods'
+
+		if src_path.is_relative_to(games_path) or src_path.is_relative_to(mods_path):
+			logging.debug(self.times)

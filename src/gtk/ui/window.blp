@@ -16,6 +16,9 @@ template $RencherWindow : Adw.ApplicationWindow {
 				icon-name: "list-add-symbolic";
 				clicked => $on_import_clicked();
 		    }
+		    ToggleButton library_search_button {
+		        icon-name: "edit-find-symbolic";
+		    }
 
 			[end]
 		    Button {
@@ -23,34 +26,23 @@ template $RencherWindow : Adw.ApplicationWindow {
 				clicked => $on_settings_clicked();
 		    }
 	    }
-			ProgressBar {
-				styles ["osd"]
-				fraction: 1;
-			}
 			
 
 		content: Adw.OverlaySplitView split_view {
 			sidebar: ScrolledWindow {
 				Box {
 					orientation: vertical;
-				
-					Box {
-						//styles ["toolbar"]
-					
-						Adw.EntryRow {
-							title: _("Search");
-						}
-						Adw.ButtonRow {
-							end-icon-name: "view-refresh-symbolic";
+
+					SearchBar {
+						search-mode-enabled: bind library_search_button.active;
+						SearchEntry {
+							placeholder-text: _("Search");
 						}
 					}
-					
 					ListBox library_list_box {
 						show-separators: true;
 					}
-					
 				}
-				
 			};
 
 		    content: Adw.ViewStack library_view_stack {

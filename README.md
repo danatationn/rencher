@@ -15,7 +15,7 @@ also i didn't know anything about how to make your code good so,,
 ### promised features
 * multiple save directories (i think i'll call them slots or something dumb like that)
 * a nice looking ui :) (most likely will be made using gtk)
-* symlinking base assets for mods (for unix only)
+* ~~symlinking base assets for mods (for unix only)~~ No
 * fully portable
 * other
 

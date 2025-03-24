@@ -1,8 +1,7 @@
 import logging
 from itertools import chain
-from pathlib import Path
 
-from gi.repository import Adw, GObject, Gtk
+from gi.repository import Adw
 
 from src import root_path
 from src.renpy import Game, Mod
@@ -31,15 +30,21 @@ def update_library_sidebar(self) -> None:
 	projects = return_projects()
 	
 	unchanged_projects = set(projects) & set(self.projects)
-	
 	added_projects = set(projects) - set(self.projects)
 	removed_projects = set(self.projects) - set(projects)
-	
 	changed_projects = set(projects) - unchanged_projects - added_projects
-	
+
+	logging.debug(
+		'\n'
+		f'unchanged_projects: {unchanged_projects}\n'
+		f'added_projects: {added_projects}\n'
+		f'removed_projects: {removed_projects}\n'
+		f'changed_projects: {changed_projects}\n'
+	)
+
 	buttons: list[Adw.ButtonRow] = []
 	for i in enumerate(self.projects):
-		buttons.append(self.library_list_box.get_row_at_y(i))
+		buttons.append(self.library_list_box.get_row_at_y(i[0]))
 
 	for project in projects:
 		if project in unchanged_projects:
@@ -83,16 +88,30 @@ def update_library_sidebar(self) -> None:
 
 def update_library_view(self, project: Game) -> None:
 	self.selected_status_page.set_title(project.name)
-	
-	last_played = format_gdatetime(project.config['info']['last_played'], 'neat')
-	size = project.config['info']['size']
-	formatted_size = HumanBytes.format(int(size), metric=True)
-	
-	self.last_played_row.set_subtitle(last_played)
-	self.playtime_row.set_subtitle(project.config['info']['playtime'])
-	self.added_on_row.set_subtitle(project.config['info']['added_on'])
-	self.size_row.set_subtitle(formatted_size)
 
-	self.version_row.set_subtitle(project.version)
+	try:
+		size = project.config['info']['size']
+		formatted_size = HumanBytes.format(int(size), metric=True)
+		self.size_row.set_subtitle(formatted_size)
+	except KeyError:
+		self.size_row.set_subtitle('N/A')
+
+	try:
+		last_played = format_gdatetime(project.config['info']['last_played'], 'neat')
+		self.last_played_row.set_subtitle(last_played)
+	except KeyError:
+		self.last_played_row.set_subtitle('N/A')
+
+	try:
+		self.playtime_row.set_subtitle(project.config['info']['playtime'])
+	except KeyError:
+		self.playtime_row.set_subtitle('N/A')
+
+	try:
+		self.added_on_row.set_subtitle(project.config['info']['added_on'])
+	except KeyError:
+		self.added_on_row.set_subtitle('N/A')
+
+	self.version_row.set_subtitle(project.version if project.version else 'N/A')
 	self.rpath_row.set_subtitle(str(project.rpath))
 	self.codename_row.set_subtitle(project.codename)

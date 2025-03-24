@@ -1,13 +1,12 @@
-import logging
 import threading
-import patoolib
 from pathlib import Path
 
-from src.gtk import GameItem
-from src.renpy import Game, Mod
-from src.gtk._import import import_game
+import patoolib
+from gi.repository import Adw, Gio, GObject, Gtk
 
-from gi.repository import Gtk, Adw, GObject, Gio, GLib
+from src.gtk import GameItem
+from src.gtk._import import import_game
+from src.renpy import Mod
 
 
 @Gtk.Template(filename='src/gtk/ui/import.ui')

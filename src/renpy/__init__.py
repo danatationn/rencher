@@ -41,6 +41,34 @@ class Game:
 		self.config = _config.read_game_config(self)
 
 
+	def __eq__(self, other) -> bool:
+		if isinstance(other, Game):
+			return(
+				self.name == other.name
+				and self.codename == other.codename
+				and self.rpath == other.rpath
+				and self.apath == other.apath
+				and self.version == other.version
+				and self.config == other.config
+			)
+		else:
+			return False
+
+
+	def __hash__(self):
+		config_tuple = tuple((section, tuple(items.items())) for section, items in self.config.items())
+		return hash(
+			(
+				self.name,
+				self.codename,
+				self.rpath,
+				self.apath,
+				self.version,
+				config_tuple
+			)
+		)
+
+
 	def return_codename(self) -> str | None:
 		"""
 			returns a name based off of the .py scripts located in apath
@@ -125,7 +153,7 @@ class Game:
 						except ValueError:
 							pass
 		else:
-			return 'N/A'  # yo shit broken boy
+			return None  # yo shit broken boy
 
 
 	def run(self) -> subprocess.Popen:
