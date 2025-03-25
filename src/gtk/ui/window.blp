@@ -35,12 +35,19 @@ template $RencherWindow : Adw.ApplicationWindow {
 
 					SearchBar {
 						search-mode-enabled: bind library_search_button.active;
-						SearchEntry {
-							placeholder-text: _("Search");
+						Box {
+							SearchEntry {
+								placeholder-text: _("Search");
+							}
+							ToggleButton {
+								icon-name: "ymuse-filter-symbolic";
+							}
 						}
 					}
 					ListBox library_list_box {
 						show-separators: true;
+
+						row-selected => $on_game_selected();
 					}
 				}
 			};
@@ -64,12 +71,13 @@ template $RencherWindow : Adw.ApplicationWindow {
 							orientation: vertical;
 							spacing: 16;
 
-							Button {
+							Adw.SplitButton play_split_button {
 								label: _("Play");
-								clicked => $on_play_clicked();
-
-								halign: center;
 								styles ["pill", "suggested-action"]
+								halign: center;
+
+								menu-model: play_button_menu;
+								clicked => $on_play_clicked();
 							}
 
 							ListBox {
@@ -104,10 +112,9 @@ template $RencherWindow : Adw.ApplicationWindow {
 									[suffix]
 									Button {
 										icon-name: "folder-symbolic";
+										styles ["flat"]
 
 										clicked => $on_dir_clicked();
-
-										styles ["flat", "circular"]
 									}
 
 									styles ["property"]
@@ -144,4 +151,26 @@ template $RencherWindow : Adw.ApplicationWindow {
 			};
 		};
     };
+}
+
+
+menu play_button_menu {
+	section {
+		item {
+			label: _("Play");
+			action: "app.play";
+		}
+		item {
+			label: _("Rename");
+		}
+		item {
+			label: _("Config Settings");
+		}
+	}
+	section {
+		item {
+			label: _("Delete");
+			action: "app.delete";
+		}
+	}
 }

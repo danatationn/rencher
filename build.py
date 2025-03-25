@@ -1,4 +1,5 @@
 def main():
+	# TODO switch to cx_freeze
 	import PyInstaller.__main__
 	from pathlib import Path
 

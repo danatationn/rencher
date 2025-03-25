@@ -22,7 +22,7 @@ class RencherApplication(Gtk.Application):
 		super().__init__(*args, **kwargs, application_id='com.github.danatationn.rencher')
 		self.window: RencherWindow | None = None  # type hinting :)
 		logging.basicConfig(format='(%(relativeCreated)d) %(levelname)s: %(msg)s', level=logging.NOTSET)
-		logging.debug('App Init')
+		logging.debug('App init')
 		
 		patool_logger = logging.getLogger('patool')
 		patool_logger.propagate = False
@@ -37,7 +37,7 @@ class RencherApplication(Gtk.Application):
 	def do_activate(self):
 		Gtk.Application.do_activate(self)
 
-		logging.debug('App Activate')
+		logging.debug('App activated')
 
 		self.window = RencherWindow(application=self)
 		self.window.present()
@@ -64,7 +64,7 @@ class RencherFSHandler(FileSystemEventHandler):
 		games_path = root_path / 'games'
 		mods_path = root_path / 'mods'
 
-		if not src_path.is_relative_to(games_path) or not src_path.is_relative_to(mods_path):
+		if not src_path.is_relative_to(games_path) and not src_path.is_relative_to(mods_path):
 			return
 
 		try:

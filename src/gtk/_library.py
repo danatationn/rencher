@@ -52,7 +52,6 @@ def update_library_sidebar(self) -> None:
 		if project in added_projects:
 			button = Adw.ButtonRow(title=project.name)
 			button.game = project
-			button.connect('activated', self.on_game_activated)
 			buttons.append(button)
 			self.library_list_box.append(button)
 			continue
@@ -69,7 +68,8 @@ def update_library_sidebar(self) -> None:
 		self.library_view_stack.set_visible_child_name('empty')
 		self.split_view.set_show_sidebar(False)
 	else:
-		self.library_view_stack.set_visible_child_name('selected')
+		if not self.library_list_box.get_selected_row():
+			self.library_view_stack.set_visible_child_name('game-select')
 		self.split_view.set_show_sidebar(True)
 	
 	self.projects = projects
