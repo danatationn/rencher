@@ -88,3 +88,16 @@ def read_game_config(self) -> dict:
 		config.read_file(f)
 
 	return config
+
+
+def write_game_config(self) -> None:
+	config_path = self.apath / 'game' / 'rencher.ini'
+	if not config_path.exists():
+		create_game_config(self)
+
+	config = configparser.ConfigParser()
+	for section, options in self.config.items():
+		config[section] = options
+
+	with open(config_path, 'w') as f:
+		config.write(f)

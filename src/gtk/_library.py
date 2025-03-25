@@ -21,8 +21,8 @@ def return_projects() -> list[Game]:
 				project = Mod(rpath=path)
 			projects.append(project)
 		except FileNotFoundError:
-			logging.debug(f'"{path.stem}" is not a valid project. Omitting...')
-	
+			pass
+
 	return projects
 
 
@@ -32,7 +32,19 @@ def update_library_sidebar(self) -> None:
 	unchanged_projects = set(projects) & set(self.projects)
 	added_projects = set(projects) - set(self.projects)
 	removed_projects = set(self.projects) - set(projects)
-	changed_projects = set(projects) - unchanged_projects - added_projects
+	changed_projects = set()
+
+	for project in projects:
+		if project in self.projects:
+			for old_project in self.projects:
+				if project == old_project and project.config != old_project.config:
+					changed_projects.add(project)
+					break
+
+	# logging.debug(f'unchanged_projects: {unchanged_projects}')
+	# logging.debug(f'added_projects: {added_projects}')
+	# logging.debug(f'removed_projects: {removed_projects}')
+	# logging.debug(f'changed_projects: {changed_projects}')
 
 	buttons: list[Adw.ButtonRow] = []
 	for i, project in enumerate(self.projects):
@@ -58,9 +70,11 @@ def update_library_sidebar(self) -> None:
 
 		if project in changed_projects:
 			for button in buttons:
-				if button.game == project or button.name == project.name:
+				if button.game == project:
 					button.game = project
 					button.name = project.name
+					if self.library_list_box.get_selected_row().game == project:
+						update_library_view(self, project)
 					break
 			continue
 
@@ -86,14 +100,24 @@ def update_library_view(self, project: Game) -> None:
 		self.size_row.set_subtitle('N/A')
 
 	try:
-		last_played = format_gdatetime(project.config['info']['last_played'], 'neat')
-		self.last_played_row.set_subtitle(last_played)
+		last_played = int(float(project.config['info']['last_played']))
+		datetime = GLib.DateTime.new_from_unix_utc(last_played)
+		formatted_last_played = format_gdatetime(datetime, 'neat')
+		self.last_played_row.set_subtitle(formatted_last_played)
 	except KeyError:
 		self.last_played_row.set_subtitle('N/A')
+	except ValueError:
+		self.last_played_row.set_subtitle('Never')
 
 	try:
-		self.playtime_row.set_subtitle(project.config['info']['playtime'])
+		playtime = int(float(project.config['info']['playtime']))
+		datetime = GLib.DateTime.new_from_unix_utc(playtime)
+		formatted_playtime = format_gdatetime(datetime, 'runtime')
+
+		self.playtime_row.set_subtitle(formatted_playtime)
 	except KeyError:
+		self.playtime_row.set_subtitle('N/A')
+	except ValueError:
 		self.playtime_row.set_subtitle('N/A')
 
 	try:

@@ -37,24 +37,35 @@ def blp2ui() -> None:
 
 def format_gdatetime(date: GLib.DateTime, style: str) -> str:
 	"""
-	nice little helper function for dates :)
-
 	dates are utc
 
-	styles can be:
+	Args:
+		date: made from glib cause it's easier to work with
 
-	* 'detailed' - Monday, 23 December 2024, 13:23:20 (%A, %d %B %Y, %H:%M:%S)
-	* 'neat' - 23 Dec 2024, 01:23 PM (%d %b %Y, %I:%M %p)
+		style: can be:
+		 * 'detailed': 'Monday, 23 December 2024, 13:23:20 (%A, %d %B %Y, %H:%M:%S)
+		 * 'neat': 23 Dec 2024, 01:23 PM (%d %b %Y, %I:%M %p)
+		 * 'runtime': 30:15:06 (hours:minutes:seconds)
 	"""
 
-	if style not in ['detailed', 'neat']:
+	if style not in ['detailed', 'neat', 'runtime']:
 		raise NotImplementedError('fucking idiot. choose something else')
 
 	formatted_date = ''
 	if style == 'neat':
 		formatted_date = date.format('%d %b %Y, %I:%M %p')
-	if style == 'detailed':
+	elif style == 'detailed':
 		formatted_date = date.format('%A, %d %B %Y, %H:%M:%S')
+	else:
+		time = date.to_unix()
+		hours = int(time / 3600)
+		minutes = int((time % 3600) / 60)
+		seconds = int((time % 3600) % 60)
+
+		formatted_date = f'{hours:02}:{minutes:02}:{seconds:02}'
+
+		if formatted_date == '00:00:00':
+			return 'N/A'
 
 	return formatted_date
 

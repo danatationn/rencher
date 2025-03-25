@@ -2,6 +2,7 @@ import stat
 import shutil
 import subprocess
 import platform
+import time
 from pathlib import Path
 
 from src import root_path
@@ -34,7 +35,7 @@ class Game:
 			self.apath = paths.find_absolute_path(self.rpath)
 
 		if not name:
-			self.name = rpath.name
+			self.name = self.rpath.name
 
 		self.version = self.return_renpy_version()
 		self.codename = self.return_codename()
@@ -49,14 +50,14 @@ class Game:
 				and self.rpath == other.rpath
 				and self.apath == other.apath
 				and self.version == other.version
-				and self.config == other.config
+				# and self.config == other.config
 			)
 		else:
 			return False
 
 
 	def __hash__(self):
-		config_tuple = tuple((section, tuple(items.items())) for section, items in self.config.items())
+		# config_tuple = tuple((section, tuple(items.items())) for section, items in self.config.items())
 		return hash(
 			(
 				self.name,
@@ -64,7 +65,7 @@ class Game:
 				self.rpath,
 				self.apath,
 				self.version,
-				config_tuple
+				# config_tuple
 			)
 		)
 
@@ -165,11 +166,17 @@ class Game:
 		return subprocess.Popen(args)		
 
 
-	def cleanup(self) -> None:
+	def setup(self) -> None:
 		# make files executable (linux)
 		exec_path = self.find_exec_path()
 		exec_path.chmod(exec_path.stat().st_mode | stat.S_IEXEC)
-		
+
+
+	def cleanup(self, playtime: float) -> None:
+		self.config['info']['playtime'] = str(playtime)
+		self.config['info']['last_played'] = str(int(time.time()))
+		_config.write_game_config(self)
+
 
 class Mod(Game):
 	name: str = None

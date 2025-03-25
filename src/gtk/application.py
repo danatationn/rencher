@@ -80,4 +80,5 @@ class RencherFSHandler(FileSystemEventHandler):
 			update_library_sidebar(self.app.window)
 
 		if src_path.is_relative_to(games_path) or src_path.is_relative_to(mods_path):
-			logging.debug(self.mtimes)
+			# logging.debug(self.mtimes)
+			pass

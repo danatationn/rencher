@@ -1,6 +1,7 @@
 import logging
 import subprocess
 import sys
+import time
 
 from gi.repository import Adw, Gtk, GLib
 
@@ -17,7 +18,8 @@ class RencherWindow(Adw.ApplicationWindow):
 
 	""" variables """
 	projects: list[Game] = []
-	process: subprocess.Popen = None
+	process: subprocess.Popen | None = None
+	process_time: float | None = None
 
 	""" classes """
 	settings_dialog: Adw.PreferencesDialog = RencherSettings()
@@ -49,7 +51,6 @@ class RencherWindow(Adw.ApplicationWindow):
 
 		update_library_sidebar(self)
 		self.import_dialog = RencherImport(self)
-		GLib.timeout_add_seconds(1, self.check_process)
 
 	@Gtk.Template.Callback()
 	def on_import_clicked(self, _widget: Adw.ButtonRow) -> None:
@@ -70,12 +71,13 @@ class RencherWindow(Adw.ApplicationWindow):
 		if _widget.get_style_context().has_class('suggested-action'):
 			self.toggle_play_button('stop')
 			self.process = game.run()
+			self.process_time = time.time()
+			GLib.timeout_add_seconds(1, self.check_process)
 		else:
 			self.toggle_play_button('play')
 			if self.process:
 				self.process.terminate()
-			self.process = None
-			
+
 	@Gtk.Template.Callback()
 	def on_dir_clicked(self, _widget: Gtk.Button) -> None:
 		selected_button_row = self.library_list_box.get_selected_rows()[0]
@@ -91,17 +93,27 @@ class RencherWindow(Adw.ApplicationWindow):
 
 			update_library_view(self, game)
 
+
 	def check_process(self) -> bool:
-		if not self.process or self.process.poll() == 0:
+		if not self.process or self.process.poll() is not None:
 			self.toggle_play_button('play')
+
+			project = Game(apath=self.process.args[0].parents[2])
+			playtime = float(project.config['info']['playtime'])
+			if self.process_time:
+				playtime += time.time() - self.process_time
+			project.cleanup(playtime)
+			self.process = None
+			return False
 		else:
 			self.toggle_play_button('stop')
-		return True  # always check .
+			return True  # always check .
+
 
 	def toggle_play_button(self, state: str) -> None:
 		"""
 		Args:
-			state : accepts two values: 'play' and 'stop'
+			state: accepts two values: 'play' and 'stop'
 		"""
 
 		if state == 'play':
