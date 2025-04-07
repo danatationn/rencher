@@ -18,7 +18,7 @@ def blp2ui() -> None:
 		converts all .blp files in usable .ui files using blueprint-compiler (provided you have it installed)
 	"""
 
-	if getattr(sys, 'frozen', False):
+	if '__compiled__' in globals():
 		return  # you can't build blp files if they don't exist 🤷
 
 	comp_path = shutil.which('blueprint-compiler')

@@ -2,12 +2,12 @@ import threading
 from pathlib import Path
 
 import patoolib
-from gi.repository import Adw, Gio, GObject, Gtk
+from gi.repository import Adw, Gio, GObject, Gtk, GLib
 
+from src import root_path
 from src.gtk import GameItem
 from src.gtk._import import import_game
 from src.renpy import Mod
-
 
 @Gtk.Template(filename='src/gtk/ui/import.ui')
 class RencherImport(Adw.PreferencesDialog):
@@ -53,7 +53,7 @@ class RencherImport(Adw.PreferencesDialog):
 	def on_picker_clicked(self, button: Gtk.Button) -> None:
 		dialog = Gtk.FileDialog()
 		dialog.open(None, None, self.on_file_selected)
-		
+
 	@Gtk.Template.Callback()
 	def on_combo_change(self, combo_row: Adw.ComboRow, _param: GObject.ParamSpec) -> None:
 		# selected_game: GObject.Object | GameItem = self.import_game_combo.get_selected_item()
@@ -81,5 +81,8 @@ class RencherImport(Adw.PreferencesDialog):
 		self.import_progress_bar.set_fraction(i)
 	
 	def on_file_selected(self, dialog: Gtk.FileDialog, result):
-		file = dialog.open_finish(result)
-		self.import_location.set_text(file.get_path())
+		try:
+			file = dialog.open_finish(result)
+			self.import_location.set_text(file.get_path())
+		except GLib.GError:
+			pass  # dialog was dismissed by user

@@ -1,5 +1,8 @@
 import logging
+import time
 from itertools import chain
+from pathlib import Path
+import os
 
 from gi.repository import Adw, GLib
 
@@ -9,6 +12,8 @@ from src.gtk import format_gdatetime, HumanBytes
 
 
 def return_projects() -> list[Game]:
+	s = time.perf_counter()
+
 	games_path = root_path / 'games'
 	mods_path = root_path / 'mods'
 
@@ -16,20 +21,19 @@ def return_projects() -> list[Game]:
 	for path in chain(games_path.glob('*'), mods_path.glob('*')):
 		try:
 			if path.parent == games_path:
-				project = Game(rpath=path)
+				projects.append(Game(rpath=path))
 			else:
-				project = Mod(rpath=path)
-			projects.append(project)
+				projects.append(Mod(rpath=path))
 		except FileNotFoundError:
 			pass
 
+	runtime = time.perf_counter() - s
+	logging.debug(f'{round(runtime, 3)}s')
 	return projects
-
 
 def update_library_sidebar(self) -> None:
 	projects = return_projects()
 	
-	unchanged_projects = set(projects) & set(self.projects)
 	added_projects = set(projects) - set(self.projects)
 	removed_projects = set(self.projects) - set(projects)
 	changed_projects = set()
@@ -41,10 +45,10 @@ def update_library_sidebar(self) -> None:
 					changed_projects.add(project)
 					break
 
-	# logging.debug(f'unchanged_projects: {unchanged_projects}')
-	# logging.debug(f'added_projects: {added_projects}')
-	# logging.debug(f'removed_projects: {removed_projects}')
-	# logging.debug(f'changed_projects: {changed_projects}')
+	if True:  # 😁😁
+		logging.debug(f'added_projects: {added_projects}')
+		logging.debug(f'removed_projects: {removed_projects}')
+		logging.debug(f'changed_projects: {changed_projects}')
 
 	buttons: list[Adw.ButtonRow] = []
 	for i, project in enumerate(self.projects):

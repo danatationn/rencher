@@ -46,7 +46,7 @@ class RencherWindow(Adw.ApplicationWindow):
 
 		logging.debug('Window init')
 
-		if not getattr(sys, 'frozen', False):
+		if '__compiled__' not in globals():
 			self.get_style_context().add_class('devel')
 
 		update_library_sidebar(self)
@@ -107,7 +107,7 @@ class RencherWindow(Adw.ApplicationWindow):
 			return False
 		else:
 			self.toggle_play_button('stop')
-			return True  # always check .
+			return True
 
 
 	def toggle_play_button(self, state: str) -> None:

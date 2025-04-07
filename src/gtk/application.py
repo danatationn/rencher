@@ -1,4 +1,5 @@
 import logging
+import sys
 from pathlib import Path
 
 import gi
@@ -28,6 +29,9 @@ class RencherApplication(Gtk.Application):
 		patool_logger.propagate = False
 		watchdog_logger = logging.getLogger('watchdog')
 		watchdog_logger.propagate = False
+
+		logging.debug(root_path)
+		logging.debug(Path(sys.executable).parent)
 
 
 	def do_startup(self):
@@ -80,5 +84,4 @@ class RencherFSHandler(FileSystemEventHandler):
 			update_library_sidebar(self.app.window)
 
 		if src_path.is_relative_to(games_path) or src_path.is_relative_to(mods_path):
-			# logging.debug(self.mtimes)
 			pass

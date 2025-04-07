@@ -1,9 +1,15 @@
-### Python template
-# Ren'cher
+# Rencher
 /games/
 /mods/
 *.ui
 
+# Nuitka
+/main.build/
+/main.dist/
+/main.onefile-build/
+/main.bin
+
+### Python template
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]

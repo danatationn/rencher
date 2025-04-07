@@ -1,18 +1,15 @@
-def main():
-	# TODO switch to cx_freeze
-	import PyInstaller.__main__
-	from pathlib import Path
+import sys
 
-	setup_path = Path(__file__).parent.absolute()
-	main_path = setup_path / 'main.py'
+from src.gtk import blp2ui
+from nuitka.__main__ import main as build
 
+args = [
+	'--main=main.py',
+	'--standalone',
+	'--onefile'
+]
 
-	PyInstaller.__main__.run([
-		str(main_path),
-		'-F',
-		'-nrencher'
-	])
-	
-	
-if __name__ == '__main__':
-	main()
+sys.argv = sys.argv + args
+
+blp2ui()
+build()
