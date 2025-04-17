@@ -1,7 +1,10 @@
 from gi.repository import Gtk, Adw
 
+from src import tmp_path
 
-@Gtk.Template(filename='src/gtk/ui/settings.ui')
+
+filename = tmp_path / 'src' / 'gtk' / 'ui' / 'settings.ui'
+@Gtk.Template(filename=str(filename))
 class RencherSettings(Adw.PreferencesDialog):
 	__gtype_name__ = 'RencherSettings'
 

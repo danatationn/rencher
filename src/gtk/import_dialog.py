@@ -4,12 +4,13 @@ from pathlib import Path
 import patoolib
 from gi.repository import Adw, Gio, GObject, Gtk, GLib
 
-from src import root_path
+from src import tmp_path
 from src.gtk import GameItem
 from src.gtk._import import import_game
 from src.renpy import Mod
 
-@Gtk.Template(filename='src/gtk/ui/import.ui')
+filename = tmp_path / 'src' / 'gtk' / 'ui' / 'import.ui'
+@Gtk.Template(filename=str(filename))
 class RencherImport(Adw.PreferencesDialog):
 	__gtype_name__ = 'RencherImport'
 

@@ -1,10 +1,10 @@
 import logging
 import subprocess
-import sys
 import time
 
 from gi.repository import Adw, Gtk, GLib
 
+from src import tmp_path
 from src.gtk import open_file_manager
 from src.gtk._library import update_library_sidebar, update_library_view
 from src.gtk.import_dialog import RencherImport
@@ -12,7 +12,8 @@ from src.gtk.settings_dialog import RencherSettings
 from src.renpy import Game
 
 
-@Gtk.Template(filename='src/gtk/ui/window.ui')
+filename = tmp_path / 'src' / 'gtk' / 'ui' / 'window.ui'
+@Gtk.Template(filename=str(filename))
 class RencherWindow(Adw.ApplicationWindow):
 	__gtype_name__ = 'RencherWindow'
 

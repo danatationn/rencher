@@ -14,6 +14,7 @@ from gi.repository import Adw, Gtk  # noqa: E402
 
 Adw.init()
 
+
 from src.gtk.window import RencherWindow  # noqa: E402
 from src.gtk._library import update_library_sidebar  # noqa: E402
 
@@ -24,15 +25,11 @@ class RencherApplication(Gtk.Application):
 		self.window: RencherWindow | None = None  # type hinting :)
 		logging.basicConfig(format='(%(relativeCreated)d) %(levelname)s: %(msg)s', level=logging.NOTSET)
 		logging.debug('App init')
-		
+
 		patool_logger = logging.getLogger('patool')
 		patool_logger.propagate = False
 		watchdog_logger = logging.getLogger('watchdog')
 		watchdog_logger.propagate = False
-
-		logging.debug(root_path)
-		logging.debug(Path(sys.executable).parent)
-
 
 	def do_startup(self):
 		Gtk.Application.do_startup(self)
