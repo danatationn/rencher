@@ -8,81 +8,79 @@ from gi.repository import Adw, GLib
 
 from src import root_path
 from src.renpy import Game, Mod
+from src.renpy.paths import find_absolute_path
 from src.gtk import format_gdatetime, HumanBytes
 
 
-def return_projects() -> list[Game]:
+def return_paths() -> list[Path]:
 	s = time.perf_counter()
 
 	games_path = root_path / 'games'
 	mods_path = root_path / 'mods'
 
-	projects: list[Game] = []
+	paths: list[Path] = []
 	for path in chain(games_path.glob('*'), mods_path.glob('*')):
-		try:
-			if path.parent == games_path:
-				projects.append(Game(rpath=path))
-			else:
-				projects.append(Mod(rpath=path))
-		except FileNotFoundError:
-			pass
+		if find_absolute_path(path) is not None:
+			paths.append(path)
 
 	runtime = time.perf_counter() - s
 	logging.debug(f'{round(runtime, 3)}s')
-	return projects
+	return paths
 
 def update_library_sidebar(self) -> None:
-	projects = return_projects()
+	paths = return_paths()
 	
-	added_projects = set(projects) - set(self.projects)
-	removed_projects = set(self.projects) - set(projects)
-	changed_projects = set()
+	added_paths = set(paths) - set(self.paths)
+	removed_paths = set(self.paths) - set(paths)
+	changed_paths = set()
 
-	for project in projects:
-		if project in self.projects:
-			for old_project in self.projects:
-				if project == old_project and project.config != old_project.config:
-					changed_projects.add(project)
+	for path in paths:
+		if path in self.paths:
+			for old_path in self.paths:
+				project = Game(rpath=path)
+				old_project = Game(rpath=old_path)
+				if project == old_project:
+					changed_paths.add(path)
 					break
 
 	if True:  # 😁😁
-		logging.debug(f'added_projects: {added_projects}')
-		logging.debug(f'removed_projects: {removed_projects}')
-		logging.debug(f'changed_projects: {changed_projects}')
+		logging.debug(f'added_paths: {added_paths}')
+		logging.debug(f'removed_paths: {removed_paths}')
+		logging.debug(f'changed_paths: {changed_paths}')
 
 	buttons: list[Adw.ButtonRow] = []
-	for i, project in enumerate(self.projects):
+	for i, path in enumerate(self.paths):
 		button = self.library_list_box.get_row_at_index(i)
 		buttons.append(button)
 
-	for project in self.projects:
-		if project in removed_projects:
+	for path in self.paths:
+		if path in removed_paths:
 			for button in buttons:
-				if project == button.game:
+				if Game(path) == Game(button.path):
 					buttons.remove(button)
 					self.library_list_box.remove(button)
 					break
 			continue
 
-	for project in projects:
-		if project in added_projects:
-			button = Adw.ButtonRow(title=project.name)
-			button.game = project
+	for path in paths:
+		if path in added_paths:
+			button = Adw.ButtonRow(title=path.name)
+			button.path = path
 			buttons.append(button)
 			self.library_list_box.append(button)
 			continue
 
-		if project in changed_projects:
+		if path in changed_paths:
 			for button in buttons:
-				if button.game == project:
-					button.game = project
-					button.name = project.name
-					if self.library_list_box.get_selected_row().game == project:
-						update_library_view(self, project)
+				if Game(button.path) == Game(path):
+					button.path = path
+					# button.name = path.name
+					if self.library_list_box.get_selected_row().path == path:
+						update_library_view(self, path)
 					break
 			continue
 
-	if not projects:  # ps5 view
+	if not paths:  # ps5 view
 		self.library_view_stack.set_visible_child_name('empty')
 		self.split_view.set_show_sidebar(False)
 	else:
@@ -90,11 +88,15 @@ def update_library_sidebar(self) -> None:
 			self.library_view_stack.set_visible_child_name('game-select')
 		self.split_view.set_show_sidebar(True)
 	
-	self.projects = projects
+	self.paths = paths
 
 
-def update_library_view(self, project: Game) -> None:
+def update_library_view(self, path: Path) -> None:
+	s = time.perf_counter()
+	project = Game(path)
 	self.selected_status_page.set_title(project.name)
+
+	logging.debug(project.name)
 
 	try:
 		size = project.config['info']['size']
@@ -135,3 +137,5 @@ def update_library_view(self, project: Game) -> None:
 	self.version_row.set_subtitle(project.version if project.version else 'N/A')
 	self.rpath_row.set_subtitle(str(project.rpath))
 	self.codename_row.set_subtitle(project.codename)
+
+	logging.debug(time.perf_counter() - s)

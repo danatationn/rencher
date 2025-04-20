@@ -28,9 +28,9 @@ class RencherImport(Adw.PreferencesDialog):
 		
 		string_list = Gio.ListStore.new(GameItem)
 		
-		for game in window.projects:
-			if not isinstance(game, Mod):
-				game_item = GameItem(name=game.name, game=game)
+		for path in window.paths:
+			if not isinstance(path, Mod):
+				game_item = GameItem(name=path, game=path)
 				string_list.append(game_item)
 			
 		self.import_game_combo.set_model(string_list)

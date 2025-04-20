@@ -18,7 +18,7 @@ class RencherWindow(Adw.ApplicationWindow):
 	__gtype_name__ = 'RencherWindow'
 
 	""" variables """
-	projects: list[Game] = []
+	paths: list[Game] = []
 	process: subprocess.Popen | None = None
 	process_time: float | None = None
 
@@ -88,11 +88,11 @@ class RencherWindow(Adw.ApplicationWindow):
 
 	@Gtk.Template.Callback()
 	def on_game_selected(self, _widget: Gtk.ListBox, row: Gtk.ListBoxRow) -> None:
-		game = getattr(row, 'game', None)
-		if game:
+		path = getattr(row, 'path', None)
+		if path:
 			self.library_view_stack.set_visible_child_name('selected')
 
-			update_library_view(self, game)
+			update_library_view(self, path)
 
 
 	def check_process(self) -> bool:

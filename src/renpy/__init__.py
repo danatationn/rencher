@@ -113,25 +113,13 @@ class Game:
 		"""
 			tries to retrieve the game's ren'py version from multiple known locations:
 
-			- the log file* (it's the third line, but it's not always present)
-			- renpy/__init__.py (only present in versions below 8 i believe)
-			- renpy/vc_version.py (only present in versions above 8)
-
-			*ok so i don't even need it lol! if i find a game that doesn't use any of these i will bring it back
+			- renpy/__init__.py (only in ren'py <8)
+			- renpy/vc_version.py (only in ren'py =>8)
 		"""
 		# log_path = self.apath / 'log.txt'
 		vc_path = self.apath / 'renpy' / 'vc_version.py'
 		init_path = self.apath / 'renpy' / '__init__.py'
-		# if log_path.exists():
-			# with open(log_path, 'r') as f:
-			# 	text = f.read().splitlines()
-			# 	for line in text:
-			# 		if 'Ren\'Py' in line:
-			# 			try:
-			# 				parts = line.split()
-			# 				return parts[1]
-			# 			except ValueError:
-			# 				pass
+
 		vc_dict = {}
 		if vc_path.exists():
 			with open(vc_path, 'r') as f:

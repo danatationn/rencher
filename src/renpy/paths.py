@@ -1,8 +1,9 @@
 from pathlib import Path
 
 
-def find_absolute_path(path: Path) -> Path | None:
-	rp_files = sorted(path.rglob('*.rp*'))
+def find_absolute_path(rpath: Path) -> Path | None:
+	rp_files = list(rpath.rglob('*.rp*'))
+
 	game_files = [
 		rp_file for rp_file in rp_files
 		if '00' not in rp_file.stem  # generic engine file
