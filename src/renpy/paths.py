@@ -1,6 +1,8 @@
+from functools import lru_cache
 from pathlib import Path
 
 
+@lru_cache
 def find_absolute_path(rpath: Path) -> Path | None:
 	rp_files = list(rpath.rglob('*.rp*'))
 
