@@ -7,7 +7,7 @@ from gi.repository import Adw, Gio, GObject, Gtk, GLib
 from src import tmp_path
 from src.gtk import GameItem
 from src.gtk._import import import_game
-from src.renpy import Mod
+from src.renpy import Game, Mod
 
 filename = tmp_path / 'src' / 'gtk' / 'ui' / 'import.ui'
 @Gtk.Template(filename=str(filename))
@@ -30,7 +30,8 @@ class RencherImport(Adw.PreferencesDialog):
 		
 		for path in window.paths:
 			if not isinstance(path, Mod):
-				game_item = GameItem(name=path, game=path)
+				project = Game(path)
+				game_item = GameItem(name=project.name, game=project)
 				string_list.append(game_item)
 			
 		self.import_game_combo.set_model(string_list)

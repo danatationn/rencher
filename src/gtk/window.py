@@ -67,11 +67,11 @@ class RencherWindow(Adw.ApplicationWindow):
 	@Gtk.Template.Callback()
 	def on_play_clicked(self, _widget: Gtk.Button) -> None:
 		selected_button_row = self.library_list_box.get_selected_row()
-		game = getattr(selected_button_row, 'game', None)
-		
+		path = getattr(selected_button_row, 'path', None)
+
 		if _widget.get_style_context().has_class('suggested-action'):
 			self.toggle_play_button('stop')
-			self.process = game.run()
+			self.process = Game(path).run()
 			self.process_time = time.time()
 			GLib.timeout_add_seconds(1, self.check_process)
 		else:

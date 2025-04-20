@@ -36,20 +36,18 @@ def update_library_sidebar(self) -> None:
 		logging.debug(f'added_paths: {added_paths}')
 		logging.debug(f'removed_paths: {removed_paths}')
 
-	# buttons = {}
-	# for i, path in enumerate(self.paths):
-	# 	button = self.library_list_box.get_row_at_index(i)
-	# 	buttons[i] = button
-	#
-	# logging.debug(buttons)
-	# for button in buttons.values():
-	# 	if button.path in removed_paths:
-	# 		self.library_list_box.remove(button)
+	buttons = {}
+	for i, path in enumerate(self.paths):
+		button = self.library_list_box.get_row_at_index(i)
+		buttons[i] = button
+
+	for button in buttons.values():
+		if button.path in removed_paths:
+			self.library_list_box.remove(button)
 
 	for path in added_paths:
 		button = Adw.ButtonRow(title=path.name)
 		button.path = path
-		# buttons.append(button)
 		self.library_list_box.append(button)
 		continue
 
