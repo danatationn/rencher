@@ -1,14 +1,9 @@
-import logging
 import shutil
-import time
-from pathlib import Path
 
-from src import root_path
-from src.renpy import Game, Mod
-from src.gtk import GameItem
+from src import local_path
+from src.renpy import Mod
 
 import patoolib
-from gi.repository import GLib
 
 
 def import_game(self):
@@ -25,7 +20,7 @@ def import_game(self):
 	if name == '':
 		name = path.stem
 
-	target_path = root_path / ('mods' if is_mod else 'games') / name
+	target_path = local_path / ('mods' if is_mod else 'games') / name
 
 	patoolib.extract_archive(str(path), 0, str(target_path))
 
@@ -45,7 +40,6 @@ def import_game(self):
 			target_path = mod.apath / relative_path
 			
 			if not target_path.exists():
-				# logging.debug(target_path)
 				if file.is_file():
 					shutil.copy(file, target_path)
 				else:
@@ -53,5 +47,5 @@ def import_game(self):
 					
 			count += 1
 			self.update_progress(0.5 + count / length)
-		
-	self.close()		
+
+	self.close()

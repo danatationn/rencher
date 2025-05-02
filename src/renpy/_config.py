@@ -25,30 +25,36 @@
 
 	save slots only work with type no. 1
 """
-
-import configparser
-from gi.repository import GLib
+import platform
+from configparser import ConfigParser
+from functools import lru_cache
 from pathlib import Path
 
+from gi.repository import GLib
 
-class GameConfig(configparser.ConfigParser):
+from src import config_path
+
+
+class GameConfig(ConfigParser):
 	...
 
 def create_config() -> None:
-	config = configparser.ConfigParser()
+	config = ConfigParser()
 
-	config['options'] = {
+	config['settings'] = {
+		'data_dir': '',
 		'skip_splash_scr': 'false',
 		'skip_main_menu': 'false',
-		'enable_discord_rpc': 'true'
+		'discord_rpc': 'true',
+		'forced_save_dir': 'false'
 	}
-	config['options.saves'] = {
-		'save_dir_type': '1'
-	}
+	
+	with open(config_path, 'w') as f:
+		config.write(f)
 
 
 def create_game_config(self) -> None:
-	config = configparser.ConfigParser()
+	config = ConfigParser()
 
 	size_bytes = sum(file.stat().st_size for file in self.rpath.rglob('*') if file.exists())
 	added_on_date = GLib.DateTime.new_now_utc().to_unix()
@@ -64,40 +70,52 @@ def create_game_config(self) -> None:
 	config['options'] = {
 		'skip_splash_scr': '',
 		'skip_main_menu': '',
-		'enable_discord_rpc': ''
+		'discord_rpc': ''
 	}
 	config['options.saves'] = {
-		'save_slot': 1,
-		'save_dir_type': '',
-		'custom_save_dir': ''
+		'forced_save_dir': '',
+		'save_slot': 1
 	}
 
-	config_path = self.apath / 'game' / 'rencher.ini'
-	config_path.touch()
-	with open(config_path, 'w') as f:
+	game_config_path = self.apath / 'game' / 'rencher.ini'
+	game_config_path.touch()
+	with open(game_config_path, 'w') as f:
 		config.write(f)
 
 
+@lru_cache
 def read_game_config(self) -> dict:
-	config_path = self.apath / 'game' / 'rencher.ini'
 	if not config_path.exists():
-		create_game_config(self)
-
+		create_config()
 	with open(config_path, 'r') as f:
-		config = configparser.ConfigParser()
+		config = ConfigParser()
 		config.read_file(f)
+	
+	game_config_path = self.apath / 'game' / 'rencher.ini'
+	if not game_config_path.exists():
+		create_game_config(self)
+	with open(game_config_path, 'r') as f:
+		game_config = ConfigParser()
+		game_config.read_file(f)
 
-	return config
+	for key in ['skip_splash_scr', 'skip_main_menu', 'discord_rpc']:
+		if game_config.get('options', key) == '':
+			game_config.set('options', key, config.get('settings', key))
+
+	if game_config.get('options.saves', 'forced_save_dir'):
+		game_config.set('options.saves', 'forced_save_dir', config.get('settings', 'forced_save_dir'))
+
+	return game_config
 
 
 def write_game_config(self) -> None:
-	config_path = self.apath / 'game' / 'rencher.ini'
-	if not config_path.exists():
+	game_config_path = self.apath / 'game' / 'rencher.ini'
+	if not game_config_path.exists():
 		create_game_config(self)
 
-	config = configparser.ConfigParser()
+	config = ConfigParser()
 	for section, options in self.config.items():
 		config[section] = options
 
-	with open(config_path, 'w') as f:
+	with open(game_config_path, 'w') as f:
 		config.write(f)

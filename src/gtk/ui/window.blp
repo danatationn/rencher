@@ -18,6 +18,7 @@ template $RencherWindow : Adw.ApplicationWindow {
 		    }
 		    ToggleButton library_search_button {
 		        icon-name: "edit-find-symbolic";
+		        sensitive: bind split_view.show-sidebar;
 		    }
 
 			[end]
@@ -106,6 +107,9 @@ template $RencherWindow : Adw.ApplicationWindow {
 								selection-mode: none;
 								styles ["boxed-list"]
 
+								Adw.ExpanderRow log_row {
+									title: _("Log");
+								}
 								Adw.ActionRow rpath_row {
 									title: _("Folder Location");
 
@@ -126,6 +130,15 @@ template $RencherWindow : Adw.ApplicationWindow {
 								Adw.ActionRow codename_row {
 									title: _("Codename");
 									styles ["property"]
+								}
+							}
+
+							ListBox {
+								selection-mode: none;
+								styles ["boxed-list"]
+
+								Adw.ExpanderRow {
+									title: _("Screenshots");
 								}
 							}
 						};

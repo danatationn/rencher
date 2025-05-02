@@ -1,3 +1,4 @@
+import os
 import stat
 import shutil
 import subprocess
@@ -5,7 +6,7 @@ import platform
 import time
 from pathlib import Path
 
-from src import root_path
+from src import local_path
 from src.renpy import paths, _config
 
 
@@ -31,7 +32,7 @@ class Game:
 				raise FileNotFoundError('The game is a lie.')
 
 		if not apath and not rpath and name:
-			self.rpath = root_path / 'games' / name
+			self.rpath = local_path / 'games' / name
 			self.apath = paths.find_absolute_path(self.rpath)
 
 		if not name:
@@ -78,12 +79,10 @@ class Game:
 
 		if py_names:
 			return py_names[0]
-
+		else:
+			return None
 
 	def find_exec_path(self) -> Path | None:
-		"""
-			windows and linux only rn
-		"""
 		arch = platform.machine()
 		os = platform.system().lower()
 
@@ -100,7 +99,8 @@ class Game:
 			codename = self.return_codename()
 			exec_name = Path(codename).stem
 		else:
-			raise NotImplemented('Your OS is not yet implemented.')
+			err = f'{os} is not supported. Sorry !'
+			raise NotImplemented(err)
 
 		for lib_dir in lib_directories:
 			exec_path = self.apath / 'lib' / lib_dir / exec_name
@@ -147,11 +147,18 @@ class Game:
 
 	def run(self) -> subprocess.Popen:
 		args = [self.find_exec_path()]
+		env = os.environ
 		py_path = self.apath / f'{self.return_codename()}.py'
+		
+		if self.config['options']['skip_splash_scr'] == 'true':
+			env['RENPY_SKIP_SPLASHSCREEN'] = '1'
+		if self.config['options']['skip_main_menu'] == 'true':
+			env['RENPY_SKIP_MAIN_MENU'] = '1'
+		
 		if self.version[0] == '6':
 			args.extend(['-EO', py_path])
 
-		return subprocess.Popen(args)		
+		return subprocess.Popen(args, env=env)		
 
 
 	def setup(self) -> None:
@@ -178,7 +185,7 @@ class Mod(Game):
 
 	def __init__(self, rpath: Path = None, apath: Path = None, name: str = None):
 		if not apath and not rpath and name:
-			rpath = root_path / 'renpy' / name
+			rpath = local_path / 'renpy' / name
 			apath = paths.find_absolute_path(rpath)
 
 		super().__init__(rpath=rpath, apath=apath, name=name)

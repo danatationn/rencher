@@ -11,8 +11,3 @@ dependencies = [
     "pygobject-stubs==2.12.0",
     "watchdog>=6.0.0",
 ]
-
-[tool.cxfreeze]
-executables = [
-    {script = "main.py", base = "gui"}
-]

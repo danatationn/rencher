@@ -1,12 +1,8 @@
-import logging
 import platform
 import subprocess
 import shutil
-import sys
 from pathlib import Path
 from typing import List, Union
-
-from src import root_path
 
 import gi
 gi.require_version('Gtk', '4.0')
@@ -25,7 +21,7 @@ def blp2ui() -> None:
 	if not comp_path:
 		raise FileNotFoundError('blueprint-compiler is not installed. Exiting...')
 
-	ui_path = root_path / 'src' / 'gtk' / 'ui'
+	ui_path = Path(__file__).parents[2] / 'src' / 'gtk' / 'ui'
 	blp_paths = ui_path.glob('*.blp')
 	args = [comp_path, 'batch-compile', ui_path, ui_path]
 

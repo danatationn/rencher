@@ -1,12 +1,15 @@
+import platform
 import sys
 from pathlib import Path
 
 
-root_path: Path = Path()
+local_path: Path = Path()
+config_path: Path = Path()
 tmp_path: Path = Path(__file__).parents[1]
 
-if '__compiled__' in globals():
-	# root_path = Path(sys.modules["__main__"].__file__)
-	root_path = Path(sys.argv[0]).parent
-else:
-	root_path = Path(__file__).parents[1]
+if platform.system() == 'Linux':
+	local_path = Path.home() / '.local' / 'share' / 'rencher'
+	config_path = Path.home() / '.config' / 'rencher.ini'
+elif platform.system() == 'Windows':
+	local_path = Path.home() / 'AppData' / 'Local' / 'Rencher'
+	config_path = Path.home() / 'AppData' / 'Local' / 'Rencher' / 'config.ini'

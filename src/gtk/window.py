@@ -18,7 +18,7 @@ class RencherWindow(Adw.ApplicationWindow):
 	__gtype_name__ = 'RencherWindow'
 
 	""" variables """
-	paths: list[Game] = []
+	projects: list[Game] = []
 	process: subprocess.Popen | None = None
 	process_time: float | None = None
 
@@ -36,6 +36,8 @@ class RencherWindow(Adw.ApplicationWindow):
 	playtime_row: Adw.ActionRow = Gtk.Template.Child()
 	size_row: Adw.ActionRow = Gtk.Template.Child()
 	added_on_row: Adw.ActionRow = Gtk.Template.Child()
+
+	log_row: Adw.ExpanderRow = Gtk.Template.Child()
 	rpath_row: Adw.ActionRow = Gtk.Template.Child()
 	version_row: Adw.ActionRow = Gtk.Template.Child()
 	codename_row: Adw.ActionRow = Gtk.Template.Child()
@@ -44,8 +46,6 @@ class RencherWindow(Adw.ApplicationWindow):
 
 	def __init__(self, *args, **kwargs):
 		super().__init__(*args, **kwargs)
-
-		logging.debug('Window init')
 
 		if '__compiled__' not in globals():
 			self.get_style_context().add_class('devel')
@@ -57,7 +57,7 @@ class RencherWindow(Adw.ApplicationWindow):
 	def on_import_clicked(self, _widget: Adw.ButtonRow) -> None:
 		if not self.import_dialog.thread.is_alive():
 			self.import_dialog = RencherImport(self)
-				
+
 		self.import_dialog.present(self)
 
 	@Gtk.Template.Callback()
@@ -67,11 +67,11 @@ class RencherWindow(Adw.ApplicationWindow):
 	@Gtk.Template.Callback()
 	def on_play_clicked(self, _widget: Gtk.Button) -> None:
 		selected_button_row = self.library_list_box.get_selected_row()
-		path = getattr(selected_button_row, 'path', None)
+		project = getattr(selected_button_row, 'game', None)
 
 		if _widget.get_style_context().has_class('suggested-action'):
 			self.toggle_play_button('stop')
-			self.process = Game(path).run()
+			self.process = project.run()
 			self.process_time = time.time()
 			GLib.timeout_add_seconds(1, self.check_process)
 		else:
@@ -82,17 +82,17 @@ class RencherWindow(Adw.ApplicationWindow):
 	@Gtk.Template.Callback()
 	def on_dir_clicked(self, _widget: Gtk.Button) -> None:
 		selected_button_row = self.library_list_box.get_selected_rows()[0]
-		game = getattr(selected_button_row, 'game', None)
-		if game:
-			open_file_manager(str(game.rpath))
+		project = getattr(selected_button_row, 'game', None)
+		if project.apath:
+			open_file_manager(str(project.apath))
 
 	@Gtk.Template.Callback()
 	def on_game_selected(self, _widget: Gtk.ListBox, row: Gtk.ListBoxRow) -> None:
-		path = getattr(row, 'path', None)
-		if path:
+		project = getattr(row, 'game', None)
+		if project:
 			self.library_view_stack.set_visible_child_name('selected')
 
-			update_library_view(self, path)
+			update_library_view(self, project)
 
 
 	def check_process(self) -> bool:

@@ -7,7 +7,9 @@ from gi.repository import Adw, Gio, GObject, Gtk, GLib
 from src import tmp_path
 from src.gtk import GameItem
 from src.gtk._import import import_game
+from src.gtk._library import update_library_sidebar
 from src.renpy import Game, Mod
+
 
 filename = tmp_path / 'src' / 'gtk' / 'ui' / 'import.ui'
 @Gtk.Template(filename=str(filename))
@@ -25,12 +27,13 @@ class RencherImport(Adw.PreferencesDialog):
 
 	def __init__(self, window, *args, **kwargs):
 		super().__init__(*args, **kwargs)
-		
+
+		self.window = window
+
 		string_list = Gio.ListStore.new(GameItem)
 		
-		for path in window.paths:
-			if not isinstance(path, Mod):
-				project = Game(path)
+		for project in window.projects:
+			if not isinstance(project, Mod):
 				game_item = GameItem(name=project.name, game=project)
 				string_list.append(game_item)
 			
@@ -38,7 +41,7 @@ class RencherImport(Adw.PreferencesDialog):
 		self.import_game_combo.set_expression(
 			Gtk.PropertyExpression.new(GameItem, None, 'name')
 		)
-		
+
 	@Gtk.Template.Callback()
 	def on_location_changed(self, entry_row: Adw.EntryRow):
 		location_text = entry_row.get_text()
@@ -74,6 +77,8 @@ class RencherImport(Adw.PreferencesDialog):
 				)
 				dialog.add_response('okay', 'Okay')
 				dialog.choose()
+			finally:
+				update_library_sidebar(self.window)
 		
 		self.thread = threading.Thread(target=import_thread)
 		self.thread.start()
