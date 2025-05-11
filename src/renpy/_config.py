@@ -1,34 +1,8 @@
-"""
-	oh boy the configs
-
-	this will be a pain to implement maybe i think
-
-	! all keys that have nothing as their value in the [options] category actually uses the default from the settings
-
-	# INFO
-
-	the size calculation only happens when the config is created as it's stupid to keep rechecking it methinks
-
-	# OPTIONS
-
-	nothing to comment about here
-
-	maybe don't tick on skip_main_menu if you're not a dev ? idk
-
-	## SAVES
-
-	there are 3 savedir types:
-
-	* 0 - let the game decide what directory it wants to save in
-	* 1 - save in apath/game/saves/
-	* 2 - use the defined custom save directory
-
-	save slots only work with type no. 1
-"""
-import platform
+import logging
+import time
 from configparser import ConfigParser
-from functools import lru_cache
 from pathlib import Path
+from typing import Literal
 
 from gi.repository import GLib
 
@@ -36,7 +10,78 @@ from src import config_path
 
 
 class GameConfig(ConfigParser):
-	...
+	def __init__(self, game_config_path: Path):
+		super().__init__()
+		
+		self.game_config_path = game_config_path
+		
+		if isinstance(game_config_path, Path | str):
+			self.read(game_config_path)
+		elif isinstance(game_config_path, ConfigParser):
+			self = game_config_path
+		self.read_config()
+		
+	def read_config(self):
+		structure = {
+			'info': {
+				'nickname': '',
+				'last_played': '',
+				'playtime': 0.0,
+				'added_on': int(time.time()),
+				'size': int()
+			},
+			
+			'options': {
+				'skip_splash_scr': '',
+				'skip_main_menu': '',
+				'forced_save_dir': '',
+				'save_slot': 1
+			},
+			
+			'overwritten': {
+				'skip_splash_scr': '',
+				'skip_main_menu': '',
+				'forced_save_dir': ''
+			}
+		}
+		
+		with open(config_path, 'r') as f:
+			rencher_config = ConfigParser()
+			rencher_config.read_file(f)
+		
+		for section, keys in structure.items():
+			if section not in self:
+				self.add_section(section)
+				
+			for key, values in keys.items():
+				if key not in self[section]:
+					self[section][key] = str(values)
+					
+				if values and self[section][key]:
+					if isinstance(values, bool):
+						value = self.getboolean(section, key, fallback='')
+					elif isinstance(values, int):
+						value = self.getint(section, key, fallback=values)
+					elif isinstance(values, float):
+						value = self.getfloat(section, key, fallback=values)
+					else:
+						value = ''
+						
+					self[section][key] = str(value)
+					
+		for key, values in structure['overwritten'].items():
+			if rencher_config['settings'][key] != '':
+				self['overwritten'][key] = rencher_config['settings'][key]
+					
+	def write_config(self):
+		new_config = ConfigParser()
+		for section in ['info', 'options']:
+			new_config.add_section(section)
+			for key, values in self[section].items():
+				new_config[section][key] = values
+
+		with open(self.game_config_path, 'w') as f:
+			new_config.write(f)
 
 def create_config() -> None:
 	config = ConfigParser()
@@ -51,71 +96,4 @@ def create_config() -> None:
 	
 	with open(config_path, 'w') as f:
 		config.write(f)
-
-
-def create_game_config(self) -> None:
-	config = ConfigParser()
-
-	size_bytes = sum(file.stat().st_size for file in self.rpath.rglob('*') if file.exists())
-	added_on_date = GLib.DateTime.new_now_utc().to_unix()
-
-	config['info'] = {
-		'nickname': '',
-		'last_played': '',
-		'playtime': 0,
-		'added_on': added_on_date,
-		'size': size_bytes
-	}
-
-	config['options'] = {
-		'skip_splash_scr': '',
-		'skip_main_menu': '',
-		'discord_rpc': ''
-	}
-	config['options.saves'] = {
-		'forced_save_dir': '',
-		'save_slot': 1
-	}
-
-	game_config_path = self.apath / 'game' / 'rencher.ini'
-	game_config_path.touch()
-	with open(game_config_path, 'w') as f:
-		config.write(f)
-
-
-@lru_cache
-def read_game_config(self) -> dict:
-	if not config_path.exists():
-		create_config()
-	with open(config_path, 'r') as f:
-		config = ConfigParser()
-		config.read_file(f)
-	
-	game_config_path = self.apath / 'game' / 'rencher.ini'
-	if not game_config_path.exists():
-		create_game_config(self)
-	with open(game_config_path, 'r') as f:
-		game_config = ConfigParser()
-		game_config.read_file(f)
-
-	for key in ['skip_splash_scr', 'skip_main_menu', 'discord_rpc']:
-		if game_config.get('options', key) == '':
-			game_config.set('options', key, config.get('settings', key))
-
-	if game_config.get('options.saves', 'forced_save_dir'):
-		game_config.set('options.saves', 'forced_save_dir', config.get('settings', 'forced_save_dir'))
-
-	return game_config
-
-
-def write_game_config(self) -> None:
-	game_config_path = self.apath / 'game' / 'rencher.ini'
-	if not game_config_path.exists():
-		create_game_config(self)
-
-	config = ConfigParser()
-	for section, options in self.config.items():
-		config[section] = options
-
-	with open(game_config_path, 'w') as f:
-		config.write(f)
+		

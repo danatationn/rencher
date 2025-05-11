@@ -1,7 +1,7 @@
 import shutil
 
 from src import local_path
-from src.renpy import Mod
+from src.renpy import Game, Mod
 
 import patoolib
 
@@ -20,13 +20,13 @@ def import_game(self):
 	if name == '':
 		name = path.stem
 
-	target_path = local_path / ('mods' if is_mod else 'games') / name
+	rpath = local_path / ('mods' if is_mod else 'games') / name
 
-	patoolib.extract_archive(str(path), 0, str(target_path))
+	patoolib.extract_archive(str(path), 0, str(rpath))
 
 	self.update_progress(0.5 if is_mod else 1)
 	if is_mod:
-		mod = Mod(rpath=target_path)
+		mod = Mod(rpath=rpath)
 		game = game_to_mod.game
 		
 		files = game.apath.rglob('*')
@@ -47,5 +47,9 @@ def import_game(self):
 					
 			count += 1
 			self.update_progress(0.5 + count / length)
+			
+	game = Game(rpath=rpath)
+	game.raw_config['info']['nickname'] = name
+	game.setup()
 
 	self.close()

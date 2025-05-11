@@ -7,7 +7,8 @@ import time
 from pathlib import Path
 
 from src import local_path
-from src.renpy import paths, _config
+from src.renpy import paths
+from src.renpy._config import GameConfig
 
 
 class Game:
@@ -16,13 +17,12 @@ class Game:
 	rpath: Path = None
 	apath: Path = None
 	version: str = None
-	config: dict = None
+	config: GameConfig = None
 
 
-	def __init__(self, rpath: Path = None, apath: Path = None, name: str = None):
+	def __init__(self, rpath: Path = None, apath: Path = None):
 		self.rpath = rpath  # relative path
-		self.apath = apath  # absolute path (cwd)
-		self.name = name
+		self.apath = apath  # absolute path (root / the working directory)
 
 		if not rpath and apath:
 			self.rpath = apath
@@ -31,17 +31,20 @@ class Game:
 			if self.apath is None:
 				raise FileNotFoundError('The game is a lie.')
 
-		if not apath and not rpath and name:
-			self.rpath = local_path / 'games' / name
-			self.apath = paths.find_absolute_path(self.rpath)
-
-		if not name:
-			self.name = self.rpath.name
-
 		self.version = self.return_renpy_version()
 		self.codename = self.return_codename()
-		self.config = _config.read_game_config(self)
+		
+		config_path = self.apath / 'game' / 'rencher.ini'
+		if not config_path.exists():
+			config = GameConfig(config_path)
+			config.write_config()
 
+		self.config = GameConfig(config_path)
+
+		if self.config['info']['nickname'] != '':
+			self.name = self.config['info']['nickname']
+		else:
+			self.name = self.rpath.name
 
 	def __eq__(self, other) -> bool:
 		if isinstance(other, Game):
@@ -51,14 +54,11 @@ class Game:
 				and self.rpath == other.rpath
 				and self.apath == other.apath
 				and self.version == other.version
-				# and self.config == other.config
 			)
 		else:
 			return False
 
-
 	def __hash__(self):
-		# config_tuple = tuple((section, tuple(items.items())) for section, items in self.config.items())
 		return hash(
 			(
 				self.name,
@@ -66,10 +66,8 @@ class Game:
 				self.rpath,
 				self.apath,
 				self.version,
-				# config_tuple
 			)
 		)
-
 
 	def return_codename(self) -> str | None:
 		"""
@@ -108,7 +106,6 @@ class Game:
 				return exec_path
 		return None
 
-
 	def return_renpy_version(self) -> str | None:
 		"""
 			tries to retrieve the game's ren'py version from multiple known locations:
@@ -144,7 +141,6 @@ class Game:
 		else:
 			return None  # yo shit broken boy
 
-
 	def run(self) -> subprocess.Popen:
 		args = [self.find_exec_path()]
 		env = os.environ
@@ -160,17 +156,27 @@ class Game:
 
 		return subprocess.Popen(args, env=env)		
 
-
 	def setup(self) -> None:
 		# make files executable (linux)
 		exec_path = self.find_exec_path()
-		exec_path.chmod(exec_path.stat().st_mode | stat.S_IEXEC)
+		exec_path.chmod(exec_path.stat().st_mode | 0o111)
+		print(exec_path)
 
+		# fix future.standard_library (ren'py 7+, linux)
+		ver_first_digit = self.return_renpy_version()[0]
+		try:
+			if int(ver_first_digit) > 6:
+				exec_path = self.find_exec_path()
+				libs_path = exec_path.parent / 'lib'
+				if libs_path.is_dir():
+					shutil.rmtree(libs_path)
+		except ValueError:
+			pass
 
 	def cleanup(self, playtime: float) -> None:
 		self.config['info']['playtime'] = str(playtime)
 		self.config['info']['last_played'] = str(int(time.time()))
-		_config.write_game_config(self)
+		self.config.write_config()
 
 
 class Mod(Game):
@@ -178,29 +184,18 @@ class Mod(Game):
 	codename: str = None
 	rpath: Path = None
 	apath: Path = None
-	is_independent: bool = None
+	# is_independent: bool = None
 	version: str = None
-	config: dict = None
+	config: GameConfig = None
 
 
-	def __init__(self, rpath: Path = None, apath: Path = None, name: str = None):
-		if not apath and not rpath and name:
-			rpath = local_path / 'renpy' / name
-			apath = paths.find_absolute_path(rpath)
+	def __init__(self, rpath: Path = None, apath: Path = None):
+		super().__init__(rpath=rpath, apath=apath)
 
-		super().__init__(rpath=rpath, apath=apath, name=name)
-
-		self.version = self.return_renpy_version()
-		self.codename = self.return_codename()
-
-		if self.codename != super().return_codename():
-			self.is_independent = True
-		else:
-			self.is_independent = False
-
+		# self.version = self.return_renpy_version()
+		# self.codename = self.return_codename()
 
 	def return_codename(self) -> str | None:
-		# TODO de-ddlc this
 		"""
 			returns a name based off of the .py scripts located in apath
 
@@ -208,6 +203,7 @@ class Mod(Game):
 		"""
 		py_names = [
 			py_path.stem for py_path in sorted(self.apath.glob('*.py'))
+			# if py_path.stem not in self.config['info']['blacklist']
 			if py_path.stem not in 'DDLC'
 		]
 
@@ -215,18 +211,3 @@ class Mod(Game):
 			return py_names[0]
 		else:
 			return 'DDLC'
-
-
-	def cleanup(self) -> None:
-		super().cleanup()
-
-		# fix future.standard_library (ren'py 7+, linux)
-		ver_first_digit = self.return_renpy_version()[0]
-		try:
-			if int(ver_first_digit) > 6:
-				exec_path = self.find_exec_path()
-				libs_path = exec_path.parent / 'libs'
-				if libs_path.is_dir():
-					shutil.rmtree(libs_path)
-		except ValueError:
-			pass
