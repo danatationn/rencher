@@ -15,13 +15,10 @@ class GameConfig(ConfigParser):
 		
 		self.game_config_path = game_config_path
 		
-		if isinstance(game_config_path, Path | str):
-			self.read(game_config_path)
-		elif isinstance(game_config_path, ConfigParser):
-			self = game_config_path
-		self.read_config()
+		self.read(game_config_path)
+		self.validate_config()
 		
-	def read_config(self):
+	def validate_config(self):
 		structure = {
 			'info': {
 				'nickname': '',

@@ -1,5 +1,7 @@
 # Rencher - a Ren'Py game manager
 
+<img src="public/Screenshot From 2025-05-15 22-23-58.png" alt="WIP Screenshot of Rencher's UI">
+
 ### why?
 this was originally a ddlc mod manager because all of them suck. 
 
@@ -15,19 +17,6 @@ back when it was named dossier, i tried adding way too many features and it just
 also i didn't know anything about how to make your code good so,,
 
 here's [a link to the trello board](https://trello.com/b/CGaqf0xx/rencher) lmao
-
-### promised features
-* multiple save directories (i think i'll call them slots or something dumb like that)
-* a nice looking ui :) (most likely will be made using gtk)
-* ~~symlinking base assets for mods (for unix only)~~ No
-* fully portable
-* other
-
-### future additions maybe
-* asset unpacking and maybe editing too
-* ddlc mod list integration
-* vndb integration
-* other
 
 ## running/compiling
 **!! you're on your own here !!**
@@ -46,9 +35,8 @@ for example, you cannot compile the .blp files used for the ui because [blueprin
 
 1. install [blueprint-compiler](https://jwestman.pages.gitlab.gnome.org/blueprint-compiler/) (linux-only right now!)
 2. install dependencies from `pyproject.toml`
-3. create the `games` and `mods` directories 
-4. run `main.py`
-5. try to avoid bugs
+3. run `main.py`
+4. try to avoid bugs
 
 note that **if you really want to build it right now** then you can run the `build.py` file
 
