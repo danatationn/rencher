@@ -1,14 +1,12 @@
-import logging
 import time
 from configparser import ConfigParser
+from functools import lru_cache
 from pathlib import Path
-from typing import Literal
-
-from gi.repository import GLib
 
 from src import config_path
 
 
+@lru_cache
 class GameConfig(ConfigParser):
 	def __init__(self, game_config_path: Path):
 		super().__init__()
@@ -25,7 +23,8 @@ class GameConfig(ConfigParser):
 				'last_played': '',
 				'playtime': 0.0,
 				'added_on': int(time.time()),
-				'size': int()
+				'size': int(),
+				'codename': ''
 			},
 			
 			'options': {

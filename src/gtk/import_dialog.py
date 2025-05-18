@@ -84,7 +84,7 @@ class RencherImport(Adw.PreferencesDialog):
 		self.thread.start()
 
 	
-	def update_progress(self, i) -> bool:
+	def update_progress(self, i) -> None:
 		self.import_progress_bar.set_fraction(i)
 	
 	def on_file_selected(self, dialog: Gtk.FileDialog, result):

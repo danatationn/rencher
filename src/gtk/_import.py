@@ -26,7 +26,7 @@ def import_game(self):
 
 	self.update_progress(0.5 if is_mod else 1)
 	if is_mod:
-		mod = Mod(rpath=rpath)
+		mod = Game(rpath=rpath)
 		game = game_to_mod.game
 		
 		files = game.apath.rglob('*')
@@ -49,7 +49,15 @@ def import_game(self):
 			self.update_progress(0.5 + count / length)
 			
 	game = Game(rpath=rpath)
-	game.raw_config['info']['nickname'] = name
-	game.setup()
+	game.config['info']['nickname'] = name
+	
+	game_codename = game.return_codename()
+	py_names = [py_path.stem for py_path in sorted(game.apath.glob('*.py'))]
+
+	if py_names:
+		py_names.remove(game_codename)
+	
+	game.config['info']['codename'] = py_names[0]
+	game.config.write_config()
 
 	self.close()

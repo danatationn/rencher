@@ -39,6 +39,7 @@ template $RencherWindow : Adw.ApplicationWindow {
 						Box {
 							SearchEntry {
 								placeholder-text: _("Search");
+								search-changed => $on_search_changed();
 							}
 							ToggleButton {
 								icon-name: "ymuse-filter-symbolic";

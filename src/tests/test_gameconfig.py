@@ -2,7 +2,7 @@ import unittest
 from pathlib import Path
 
 from configparser import ConfigParser
-from src.renpy._config import GameConfig
+from src.renpy.config import GameConfig
 
 
 class TestConfig(unittest.TestCase):

@@ -1,11 +1,15 @@
+from enum import Enum
 import logging
 from itertools import chain
+from configparser import NoOptionError
 
-from gi.repository import Adw, GLib
+from gi.repository import Adw, GLib, Gtk
+from thefuzz.fuzz import partial_ratio
 
 from src import local_path
 from src.renpy import Game, Mod
 from src.gtk import format_gdatetime, HumanBytes
+from src.gtk.codename_dialog import RencherCodename
 
 
 def return_projects(self) -> list[Game]:
@@ -21,6 +25,9 @@ def return_projects(self) -> list[Game]:
 				projects.append(Mod(rpath=path))
 		except FileNotFoundError:
 			pass
+		except NoOptionError:
+			dialog = RencherCodename(path, self)
+			dialog.choose(self)
 
 	return projects
 
@@ -68,7 +75,6 @@ def update_library_sidebar(self) -> None:
 		self.split_view.set_show_sidebar(True)
 	
 	self.projects = projects
-
 
 def update_library_view(self, project: Game) -> None:
 	self.selected_status_page.set_title(project.name)
@@ -125,3 +131,62 @@ def update_library_view(self, project: Game) -> None:
 	self.version_row.set_subtitle(project.version if project.version else 'N/A')
 	self.rpath_row.set_subtitle(str(project.rpath))
 	self.codename_row.set_subtitle(project.codename)
+
+class SortEnum(Enum):
+	NAME = 1
+	LAST_PLAYED = 2
+	PLAYTIME = 4
+	ADDED_ON = 8
+	SIZE = 16
+
+def sort_name(one: Gtk.ListBoxRow, two: Gtk.ListBoxRow) -> int:
+	game_one = one.game.name
+	game_two = two.game.name
+
+	if game_one > game_two:
+		return 1
+	elif game_one < game_two:
+		return -1
+	else:
+		return 0
+
+def sort_last_played(one: Gtk.ListBoxRow, two: Gtk.ListBoxRow) -> int:
+	game_one = one.game.config['info'].get('last_played', 0)
+	game_two = two.game.config['info'].get('last_played', 0)
+	
+	if game_one < game_two:
+		return 1
+	elif game_one > game_two:
+		return -1
+	else:
+		return 0
+
+def sort_playtime(one: Gtk.ListBoxRow, two: Gtk.ListBoxRow) -> int:
+	game_one = float(one.game.config['info'].get('playtime', 0))
+	game_two = float(two.game.config['info'].get('playtime', 0))
+	if game_one < game_two:
+		return 1
+	elif game_one > game_two:
+		return -1
+	else:
+		return 0
+
+def sort_added_on(one: Gtk.ListBoxRow, two: Gtk.ListBoxRow) -> int:
+	game_one = one.game.config['info'].get('added_on', 0)
+	game_two = two.game.config['info'].get('added_on', 0)
+	if game_one < game_two:
+		return 1
+	elif game_one > game_two:
+		return -1
+	else:
+		return 0
+
+def sort_size(one: Gtk.ListBoxRow, two: Gtk.ListBoxRow) -> int:
+	game_one = one.game.config['info'].get('size', 0)
+	game_two = two.game.config['info'].get('size', 0)
+	if game_one < game_two:
+		return 1
+	elif game_one > game_two:
+		return -1
+	else:
+		return 0

@@ -8,7 +8,7 @@ from watchdog.events import DirModifiedEvent, FileModifiedEvent, FileSystemEvent
 from watchdog.observers import Observer
 
 from src import local_path
-from src.renpy._config import create_config
+from src.renpy.config import create_config
 
 gi.require_version('Gtk', '4.0')
 gi.require_version('Adw', '1')
@@ -95,7 +95,8 @@ class RencherFSHandler(FileSystemEventHandler):
 			self.mtimes.append(mtime)
 			update_library_sidebar(self.app.window)
 			row = self.app.window.library_list_box.get_selected_row()
-			update_library_view(self.app.window, row.game)
+			if row:
+				update_library_view(self.app.window, row.game)
 
 		if src_path.is_relative_to(games_path) or src_path.is_relative_to(mods_path):
 			pass

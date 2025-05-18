@@ -1,12 +1,14 @@
 import logging
 import subprocess
 import time
+from enum import Enum
 
 from gi.repository import Adw, Gtk, GLib
+from thefuzz.fuzz import partial_token_sort_ratio
 
 from src import tmp_path
 from src.gtk import open_file_manager
-from src.gtk._library import update_library_sidebar, update_library_view
+from src.gtk._library import update_library_sidebar, update_library_view, SortEnum, sort_name, sort_last_played, sort_playtime, sort_added_on, sort_size
 from src.gtk.import_dialog import RencherImport
 from src.gtk.settings_dialog import RencherSettings
 from src.renpy import Game
@@ -21,6 +23,8 @@ class RencherWindow(Adw.ApplicationWindow):
 	projects: list[Game] = []
 	process: subprocess.Popen | None = None
 	process_time: float | None = None
+	sort_enum: Enum = SortEnum.NAME
+	filter_text: str = ''
 
 	""" classes """
 	settings_dialog: Adw.PreferencesDialog = RencherSettings()
@@ -52,6 +56,8 @@ class RencherWindow(Adw.ApplicationWindow):
 
 		update_library_sidebar(self)
 		self.import_dialog = RencherImport(self)
+		self.library_list_box.set_sort_func(sort_name)
+		self.library_list_box.set_filter_func(self.filter_func)
 
 	@Gtk.Template.Callback()
 	def on_import_clicked(self, _widget: Adw.ButtonRow) -> None:
@@ -79,6 +85,7 @@ class RencherWindow(Adw.ApplicationWindow):
 			if self.process:
 				self.process.terminate()
 
+
 	@Gtk.Template.Callback()
 	def on_dir_clicked(self, _widget: Gtk.Button) -> None:
 		selected_button_row = self.library_list_box.get_selected_rows()[0]
@@ -93,7 +100,11 @@ class RencherWindow(Adw.ApplicationWindow):
 			self.library_view_stack.set_visible_child_name('selected')
 
 			update_library_view(self, project)
-
+			
+	@Gtk.Template.Callback()
+	def on_search_changed(self, _widget: Gtk.SearchEntry):
+		self.filter_text = _widget.get_text()
+		self.library_list_box.invalidate_filter()
 
 	def check_process(self) -> bool:
 		if not self.process or self.process.poll() is not None:
@@ -110,7 +121,6 @@ class RencherWindow(Adw.ApplicationWindow):
 			self.toggle_play_button('stop')
 			return True
 
-
 	def toggle_play_button(self, state: str) -> None:
 		"""
 		Args:
@@ -125,3 +135,14 @@ class RencherWindow(Adw.ApplicationWindow):
 			self.play_split_button.set_label('Stop')
 			self.play_split_button.get_style_context().remove_class('suggested-action')
 			self.play_split_button.get_style_context().add_class('destructive-action')
+
+	def filter_func(self, widget: Gtk.ListBoxRow) -> bool:
+		if not self.filter_text:
+			return True
+		
+		fuzz = partial_token_sort_ratio(widget.game.name, self.filter_text)
+		# logging.debug(f'{widget.game.name} - {self.filter_text}: {fuzz}%')
+		if fuzz > 50:
+			return True
+		return False
+		
