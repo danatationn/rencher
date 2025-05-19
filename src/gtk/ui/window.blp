@@ -37,12 +37,17 @@ template $RencherWindow : Adw.ApplicationWindow {
 					SearchBar {
 						search-mode-enabled: bind library_search_button.active;
 						Box {
+							styles ["linked"]
 							SearchEntry {
 								placeholder-text: _("Search");
 								search-changed => $on_search_changed();
 							}
-							ToggleButton {
-								icon-name: "ymuse-filter-symbolic";
+							DropDown {
+								model: StringList {
+									strings: ["Name", "Last Played", "Playtime", "Added On", "Size"];
+								};
+								
+								notify::selected => $on_combo_changed();
 							}
 						}
 					}
@@ -166,7 +171,6 @@ template $RencherWindow : Adw.ApplicationWindow {
 		};
     };
 }
-
 
 menu play_button_menu {
 	section {

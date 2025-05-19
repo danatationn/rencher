@@ -4,11 +4,11 @@ import time
 from enum import Enum
 
 from gi.repository import Adw, Gtk, GLib
-from thefuzz.fuzz import partial_token_sort_ratio
+from thefuzz.fuzz import partial_ratio
 
 from src import tmp_path
 from src.gtk import open_file_manager
-from src.gtk._library import update_library_sidebar, update_library_view, SortEnum, sort_name, sort_last_played, sort_playtime, sort_added_on, sort_size
+from src.gtk._library import update_library_sidebar, update_library_view
 from src.gtk.import_dialog import RencherImport
 from src.gtk.settings_dialog import RencherSettings
 from src.renpy import Game
@@ -23,8 +23,8 @@ class RencherWindow(Adw.ApplicationWindow):
 	projects: list[Game] = []
 	process: subprocess.Popen | None = None
 	process_time: float | None = None
-	sort_enum: Enum = SortEnum.NAME
 	filter_text: str = ''
+	combo_index: int = 0
 
 	""" classes """
 	settings_dialog: Adw.PreferencesDialog = RencherSettings()
@@ -56,7 +56,7 @@ class RencherWindow(Adw.ApplicationWindow):
 
 		update_library_sidebar(self)
 		self.import_dialog = RencherImport(self)
-		self.library_list_box.set_sort_func(sort_name)
+		self.library_list_box.set_sort_func(self.sort_func)
 		self.library_list_box.set_filter_func(self.filter_func)
 
 	@Gtk.Template.Callback()
@@ -106,6 +106,11 @@ class RencherWindow(Adw.ApplicationWindow):
 		self.filter_text = _widget.get_text()
 		self.library_list_box.invalidate_filter()
 
+	@Gtk.Template.Callback()
+	def on_combo_changed(self, _widget: Gtk.DropDown, _):
+		self.combo_index = _widget.get_selected()
+		self.library_list_box.invalidate_sort()
+			
 	def check_process(self) -> bool:
 		if not self.process or self.process.poll() is not None:
 			self.toggle_play_button('play')
@@ -140,9 +145,32 @@ class RencherWindow(Adw.ApplicationWindow):
 		if not self.filter_text:
 			return True
 		
-		fuzz = partial_token_sort_ratio(widget.game.name, self.filter_text)
-		# logging.debug(f'{widget.game.name} - {self.filter_text}: {fuzz}%')
-		if fuzz > 50:
+		fuzz = partial_ratio(widget.game.name, self.filter_text)
+		if fuzz > 75:
 			return True
 		return False
 		
+	def sort_func(self, one: Adw.ActionRow, two: Adw.ActionRow) -> int:
+		if self.combo_index == 0:
+			# b > a so we invert these
+			game_one = two.game.name.lower() 
+			game_two = one.game.name.lower()
+		elif self.combo_index == 1:
+			game_one = one.game.config['info'].get('last_played', 0)
+			game_two = two.game.config['info'].get('last_played', 0)
+		elif self.combo_index == 2:
+			game_one = float(one.game.config['info'].get('playtime', 0))
+			game_two = float(two.game.config['info'].get('playtime', 0))
+		elif self.combo_index == 3:
+			game_one = one.game.config['info'].get('added_on', 0)
+			game_two = two.game.config['info'].get('added_on', 0)
+		else:
+			game_one = one.game.config['info'].get('size', 0)
+			game_two = two.game.config['info'].get('size', 0)
+			
+		if game_one < game_two:
+			return 1
+		elif game_one > game_two:
+			return -1
+		else:
+			return 0
