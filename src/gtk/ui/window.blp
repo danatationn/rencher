@@ -31,30 +31,47 @@ template $RencherWindow : Adw.ApplicationWindow {
 
 		content: Adw.OverlaySplitView split_view {
 			sidebar: ScrolledWindow {
+				hscrollbar-policy: never;
+				
 				Box {
 					orientation: vertical;
+					styles ["view"]
 
 					SearchBar {
 						search-mode-enabled: bind library_search_button.active;
 						Box {
-							styles ["linked"]
 							SearchEntry {
 								placeholder-text: _("Search");
 								search-changed => $on_search_changed();
-							}
-							DropDown {
-								model: StringList {
-									strings: ["Name", "Last Played", "Playtime", "Added On", "Size"];
-								};
-								
-								notify::selected => $on_combo_changed();
 							}
 						}
 					}
 					ListBox library_list_box {
 						show-separators: true;
+						vexpand: true;
 
 						row-selected => $on_game_selected();
+					}
+					Box {
+						styles ["linked"]
+						
+						margin-bottom: 6;
+						margin-start: 6;
+						margin-end: 6;
+						
+						DropDown {
+							model: StringList {
+								strings: ["Name", "Last Played", "Playtime", "Added On", "Size"];
+							};
+							hexpand: true;
+							
+							notify::selected => $on_combo_changed();
+						}
+						ToggleButton ascending_order_button {
+							icon-name: "view-sort-ascending";
+							
+							toggled => $on_order_changed();
+						}
 					}
 				}
 			};

@@ -4,7 +4,7 @@ import time
 from enum import Enum
 
 from gi.repository import Adw, Gtk, GLib
-from thefuzz.fuzz import partial_ratio
+from thefuzz.fuzz import partial_token_sort_ratio
 
 from src import tmp_path
 from src.gtk import open_file_manager
@@ -25,6 +25,7 @@ class RencherWindow(Adw.ApplicationWindow):
 	process_time: float | None = None
 	filter_text: str = ''
 	combo_index: int = 0
+	ascending_order: bool = False
 
 	""" classes """
 	settings_dialog: Adw.PreferencesDialog = RencherSettings()
@@ -110,6 +111,11 @@ class RencherWindow(Adw.ApplicationWindow):
 	def on_combo_changed(self, _widget: Gtk.DropDown, _):
 		self.combo_index = _widget.get_selected()
 		self.library_list_box.invalidate_sort()
+		
+	@Gtk.Template.Callback()
+	def on_order_changed(self, _widget: Gtk.ToggleButton):
+		self.ascending_order = _widget.get_active()
+		self.library_list_box.invalidate_sort()
 			
 	def check_process(self) -> bool:
 		if not self.process or self.process.poll() is not None:
@@ -145,8 +151,8 @@ class RencherWindow(Adw.ApplicationWindow):
 		if not self.filter_text:
 			return True
 		
-		fuzz = partial_ratio(widget.game.name, self.filter_text)
-		if fuzz > 75:
+		fuzz = partial_token_sort_ratio(widget.game.name, self.filter_text)
+		if fuzz > 90:
 			return True
 		return False
 		
@@ -169,8 +175,13 @@ class RencherWindow(Adw.ApplicationWindow):
 			game_two = two.game.config['info'].get('size', 0)
 			
 		if game_one < game_two:
-			return 1
+			res = 1
 		elif game_one > game_two:
-			return -1
+			res = -1
 		else:
-			return 0
+			res = 0
+			
+		if self.ascending_order:
+			return -res
+		else:
+			return res
