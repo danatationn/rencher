@@ -101,8 +101,9 @@ template $RencherWindow : Adw.ApplicationWindow {
 								spacing: 6;
 								
 								Button play_button {
-									label: _("Play");
 									styles ["pill", "suggested-action"]
+									
+									label: _("Play");
 	
 									clicked => $on_play_clicked();
 								}
@@ -110,6 +111,8 @@ template $RencherWindow : Adw.ApplicationWindow {
 									styles ["circular"]
 									
 									icon-name: "wrench-wide-symbolic";
+									
+									clicked => $on_options_clicked();
 								}
 							}
 

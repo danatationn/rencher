@@ -1,3 +1,4 @@
+import logging
 import os
 import shutil
 import subprocess
@@ -96,7 +97,7 @@ class Game:
 			exec_name = Path(codename).stem
 		else:
 			err = f'{os} is not supported. Sorry !'
-			raise NotImplemented(err)
+			raise NotImplementedError(err)
 
 		for lib_dir in lib_directories:
 			exec_path = self.apath / 'lib' / lib_dir / exec_name
@@ -151,26 +152,18 @@ class Game:
 		if self.config['options']['skip_main_menu'] == 'true':
 			env['RENPY_SKIP_MAIN_MENU'] = '1'
 
-		if self.version[0] == '6':
+		# if self.version[0] == '6':
+		librenpython_path = args[0].parent / 'librenpython.so'
+		if not librenpython_path.exists():
 			args.extend(['-EO', py_path])
 
 		return subprocess.Popen(args, env=env)
 
 	def setup(self) -> None:
-		# make files executable (linux)
+		# LINUX: make files executable
 		exec_path = self.find_exec_path()
 		exec_path.chmod(exec_path.stat().st_mode | 0o111)
 
-		# fix future.standard_library (ren'py 7+, linux)
-		ver_first_digit = self.return_renpy_version()[0]
-		try:
-			if int(ver_first_digit) > 6:
-				exec_path = self.find_exec_path()
-				libs_path = exec_path.parent / 'lib'
-				if libs_path.is_dir():
-					shutil.rmtree(libs_path)
-		except ValueError:
-			pass
 
 	def cleanup(self, playtime: float) -> None:
 		self.config['info']['playtime'] = str(playtime)
@@ -202,3 +195,27 @@ class Mod(Game):
 			return codename
 		else:
 			raise NoOptionError('codename', 'info')
+
+	def setup(self):
+		""" in newer ren'py versions, a dll called "librenpython" got added
+		this library includes all the python libraries ren'py needs (i think)
+		this makes modding a bit more complicated, as errors arise based on mod ren'py versions and the game's (ddlc)
+
+		PRE LIBRENPYTHON:
+		* libraries were located in lib/ inside the exec path
+		* you needed to pass "-EO <python_path>" to args
+		
+		POST LIBRENPYTHON:
+		* lib/ folder is gone
+		* you no longer need to pass anything to args
+		"""
+		super().setup()
+
+		try:
+			exec_path = self.find_exec_path()
+			libs_path = exec_path.parent / 'lib'
+			librenpython_path = exec_path.parent / 'librenpython.so'
+			if libs_path.is_dir() and librenpython_path.exists():
+				shutil.rmtree(libs_path)
+		except ValueError:
+			pass

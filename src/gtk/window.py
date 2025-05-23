@@ -117,6 +117,15 @@ class RencherWindow(Adw.ApplicationWindow):
 		self.ascending_order = _widget.get_active()
 		self.library_list_box.invalidate_sort()
 			
+	@Gtk.Template.Callback()
+	def on_options_clicked(self, _widget: Gtk.Button):
+		selected_button_row = self.library_list_box.get_selected_row()
+		project = getattr(selected_button_row, 'game', None)
+		
+		project.config['info']['codename'] = ''
+		project.config.write_config()
+	
+			
 	def check_process(self) -> bool:
 		if not self.process or self.process.poll() is not None:
 			self.toggle_play_button('play')
