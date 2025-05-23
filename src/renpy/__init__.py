@@ -164,7 +164,6 @@ class Game:
 		exec_path = self.find_exec_path()
 		exec_path.chmod(exec_path.stat().st_mode | 0o111)
 
-
 	def cleanup(self, playtime: float) -> None:
 		self.config['info']['playtime'] = str(playtime)
 		self.config['info']['last_played'] = str(int(time.time()))

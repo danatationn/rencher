@@ -61,7 +61,7 @@ template $RencherWindow : Adw.ApplicationWindow {
 						
 						DropDown {
 							model: StringList {
-								strings: ["Name", "Last Played", "Playtime", "Added On", "Size"];
+								strings: ["Name", "Last Played", "Playtime", "Added On"];
 							};
 							hexpand: true;
 							
@@ -132,19 +132,19 @@ template $RencherWindow : Adw.ApplicationWindow {
 									title: _("Added On");
 									styles ["property"]
 								}
-								Adw.ActionRow size_row {
-									title: _("Size");
-									styles ["property"]
-								}
+								//Adw.ActionRow size_row {
+								//	title: _("Size");
+								//	styles ["property"]
+								//}
 							}
 
 							ListBox {
 								selection-mode: none;
 								styles ["boxed-list"]
 
-								Adw.ExpanderRow log_row {
-									title: _("Log");
-								}
+								//Adw.ExpanderRow log_row {
+								//	title: _("Log");
+								//}
 								Adw.ActionRow rpath_row {
 									title: _("Folder Location");
 
@@ -168,14 +168,14 @@ template $RencherWindow : Adw.ApplicationWindow {
 								}
 							}
 
-							ListBox {
-								selection-mode: none;
-								styles ["boxed-list"]
+							//ListBox {
+							//	selection-mode: none;
+							//	styles ["boxed-list"]
 
-								Adw.ExpanderRow {
-									title: _("Screenshots");
-								}
-							}
+							//	Adw.ExpanderRow {
+							//		title: _("Screenshots");
+							//	}
+							//}
 						};
 			        };
 		        }

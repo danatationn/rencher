@@ -39,10 +39,10 @@ class RencherWindow(Adw.ApplicationWindow):
 
 	last_played_row: Adw.ActionRow = Gtk.Template.Child()
 	playtime_row: Adw.ActionRow = Gtk.Template.Child()
-	size_row: Adw.ActionRow = Gtk.Template.Child()
+	# size_row: Adw.ActionRow = Gtk.Template.Child()
 	added_on_row: Adw.ActionRow = Gtk.Template.Child()
 
-	log_row: Adw.ExpanderRow = Gtk.Template.Child()
+	# log_row: Adw.ExpanderRow = Gtk.Template.Child()
 	rpath_row: Adw.ActionRow = Gtk.Template.Child()
 	version_row: Adw.ActionRow = Gtk.Template.Child()
 	codename_row: Adw.ActionRow = Gtk.Template.Child()
@@ -176,12 +176,12 @@ class RencherWindow(Adw.ApplicationWindow):
 		elif self.combo_index == 2:
 			game_one = float(one.game.config['info'].get('playtime', 0))
 			game_two = float(two.game.config['info'].get('playtime', 0))
-		elif self.combo_index == 3:
+		else:
 			game_one = one.game.config['info'].get('added_on', 0)
 			game_two = two.game.config['info'].get('added_on', 0)
-		else:
-			game_one = one.game.config['info'].get('size', 0)
-			game_two = two.game.config['info'].get('size', 0)
+		# else:
+		# 	game_one = one.game.config['info'].get('size', 0)
+		# 	game_two = two.game.config['info'].get('size', 0)
 			
 		if game_one < game_two:
 			res = 1
