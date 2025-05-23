@@ -47,7 +47,7 @@ class RencherWindow(Adw.ApplicationWindow):
 	version_row: Adw.ActionRow = Gtk.Template.Child()
 	codename_row: Adw.ActionRow = Gtk.Template.Child()
 
-	play_split_button: Adw.SplitButton = Gtk.Template.Child()
+	play_button: Gtk.Button = Gtk.Template.Child()
 
 	def __init__(self, *args, **kwargs):
 		super().__init__(*args, **kwargs)
@@ -139,13 +139,13 @@ class RencherWindow(Adw.ApplicationWindow):
 		"""
 
 		if state == 'play':
-			self.play_split_button.set_label('Play')
-			self.play_split_button.get_style_context().remove_class('destructive-action')
-			self.play_split_button.get_style_context().add_class('suggested-action')
+			self.play_button.set_label('Play')
+			self.play_button.get_style_context().remove_class('destructive-action')
+			self.play_button.get_style_context().add_class('suggested-action')
 		elif state == 'stop':
-			self.play_split_button.set_label('Stop')
-			self.play_split_button.get_style_context().remove_class('suggested-action')
-			self.play_split_button.get_style_context().add_class('destructive-action')
+			self.play_button.set_label('Stop')
+			self.play_button.get_style_context().remove_class('suggested-action')
+			self.play_button.get_style_context().add_class('destructive-action')
 
 	def filter_func(self, widget: Gtk.ListBoxRow) -> bool:
 		if not self.filter_text:

@@ -95,13 +95,22 @@ template $RencherWindow : Adw.ApplicationWindow {
 							orientation: vertical;
 							spacing: 16;
 
-							Adw.SplitButton play_split_button {
-								label: _("Play");
-								styles ["pill", "suggested-action"]
+							Box {
+								orientation: horizontal;
 								halign: center;
-
-								menu-model: play_button_menu;
-								clicked => $on_play_clicked();
+								spacing: 6;
+								
+								Button play_button {
+									label: _("Play");
+									styles ["pill", "suggested-action"]
+	
+									clicked => $on_play_clicked();
+								}
+								Button {
+									styles ["circular"]
+									
+									icon-name: "wrench-wide-symbolic";
+								}
 							}
 
 							ListBox {
@@ -187,29 +196,4 @@ template $RencherWindow : Adw.ApplicationWindow {
 			};
 		};
     };
-}
-
-menu play_button_menu {
-	section {
-		item {
-			label: _("Play");
-			action: "app.play";
-		}
-		item {
-			label: _("Kill");
-			action: "app.kill";
-		}
-		item {
-			label: _("Rename");
-		}
-		item {
-			label: _("Config Settings");
-		}
-	}
-	section {
-		item {
-			label: _("Delete");
-			action: "app.delete";
-		}
-	}
 }
