@@ -1,0 +1,7 @@
+# this file is for windows/msys2
+
+# PyGObject~=3.50.0 - INSTALL USING PACMAN !!!
+thefuzz~=0.22.1
+patool~=4.0.0
+watchdog~=6.0.0
+Nuitka~=2.7
