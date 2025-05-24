@@ -20,13 +20,13 @@ def blp2ui() -> None:
 	if platform.system() == 'Linux':
 		comp_path = shutil.which('blueprint-compiler')
 	else:  # Windows
-		comp_path = Path('/ucrt64/bin/blueprint-compiler')
+		comp_path = Path('C:/msys64/ucrt64/bin/blueprint-compiler')
 	if not comp_path:
 		raise FileNotFoundError('blueprint-compiler is not installed. Exiting...')
 
 	ui_path = Path(__file__).parents[2] / 'src' / 'gtk' / 'ui'
 	blp_paths = ui_path.glob('*.blp')
-	args = ['bash', '-c', 'blueprint-compiler', 'batch-compile', ui_path, ui_path]
+	args = ['python', comp_path, 'batch-compile', ui_path, ui_path]
 
 	for path in blp_paths:
 		args.extend([path])

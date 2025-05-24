@@ -5,7 +5,7 @@ from src.gtk import blp2ui
 from nuitka import __main__ as nuitka
 
 blp2ui()
-ui_path = Path(sys.executable).parents[2] / 'src' / 'gtk' / 'ui'
+ui_path = Path(__file__).parent / 'src' / 'gtk' / 'ui'
 
 args = [
 	'--main=main.py',
