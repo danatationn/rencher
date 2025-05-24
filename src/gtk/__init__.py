@@ -26,7 +26,7 @@ def blp2ui() -> None:
 
 	ui_path = Path(__file__).parents[2] / 'src' / 'gtk' / 'ui'
 	blp_paths = ui_path.glob('*.blp')
-	args = [comp_path, 'batch-compile', ui_path, ui_path]
+	args = ['bash', '-c', 'blueprint-compiler', 'batch-compile', ui_path, ui_path]
 
 	for path in blp_paths:
 		args.extend([path])

@@ -90,6 +90,8 @@ def create_config() -> None:
 		'forced_save_dir': 'false'
 	}
 	
+	config_path.parent.mkdir(exist_ok=True)
+	# config_path.touch(exist_ok=True)
 	with open(config_path, 'w') as f:
 		config.write(f)
 		
