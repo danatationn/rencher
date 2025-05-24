@@ -34,8 +34,9 @@ template $RencherWindow : Adw.ApplicationWindow {
 				hscrollbar-policy: never;
 				
 				Box {
-					orientation: vertical;
 					styles ["view"]
+					
+					orientation: vertical;
 
 					SearchBar {
 						search-mode-enabled: bind library_search_button.active;
@@ -55,9 +56,10 @@ template $RencherWindow : Adw.ApplicationWindow {
 					Box {
 						styles ["linked"]
 						
-						margin-bottom: 6;
-						margin-start: 6;
-						margin-end: 6;
+						margin-bottom: 8;
+						margin-start: 8;
+						margin-end: 8;
+						margin-top: 8;
 						
 						DropDown {
 							model: StringList {
@@ -91,14 +93,18 @@ template $RencherWindow : Adw.ApplicationWindow {
 
 			        child: Adw.StatusPage selected_status_page {
 						title: "Title";
+						valign: start;
+						halign: center;
+						
 						child: Box {
-							orientation: vertical;
 							spacing: 16;
+							orientation: vertical;
+							width-request: 500;
 
 							Box {
 								orientation: horizontal;
 								halign: center;
-								spacing: 6;
+								spacing: 8;
 								
 								Button play_button {
 									styles ["pill", "suggested-action"]

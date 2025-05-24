@@ -1,6 +1,6 @@
 # Rencher - a Ren'Py game manager
 
-<img src="public/Screenshot From 2025-05-15 22-23-58.png" alt="WIP Screenshot of Rencher's UI">
+<img src="public/Screenshot From 2025-05-24 11-12-47.png" alt="WIP Screenshot of Rencher's UI">
 
 ### why?
 this was originally a ddlc mod manager because all of them suck. 
@@ -23,7 +23,7 @@ here's [a link to the trello board](https://trello.com/b/CGaqf0xx/rencher) lmao
 
 first of all, this is **NOT** production ready whatsoever
 
-you will encounter lots of weird errors that only i know how to circumvent, and it will generally be a pain trying to use this app, at its current stage
+you will encounter lots of weird errors that only i know how to circumvent, and it will generally be a pain trying to use this app right now
 
 second of all, right now this is tailored to linux specifically
 
