@@ -17,7 +17,10 @@ def blp2ui() -> None:
 	if '__compiled__' in globals():
 		return  # you can't build blp files if they don't exist 🤷
 
-	comp_path = shutil.which('blueprint-compiler')
+	if platform.system() == 'Linux':
+		comp_path = shutil.which('blueprint-compiler')
+	else:  # Windows
+		comp_path = Path('/ucrt64/bin/blueprint-compiler')
 	if not comp_path:
 		raise FileNotFoundError('blueprint-compiler is not installed. Exiting...')
 
