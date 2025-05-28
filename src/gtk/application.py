@@ -1,5 +1,6 @@
 import logging
 import platform
+import os
 from pathlib import Path
 from configparser import ConfigParser 
 
@@ -61,6 +62,8 @@ class RencherApplication(Gtk.Application):
 		observer.schedule(handler, local_path, recursive=True)
 		observer.start()
 
+	def do_shutdown(self):
+		Gtk.Application.do_activate(self)
 
 class RencherFSHandler(FileSystemEventHandler):
 	def __init__(self, app):
