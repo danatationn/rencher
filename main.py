@@ -1,22 +1,15 @@
 import sys
-import os
+from src.gtk import blp2ui
 
-from src import tmp_path
-tmp = str(tmp_path)
-
-if '__compiled__' in globals():
-	gtk_path = tmp_path / 'libgtk-4-1.dll'
-	print(gtk_path.exists())
-
-	os.environ['PATH'] = os.pathsep.join([tmp, os.environ.get('PATH', '')])	
-	os.add_dll_directory(tmp)
+def main():
+	blp2ui()
 	
-from src.gtk import blp2ui  # noqa: E402
-blp2ui()
-
-from src.gtk.application import RencherApplication  # noqa: E402
-
-app = RencherApplication()
-app.run(sys.argv)
+	# ui files get loaded when the import happens
+	# we want the ui that we just compiled
+	from src.gtk.application import RencherApplication  # noqa: E402	
+	app = RencherApplication()
+	app.run(sys.argv)
 
 
+if __name__ == '__main__':
+	main()

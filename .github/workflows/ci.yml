@@ -1,0 +1,66 @@
+name: Rencher
+on: 
+  workflow_dispatch: 
+
+jobs:
+  windows-job:
+    name: Windows
+    runs-on: windows-latest
+    defaults:
+      run:
+        shell: msys2 {0}
+    steps:
+      - uses: actions/checkout@v3
+      - uses: msys2/setup-msys2@v2
+        with:
+          msystem: UCRT64
+          update: true
+          install: >-
+            git 
+            mingw-w64-ucrt-x86_64-python 
+            mingw-w64-ucrt-x86_64-python-pip 
+            mingw-w64-ucrt-x86_64-python-gobject 
+            mingw-w64-ucrt-x86_64-blueprint-compiler 
+            mingw-w64-ucrt-x86_64-gtk4 
+            mingw-w64-ucrt-x86_64-libadwaita 
+            mingw-w64-ucrt-x86_64-gcc 
+            mingw-w64-ucrt-x86_64-python-nuitka 
+            mingw-w64-ucrt-x86_64-ntldd
+      - name: Compile with Nuitka
+        run: |
+          pip install -r requirements.txt
+          python build.py
+      - name: Upload Windows artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Rencher-Windows
+          path: 'Rencher/Rencher.exe'
+  linux-job:
+    name: Linux
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Install Rencher dependencies
+        run: |
+          sudo apt update
+          sudo apt install -y\
+            python3-dev\
+            cmake\
+            gobject-introspection\
+            libgirepository1.0-dev\
+            libgtk-4-dev\
+            blueprint-compiler\
+            patchelf\
+            libadwaita-1-dev\
+            ccache
+      - name: Install uv
+        uses: astral-sh/setup-uv@v6
+      - run: uv sync
+      - name: Compie with Nuitka
+        run: |
+          python build.py
+      - name: Upload Linux artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Rencher-Linux
+          path: 'Rencher/Rencher'
