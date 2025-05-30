@@ -14,11 +14,15 @@ jobs:
         with:
           msystem: UCRT64
           update: true
-          install: git mingw-w64-ucrt-x86_64-gcc
-      - name: CI-Build
+          install: git mingw-w64-ucrt-x86_64-python mingw-w64-ucrt-x86_64-python-pip mingw-w64-ucrt-x86_64-python-gobject mingw-w64-ucrt-x86_64-blueprint-compiler mingw-w64-ucrt-x86_64-gtk4 mingw-w64-ucrt-x86_64-libadwaita mingw-w64-ucrt-x86_64-gcc mingw-w64-ucrt-x86_64-python-nuitka mingw-w64-ucrt-x86_64-ntldd
+      - name: compiling rencher
         run: |
-          echo 'Running in MSYS2!'
-          ./ci-build.sh
-      - shell: msys2 {0}
-        run : |
-          
+          git clone https://github.com/danatationn/Rencher
+          cd Rencher
+          pip install -r requirements.txt
+          python build.py
+      - name: upload exe file
+        uses: actions/upload-artifact@v4
+        with:
+          name: Rencher
+          path: 'Rencher/Rencher.exe'

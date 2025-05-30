@@ -4,6 +4,7 @@
 import platform
 import subprocess
 import sys
+import tomllib
 from pathlib import Path
 
 from src.gtk import blp2ui
@@ -13,12 +14,21 @@ blp2ui()
 ui_path = Path(__file__).parent / 'src' / 'gtk' / 'ui'
 main_path = Path(__file__).parent / 'main.py'
 yaml_path = Path(__file__).parent / 'build.yml'
+pyproject_path = Path(__file__).parent / 'pyproject.toml'
 bin_path = Path('C:/msys64/ucrt64/bin/')  # windows/msys2 
+
+with open(pyproject_path, 'rb') as f:
+	project = tomllib.load(f)
 
 args = [
 	f'--main={main_path}',
 	'--standalone',
 	'--onefile',
+	'--output-filename=Rencher',
+	'--company-name=danatationn',
+	f'--file-version={project['project']['version']}',
+	f'--product-version={project['project']['version']}',
+	f'--file-description={project['project']['description']}',
 	f'--include-data-dir={ui_path}=src/gtk/ui',
 	'--assume-yes-for-downloads',
 ]
