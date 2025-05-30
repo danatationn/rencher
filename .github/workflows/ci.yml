@@ -58,6 +58,7 @@ jobs:
       - run: uv sync
       - name: Compie with Nuitka
         run: |
+          source .venv/bin/activate
           python build.py
       - name: Upload Linux artifact
         uses: actions/upload-artifact@v4
