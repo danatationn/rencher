@@ -19,26 +19,34 @@ also i didn't know anything about how to make your code good so,,
 here's [a link to the trello board](https://trello.com/b/CGaqf0xx/rencher) lmao
 
 ## running/compiling
-**!! you're on your own here !!**
+! WARNING ! this is still *heavily* a WIP so expect bugs galore
 
-first of all, this is **NOT** production ready whatsoever
+### linux
+1. install uv
+2. do `uv sync`
+3. run:
+	* `python main.py` if you want to test it out
+    * `python build.py` if you want to compile it
 
-you will encounter lots of weird errors that only i know how to circumvent, and it will generally be a pain trying to use this app right now
-
-second of all, right now this is tailored to linux specifically
-
-while i will be forced to make this work on windows too, there are a lot of hiccups that happen on windows
-
-for example, you cannot compile the .blp files used for the ui because [blueprint-compiler](https://jwestman.pages.gitlab.gnome.org/blueprint-compiler/) is [linux-only](https://patorjk.com/software/taag/#p=display&f=Doom&t=lol!!!!) (for some fucking reason)
-
-**if you really want to run it right now...**
-
-1. install [blueprint-compiler](https://jwestman.pages.gitlab.gnome.org/blueprint-compiler/) (linux-only right now!)
-2. install dependencies from `pyproject.toml`
-3. run `main.py`
-4. try to avoid bugs
-
-note that **if you really want to build it right now** then you can run the `build.py` file
+### windows
+1. install msys2
+2. install the required packages:
+   ```
+   pacman -S --needed --noconfirm\
+		mingw-w64-ucrt-x86_64-python\
+		mingw-w64-ucrt-x86_64-python-pip\
+		mingw-w64-ucrt-x86_64-python-gobject\
+		mingw-w64-ucrt-x86_64-blueprint-compiler\
+		mingw-w64-ucrt-x86_64-gtk4\
+		mingw-w64-ucrt-x86_64-libadwaita\
+		mingw-w64-ucrt-x86_64-gcc\
+		mingw-w64-ucrt-x86_64-python-nuitka\
+		mingw-w64-ucrt-x86_64-ntldd
+   ```
+3. install pip packages from `requirements.txt`
+4. run:
+	* `python main.py` if you want to test it out
+	* `python build.py` if you want to compile it
 
 ## license
 

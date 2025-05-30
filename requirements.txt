@@ -1,10 +1,5 @@
 # this file is for windows/msys2
 
-# PyGObject~=3.50.0 - INSTALL USING PACMAN !!!
-# -> mingw-w64-ucrt-x86_64-python3-gobject
-# -> mingw-w64-ucrt-x86_64-python3-gtk4
-# Nuitka~=2.7
-# -> mingw-w64-ucrt-x86_64-python-nuitka
 thefuzz~=0.22.1
 patool~=4.0.0
 watchdog~=6.0.0

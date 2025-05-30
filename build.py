@@ -1,3 +1,6 @@
+#
+# FUCK YOU NUITKA
+#
 import platform
 import subprocess
 import sys
@@ -15,10 +18,9 @@ bin_path = Path('C:/msys64/ucrt64/bin/')  # windows/msys2
 args = [
 	f'--main={main_path}',
 	'--standalone',
-	# '--onefile',
+	'--onefile',
 	f'--include-data-dir={ui_path}=src/gtk/ui',
-	# f'--user-package-configuration-file={yaml_path}',
-	'--assume-yes-for-downloads'
+	'--assume-yes-for-downloads',
 ]
 
 if platform.system() == 'Windows':
@@ -30,17 +32,20 @@ if platform.system() == 'Windows':
 
 	required_ddls = [
 		'libadwaita-1-0.dll',
-		'libgtk-4-1.dll',
-		'libappstream-5.dll',
-		'libfreetype-6.dll',
-		'libidn2-0.dll',
-		'libpsl-5.dll',
-		'libthai-0.dll',
+		'vulkan-1.dll',
+		'libwebpdemux-2.dll',
+		'libwebpmux-3.dll',
+		'libsqlite3-0.dll',
+		'libncursesw6.dll',
+		'libgthread-2.0-0.dll',
+		'gdbus.exe'
 	]
 
 	for dll in required_ddls:
-		if not Path(bin_path / dll).exists():
-			msg = f'{dll} was not found. Please install it and try again.'
+		if Path(bin_path / dll).exists():
+			args.append(f'--include-data-files={bin_path}/{dll}={dll}')
+		else:
+			msg = f'(UCRT64) {dll} was not found. Please install it and try again.'
 			FileNotFoundError(msg)
 
 	ntldd_path = bin_path / 'ntldd.exe'
@@ -48,8 +53,8 @@ if platform.system() == 'Windows':
 		msg = 'ntldd is not installed. Please install it and try again.'
 		FileNotFoundError(msg)
 		
-	def ntldd_dlls(dll_name: str) -> dict:
-		result = subprocess.run([ntldd_path, dll_name], capture_output=True, text=True, check=True)
+	for dll_name in required_ddls:
+		result = subprocess.run([ntldd_path, '-R', dll_name], capture_output=True, text=True, check=True)
 		output = result.stdout.strip()
 		dlls = {}
 	
@@ -58,25 +63,17 @@ if platform.system() == 'Windows':
 			dll_name = parts[0].strip()
 			dll_info = parts[1].strip()
 			
-			info_parts = dll_info.split('(')
-			dll_path = info_parts[0].strip()
+			if 'not found' not in dll_info:
+				info_parts = dll_info.split('(')
+				dll_path = info_parts[0].strip()
 			
-			dlls[dll_name] = dll_path 
-	
+				dlls[dll_name] = dll_path 
+			
 		for dll in dlls:
-			if 'lib' not in dlls[dll]:
+			if not Path(dlls[dll]).is_relative_to(bin_path):  # ignore all dlls that aren't in msys2
 				continue
 			args.append(f'--include-data-files={dlls[dll]}={dll}')
-			
-		return dlls
-
-	dlls = []
-	for dll_name in required_ddls:
-		result = ntldd_dlls(dll_name)
-		for dll in result:
-			dlls.append(result[dll])
 		
-
 sys.argv = sys.argv + args
 
 nuitka.main()
