@@ -64,7 +64,13 @@ if platform.system() == 'Windows':
 		FileNotFoundError(msg)
 		
 	for dll_name in required_ddls:
-		result = subprocess.run([ntldd_path, '-R', dll_name], capture_output=True, text=True, check=True)
+		result = subprocess.run(
+			['bash', '-c', f'ntldd -R {dll_name}'],
+			cwd=str(bin_path),
+			capture_output=True,
+			text=True,
+			check=True
+		)
 		output = result.stdout.strip()
 		dlls = {}
 	
