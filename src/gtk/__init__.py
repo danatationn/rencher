@@ -22,8 +22,8 @@ def blp2ui() -> None:
 	else:  # Windows
 		result = subprocess.run(
 			['cygpath', '-m', '/ucrt64/bin/blueprint-compiler'],
+			capture_output=True,
 			text=True,
-			stdout=True,
 			check=True
 		)
 		comp_path = result.stdout.strip()
