@@ -15,7 +15,6 @@ ui_path = Path(__file__).parent / 'src' / 'gtk' / 'ui'
 main_path = Path(__file__).parent / 'main.py'
 yaml_path = Path(__file__).parent / 'build.yml'
 pyproject_path = Path(__file__).parent / 'pyproject.toml'
-bin_path = Path('C:/msys64/ucrt64/bin/')  # windows/msys2 
 
 with open(pyproject_path, 'rb') as f:
 	project = tomllib.load(f)
@@ -34,9 +33,12 @@ args = [
 ]
 
 if platform.system() == 'Windows':
-	while not bin_path.is_dir():
-		input_path = input('MSYS2 could not be found.\nPlease enter its path. ')
-		bin_path = Path(input_path) / 'ucrt64' / 'bin'
+	process = subprocess.run(
+		['cygpath', '-m', '/ucrt64/bin/'],
+		capture_output=True,
+		text=True,
+		check=True)
+	bin_path = Path(process.stdout.strip())
 
 	args.append('--include-module=gi._enum')
 
@@ -65,12 +67,10 @@ if platform.system() == 'Windows':
 		
 	for dll_name in required_ddls:
 		result = subprocess.run(
-			['bash', '-c', f'ntldd -R {dll_name}'],
-			cwd=str(bin_path),
+			['ntldd', '-R', dll_name],
 			capture_output=True,
 			text=True,
-			check=True
-		)
+			check=True)
 		output = result.stdout.strip()
 		dlls = {}
 	
@@ -83,10 +83,10 @@ if platform.system() == 'Windows':
 				info_parts = dll_info.split('(')
 				dll_path = info_parts[0].strip()
 			
-				dlls[dll_name] = dll_path 
+				dlls[dll_name] = Path(dll_path) 
 			
 		for dll in dlls:
-			if not Path(dlls[dll]).is_relative_to(bin_path):  # ignore all dlls that aren't in msys2
+			if not dlls[dll].is_relative_to(bin_path):  # ignore all dlls that aren't in msys2
 				continue
 			args.append(f'--include-data-files={dlls[dll]}={dll}')
 		

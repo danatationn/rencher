@@ -20,7 +20,13 @@ def blp2ui() -> None:
 	if platform.system() == 'Linux':
 		comp_path = shutil.which('blueprint-compiler')
 	else:  # Windows
-		comp_path = Path('C:/msys64/ucrt64/bin/blueprint-compiler')
+		result = subprocess.run(
+			['cygpath', '-m', '/ucrt64/bin/blueprint-compiler'],
+			text=True,
+			stdout=True,
+			check=True
+		)
+		comp_path = result.stdout.strip()
 	if not comp_path:
 		raise FileNotFoundError('blueprint-compiler is not installed. Exiting...')
 
