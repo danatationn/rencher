@@ -47,9 +47,8 @@ jobs:
             python3-dev\
             cmake\
             gobject-introspection\
-            libgirepository1.0-dev\
+            libgirepository2.0-dev\
             libgtk-4-dev\
-            python-gi-dev\
             blueprint-compiler\
             patchelf\
             libadwaita-1-dev\
