@@ -52,7 +52,8 @@ jobs:
             libgtk-4-dev\
             patchelf\
             libadwaita-1-dev\
-            ccache
+            ccache\
+            meson
       - name: Install uv
         run: |
           wget -qO- https://astral.sh/uv/install.sh | sh
