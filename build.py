@@ -31,9 +31,7 @@ args = [
 	'--assume-yes-for-downloads',
 ]
 
-if '24.04.2-Ubuntu' not in platform.uname().version:
-	# 24.04 does not have adw 1.6 which has buttonrows . 
-	blp2ui()
+blp2ui()
 
 if platform.system() == 'Windows':
 	process = subprocess.run(
