@@ -47,6 +47,7 @@ jobs:
             python3-dev\
             cmake\
             gobject-introspection\
+            libgirepository1.0-dev\
             libgirepository-2.0-dev\
             libgtk-4-dev\
             blueprint-compiler\
