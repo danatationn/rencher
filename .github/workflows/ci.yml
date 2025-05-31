@@ -63,7 +63,7 @@ jobs:
           git clone https://gitlab.gnome.org/GNOME/blueprint-compiler
           cd blueprint-compiler
           meson _build
-          ninja -C _build install
+          sudo ninja -C _build install
       - name: Compile with Nuitka
         run: |
           source .venv/bin/activate
