@@ -10,7 +10,6 @@ from pathlib import Path
 from src.gtk import blp2ui
 from nuitka import __main__ as nuitka
 
-blp2ui()
 ui_path = Path(__file__).parent / 'src' / 'gtk' / 'ui'
 main_path = Path(__file__).parent / 'main.py'
 yaml_path = Path(__file__).parent / 'build.yml'
@@ -31,6 +30,10 @@ args = [
 	f'--include-data-dir={ui_path}=src/gtk/ui',
 	'--assume-yes-for-downloads',
 ]
+
+if '24.04.2-Ubuntu' not in platform.uname().version:
+	# 24.04 does not have adw 1.6 which has buttonrows . 
+	blp2ui()
 
 if platform.system() == 'Windows':
 	process = subprocess.run(

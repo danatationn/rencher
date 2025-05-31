@@ -5,7 +5,7 @@ on:
 jobs:
   windows-job:
     name: Windows
-    runs-on: windows-latest
+    runs-on: windows-2022
     defaults:
       run:
         shell: msys2 {0}
@@ -37,7 +37,7 @@ jobs:
           path: 'Rencher.exe'
   linux-job:
     name: Linux
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v3
       - name: Install Rencher dependencies
@@ -50,7 +50,7 @@ jobs:
             libgirepository1.0-dev\
             libgirepository-2.0-dev\
             libgtk-4-dev\
-            blueprint-compiler\
+#            blueprint-compiler\
             patchelf\
             libadwaita-1-dev\
             ccache
@@ -58,6 +58,12 @@ jobs:
         run: |
           wget -qO- https://astral.sh/uv/install.sh | sh
           uv sync
+      - name: Install blueprint-compiler
+        run: |
+          git clone https://gitlab.gnome.org/GNOME/blueprint-compiler
+          cd blueprint-compiler
+          meson _build
+          ninja -C _build install
       - name: Compile with Nuitka
         run: |
           source .venv/bin/activate

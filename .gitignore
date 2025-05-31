@@ -1,7 +1,6 @@
 # Rencher
 /games/
 /mods/
-*.ui
 
 # Nuitka
 /main.build/
