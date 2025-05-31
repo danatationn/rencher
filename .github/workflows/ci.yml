@@ -54,9 +54,10 @@ jobs:
             libadwaita-1-dev\
             ccache
       - name: Install uv
-        uses: astral-sh/setup-uv@v6
-      - run: uv sync
-      - name: Compie with Nuitka
+        run: |
+          wget -qO- https://astral.sh/uv/install.sh | sh
+          uv sync
+      - name: Compile with Nuitka
         run: |
           source .venv/bin/activate
           python build.py
