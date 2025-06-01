@@ -188,10 +188,13 @@ class Mod(Game):
 
 			function modified as renpy tend to be independent of their base games
 		"""
+		py_names = [py_path.stem for py_path in sorted(self.apath.glob('*.py'))]
 		codename = self.config['info']['codename']
 
 		if codename != '':
 			return codename
+		elif len(py_names) == 1:
+			return py_names[0]
 		else:
 			raise NoOptionError('codename', 'info')
 

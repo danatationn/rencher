@@ -1,8 +1,9 @@
 import threading
+import zipfile
 from pathlib import Path
 
-import patoolib
 from gi.repository import Adw, Gio, GObject, Gtk, GLib
+import rarfile
 
 from src import tmp_path
 from src.gtk import GameItem
@@ -45,14 +46,19 @@ class RencherImport(Adw.PreferencesDialog):
 	@Gtk.Template.Callback()
 	def on_location_changed(self, entry_row: Adw.EntryRow):
 		location_text = entry_row.get_text()
-				
-		if patoolib.is_archive(location_text) and location_text != '':
+			
+		try:	
+			if Path(location_text).suffix == '.zip':
+				zipfile.ZipFile(location_text, 'r')
+			if Path(location_text).suffix == '.rar':
+				rarfile.RarFile(location_text, 'r')
+		except (rarfile.BadRarFile, rarfile.NotRarFile, zipfile.BadZipFile):
+			self.import_button.set_sensitive(False)
+		else:
 			self.import_button.set_sensitive(True)
 			if not self.import_title.get_text():
 				name = Path(location_text).stem
 				self.import_title.set_text(name)
-		else:
-			self.import_button.set_sensitive(False)
 				
 	@Gtk.Template.Callback()
 	def on_picker_clicked(self, button: Gtk.Button) -> None:
@@ -67,18 +73,11 @@ class RencherImport(Adw.PreferencesDialog):
 	@Gtk.Template.Callback()
 	def on_import_clicked(self, button_row: Adw.ButtonRow) -> None:
 		def import_thread():
-			try:
-				import_game(self)
-			except patoolib.util.PatoolError:
-				dialog = Adw.AlertDialog(
-					heading=f'Error importing {self.import_title.get_text()}',
-					body='The archive supplied is not valid. Please re-download the file and try again.',
-					close_response='okay'
-				)
-				dialog.add_response('okay', 'Okay')
-				dialog.choose()
-			finally:
-				update_library_sidebar(self.window)
+			import_game(self)
+			GLib.idle_add(lambda: (
+				update_library_sidebar(self.window),
+				self.close()
+			))
 		
 		self.thread = threading.Thread(target=import_thread)
 		self.thread.start()
