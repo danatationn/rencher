@@ -11,6 +11,7 @@ from src.gtk import open_file_manager
 from src.gtk._library import update_library_sidebar, update_library_view
 from src.gtk.import_dialog import RencherImport
 from src.gtk.settings_dialog import RencherSettings
+from src.gtk.codename_dialog import RencherCodename
 from src.renpy import Game
 
 
@@ -122,8 +123,8 @@ class RencherWindow(Adw.ApplicationWindow):
 		selected_button_row = self.library_list_box.get_selected_row()
 		project = getattr(selected_button_row, 'game', None)
 		
-		project.config['info']['codename'] = ''
-		project.config.write_config()
+		dialog = RencherCodename(project.rpath, self)
+		dialog.choose(self)
 	
 			
 	def check_process(self) -> bool:

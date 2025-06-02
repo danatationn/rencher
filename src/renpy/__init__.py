@@ -193,6 +193,8 @@ class Mod(Game):
 
 		if codename != '':
 			return codename
+		elif len(py_names) == 0:
+			raise FileNotFoundError
 		elif len(py_names) == 1:
 			return py_names[0]
 		else:
