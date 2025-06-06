@@ -1,23 +1,38 @@
+import logging
 import shutil
 import zipfile
 from pathlib import Path
-import logging
+import secrets
 
 from src import local_path
-from src.renpy import Game, Mod
+from src.gtk import windowficate_file
+from src.renpy import Game
 from src.renpy.paths import find_absolute_path
 
 from gi.repository import GLib
 import rarfile
 
-
-def import_game(self):
+def import_game(self):  # TODO: give better names to variables
 	game_name = self.import_title.get_text()
 	location = Path(self.import_location.get_text())
 	is_mod = self.import_game_combo.get_sensitive()
 	game_to_mod = self.import_game_combo.get_selected_item()
-	rpath = local_path / ('mods' if is_mod else 'games') / game_name
 	
+	try:
+		dir_name = windowficate_file(self.import_title.get_text())
+	except ValueError:
+		try:
+			dir_name = windowficate_file(Path(self.import_location.get_text())).stem
+		except ValueError:
+			pass
+	
+	rpath = local_path / ('mods' if is_mod else 'games') / dir_name
+	while True:
+		if rpath.is_dir():
+			dir_name = secrets.token_urlsafe(4)  # simple random string like 'vRDQzw' so it's not difficult to remember
+			rpath = local_path / ('mods' if is_mod else 'games') / dir_name
+		else:
+			break
 		
 	if location.suffix == '.zip':
 		archive = zipfile.ZipFile(location, 'r')
@@ -31,7 +46,7 @@ def import_game(self):
 	
 	for i, file in enumerate(archive.namelist(), 1):
 		archive.extract(file, rpath)
-		GLib.idle_add(self.update_progress, i / total_work)
+		GLib.idle_add(self.import_progress_bar.set_fraction, i / total_work)
 
 	archive.close()
 
@@ -45,6 +60,8 @@ def import_game(self):
 				rpa_path.mkdir(exist_ok=True, parents=True)
 				file.replace(rpa_path / file.name)
 
+		# we already did find_absolute_path, and it's possible that the directory has now changed completely
+		# we need to clear the cache in order for it to not return the same thing
 		find_absolute_path.cache_clear()
 		apath = find_absolute_path(rpath)
 			
@@ -64,11 +81,11 @@ def import_game(self):
 			else:
 				shutil.copy(file, target_path)
 				
-			GLib.idle_add(self.update_progress, (total_extract + i) / total_work)
+			GLib.idle_add(self.import_progress_bar.set_fraction, (total_extract + i) / total_work)
 				
 	find_absolute_path.cache_clear()
 	game = Game(rpath=rpath)
-	game.config['info']['nickname'] = game.name
+	game.config['info']['nickname'] = game_name
 
 	game_codename = game_to_mod.game.codename
 	py_names = [py_path.stem for py_path in sorted(game.apath.glob('*.py'))]

@@ -8,7 +8,11 @@ def main():
 	# we want the ui that we just compiled
 	from src.gtk.application import RencherApplication  # noqa: E402	
 	app = RencherApplication()
-	app.run(sys.argv)
+	
+	try:
+		app.run(sys.argv)
+	except KeyboardInterrupt:
+		pass
 
 
 if __name__ == '__main__':

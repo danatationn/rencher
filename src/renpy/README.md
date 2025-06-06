@@ -1,13 +1,11 @@
 # my awesome spec
 
 ### terms:
-* `project` - any type of Ren'Py game that can launch
-* `game` - a normal project
-* `mod` - a project that has been tampered with
-* `codename` - the project's internal name
+* `game` - a ren'py game
+* `mod` - a game that has been tampered with (notably having its scripts.rpa modified)
+* `codename` - the project name
 * `rpath` (relative path) - the top folder. this can be the same as apath
-* `apath` (absolute path) - the folder which has the project's files
-* `independency` - when a mod has a different Ren'Py version than the game. restricted to mods :p
+* `apath` (absolute path) - the folder which has the game's files
 
 ### config:
 1. info

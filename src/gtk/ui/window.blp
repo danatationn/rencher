@@ -30,9 +30,7 @@ template $RencherWindow : Adw.ApplicationWindow {
 			
 
 		content: Adw.OverlaySplitView split_view {
-			sidebar: ScrolledWindow {
-				hscrollbar-policy: never;
-				
+			sidebar: Box {
 				Box {
 					styles ["view"]
 					
@@ -47,13 +45,18 @@ template $RencherWindow : Adw.ApplicationWindow {
 							}
 						}
 					}
-					ListBox library_list_box {
-						show-separators: true;
-						vexpand: true;
-
-						row-selected => $on_game_selected();
+					ScrolledWindow {
+						hscrollbar-policy: never;
+						ListBox library_list_box {
+							show-separators: true;
+							vexpand: true;
+	
+							row-selected => $on_game_selected();
+						}
 					}
 					Box {
+						// make this float !!!!
+					
 						styles ["linked"]
 						
 						margin-bottom: 8;

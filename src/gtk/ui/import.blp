@@ -51,8 +51,6 @@ template $RencherImport: Adw.PreferencesDialog {
                         title: _("Game To Mod");
                         enable-search: true;
                         sensitive: bind import_mod_toggle.active;
-                        
-                        notify::selected-item => $on_combo_change();                                                
                     }
 				}
 				

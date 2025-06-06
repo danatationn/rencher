@@ -1,14 +1,12 @@
-from enum import Enum
 import logging
 from itertools import chain
 from configparser import NoOptionError
 
-from gi.repository import Adw, GLib, Gtk
-from thefuzz.fuzz import partial_ratio
+from gi.repository import Adw, GLib
 
 from src import local_path
 from src.renpy import Game, Mod
-from src.gtk import format_gdatetime, HumanBytes
+from src.gtk import format_gdatetime
 from src.gtk.codename_dialog import RencherCodename
 
 

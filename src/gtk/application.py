@@ -1,6 +1,5 @@
 import logging
 import platform
-import os
 from pathlib import Path
 from configparser import ConfigParser 
 
@@ -16,7 +15,6 @@ gi.require_version('Adw', '1')
 from gi.repository import Adw, Gtk  # noqa: E402
 
 Adw.init()
-
 
 from src.gtk.window import RencherWindow  # noqa: E402
 from src.gtk._library import update_library_sidebar, update_library_view  # noqa: E402
@@ -36,7 +34,6 @@ class RencherApplication(Gtk.Application):
 
 	def do_startup(self):
 		Gtk.Application.do_startup(self)
-
 
 	def do_activate(self):
 		Gtk.Application.do_activate(self)
@@ -62,8 +59,8 @@ class RencherApplication(Gtk.Application):
 		observer.schedule(handler, local_path, recursive=True)
 		observer.start()
 
-	def do_shutdown(self):
-		Gtk.Application.do_activate(self)
+	# def do_shutdown(self):
+	# 	Gtk.Application.do_activate(self)
 
 class RencherFSHandler(FileSystemEventHandler):
 	def __init__(self, app):

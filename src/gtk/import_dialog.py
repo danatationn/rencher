@@ -2,7 +2,7 @@ import threading
 import zipfile
 from pathlib import Path
 
-from gi.repository import Adw, Gio, GObject, Gtk, GLib
+from gi.repository import Adw, Gio, Gtk, GLib
 import rarfile
 
 from src import tmp_path
@@ -52,7 +52,7 @@ class RencherImport(Adw.PreferencesDialog):
 				zipfile.ZipFile(location_text, 'r')
 			if Path(location_text).suffix == '.rar':
 				rarfile.RarFile(location_text, 'r')
-		except (rarfile.BadRarFile, rarfile.NotRarFile, zipfile.BadZipFile):
+		except (rarfile.BadRarFile, rarfile.NotRarFile, zipfile.BadZipFile, FileNotFoundError):
 			self.import_button.set_sensitive(False)
 		else:
 			self.import_button.set_sensitive(True)
@@ -66,11 +66,6 @@ class RencherImport(Adw.PreferencesDialog):
 		dialog.open(None, None, self.on_file_selected)
 
 	@Gtk.Template.Callback()
-	def on_combo_change(self, combo_row: Adw.ComboRow, _param: GObject.ParamSpec) -> None:
-		# selected_game: GObject.Object | GameItem = self.import_game_combo.get_selected_item()
-		...
-		
-	@Gtk.Template.Callback()
 	def on_import_clicked(self, button_row: Adw.ButtonRow) -> None:
 		def import_thread():
 			import_game(self)
@@ -82,13 +77,10 @@ class RencherImport(Adw.PreferencesDialog):
 		self.thread = threading.Thread(target=import_thread)
 		self.thread.start()
 
-	
-	def update_progress(self, i) -> None:
-		self.import_progress_bar.set_fraction(i)
-	
 	def on_file_selected(self, dialog: Gtk.FileDialog, result):
 		try:
 			file = dialog.open_finish(result)
 			self.import_location.set_text(file.get_path())
 		except GLib.GError:
 			pass  # dialog was dismissed by user
+		
