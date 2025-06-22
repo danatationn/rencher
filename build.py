@@ -7,10 +7,11 @@ import sys
 import tomllib
 from pathlib import Path
 
-from src.gtk import blp2ui
+from src.gtk import compile_data
 from nuitka import __main__ as nuitka
 
 ui_path = Path(__file__).parent / 'src' / 'gtk' / 'ui'
+gres_path = Path(__file__).parent / 'src' / 'gtk' / 'res' / 'resources.gresource' 
 main_path = Path(__file__).parent / 'main.py'
 yaml_path = Path(__file__).parent / 'build.yml'
 pyproject_path = Path(__file__).parent / 'pyproject.toml'
@@ -28,10 +29,11 @@ args = [
 	f'--product-version={project['project']['version']}',
 	f'--file-description={project['project']['description']}',
 	f'--include-data-dir={ui_path}=src/gtk/ui',
+	f'--include-data-files={gres_path}=src/gtk/res/{gres_path.name}',
 	'--assume-yes-for-downloads',
 ]
 
-blp2ui()
+compile_data()
 
 if platform.system() == 'Windows':
 	process = subprocess.run(

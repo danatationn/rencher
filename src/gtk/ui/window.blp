@@ -17,17 +17,16 @@ template $RencherWindow : Adw.ApplicationWindow {
 				clicked => $on_import_clicked();
 		    }
 		    ToggleButton library_search_button {
-		        icon-name: "edit-find-symbolic";
+		        icon-name: "loupe-large-symbolic";
 		        sensitive: bind split_view.show-sidebar;
 		    }
 
 			[end]
 		    Button {
-				icon-name: "application-menu-symbolic";
+				icon-name: "cogged-wheel-symbolic";
 				clicked => $on_settings_clicked();
 		    }
 	    }
-			
 
 		content: Adw.OverlaySplitView split_view {
 			sidebar: Box {
@@ -88,6 +87,7 @@ template $RencherWindow : Adw.ApplicationWindow {
 					child: Adw.StatusPage {
 						title: _("Welcome to Rencher!");
 						description: _("Select a game from the sidebar to get started");
+						icon-name: "wrench-wide";
 					};
 				}
 
@@ -193,7 +193,7 @@ template $RencherWindow : Adw.ApplicationWindow {
 					name: 'empty';
 
 				    child: Adw.StatusPage {
-						icon-name: "applications-games-symbolic";
+						icon-name: "xbox-controller-symbolic";
 						title: _("No Games Installed");
 						description: _("Add a visual novel by clicking the Import button");
 						child: Gtk.Button {

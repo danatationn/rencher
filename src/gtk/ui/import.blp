@@ -5,67 +5,75 @@ template $RencherImport: Adw.PreferencesDialog {
 	title: _("Import");
 	
 	child: Adw.ToolbarView {
+		top-bar-style: raised;
+	
 		[top]
 		HeaderBar {}
 		
-		[bottom]
-		ProgressBar import_progress_bar {
-			styles ["osd"]
-		}
-		
-		content: Adw.StatusPage {
-			child: Box {
-				orientation: vertical;
-				spacing: 16;
-				
-				ListBox {
-					selection-mode: none;
-					styles ["boxed-list"]
+		content: Overlay {
+			child: Adw.StatusPage {
+				child: Box {
+					orientation: vertical;
+					spacing: 16;
 					
-					Adw.EntryRow import_title {
-						title: _("Title");
-					}
-					Adw.EntryRow import_location {
-						title: _("Location");
+					ListBox {
+						selection-mode: none;
+						styles ["boxed-list"]
 						
-						changed => $on_location_changed();
-						
-						[suffix]
-						Button {
-							icon-name: "folder-symbolic";
-							styles ["flat"]
+						Adw.EntryRow import_title {
+							title: _("Title");
+						}
+						Adw.EntryRow import_location {
+							title: _("Location");
 							
-							clicked => $on_picker_clicked();
+							changed => $on_location_changed();
+							
+							[suffix]
+							Button {
+								icon-name: "folder-symbolic";
+								styles ["flat"]
+								
+								clicked => $on_picker_clicked();
+							}
 						}
 					}
-				}
-				
-				ListBox {
-					selection-mode: none;
-					styles ["boxed-list"]
 					
-					Adw.SwitchRow import_mod_toggle {
-                        title: _("Is A Mod");
-                    }
-                    Adw.ComboRow import_game_combo {
-                        title: _("Game To Mod");
-                        enable-search: true;
-                        sensitive: bind import_mod_toggle.active;
-                    }
-				}
-				
-				ListBox {
-					selection-mode: none;
-					styles ["boxed-list"]
-				
-					Adw.ButtonRow import_button {
-						title: _("Import");
-						sensitive: false;
-					
-						activated => $ on_import_clicked();
+					ListBox {
+						selection-mode: none;
+						styles ["boxed-list"]
+						
+						Adw.SwitchRow import_mod_toggle {
+	                        title: _("Is A Mod");
+	                    }
+	                    Adw.ComboRow import_game_combo {
+	                        title: _("Game To Mod");
+	                        enable-search: true;
+	                        sensitive: bind import_mod_toggle.active;
+	                    }
 					}
-				}
+					
+					ListBox {
+						selection-mode: none;
+						styles ["boxed-list"]
+					
+						Adw.ButtonRow import_button {
+							title: _("Import");
+							sensitive: false;
+						
+							activated => $ on_import_clicked();
+						}
+					}
+				};
 			};
+			
+			[overlay]
+			ProgressBar import_progress_bar {
+                styles ["osd"]
+                visible: false;
+                can-focus: false;
+                
+                valign: start;
+            }	
 		};
 	};
 }

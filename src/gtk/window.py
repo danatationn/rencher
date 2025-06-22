@@ -37,18 +37,14 @@ class RencherWindow(Adw.ApplicationWindow):
 	library_list_box: Gtk.ListBox = Gtk.Template.Child()
 	selected_status_page: Adw.ViewStackPage = Gtk.Template.Child()
 	library_view_stack: Adw.ViewStack = Gtk.Template.Child()
+	play_button: Gtk.Button = Gtk.Template.Child()
 
 	last_played_row: Adw.ActionRow = Gtk.Template.Child()
 	playtime_row: Adw.ActionRow = Gtk.Template.Child()
-	# size_row: Adw.ActionRow = Gtk.Template.Child()
 	added_on_row: Adw.ActionRow = Gtk.Template.Child()
-
-	# log_row: Adw.ExpanderRow = Gtk.Template.Child()
 	rpath_row: Adw.ActionRow = Gtk.Template.Child()
 	version_row: Adw.ActionRow = Gtk.Template.Child()
 	codename_row: Adw.ActionRow = Gtk.Template.Child()
-
-	play_button: Gtk.Button = Gtk.Template.Child()
 
 	def __init__(self, *args, **kwargs):
 		super().__init__(*args, **kwargs)
@@ -64,6 +60,7 @@ class RencherWindow(Adw.ApplicationWindow):
 	@Gtk.Template.Callback()
 	def on_import_clicked(self, _widget: Adw.ButtonRow) -> None:
 		if not self.import_dialog.thread.is_alive():
+			self.import_dialog.force_close()
 			self.import_dialog = RencherImport(self)
 
 		self.import_dialog.present(self)
@@ -86,7 +83,6 @@ class RencherWindow(Adw.ApplicationWindow):
 			self.toggle_play_button('play')
 			if self.process:
 				self.process.terminate()
-
 
 	@Gtk.Template.Callback()
 	def on_dir_clicked(self, _widget: Gtk.Button) -> None:
@@ -125,7 +121,6 @@ class RencherWindow(Adw.ApplicationWindow):
 		
 		dialog = RencherCodename(project.rpath, self)
 		dialog.choose(self)
-	
 			
 	def check_process(self) -> bool:
 		if not self.process or self.process.poll() is not None:

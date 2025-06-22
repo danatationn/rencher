@@ -1,7 +1,8 @@
 import logging
 import platform
 from pathlib import Path
-from configparser import ConfigParser 
+from configparser import ConfigParser
+import time
 
 import gi
 from watchdog.events import DirModifiedEvent, FileModifiedEvent, FileSystemEventHandler
@@ -12,7 +13,7 @@ from src.renpy.config import create_config
 
 gi.require_version('Gtk', '4.0')
 gi.require_version('Adw', '1')
-from gi.repository import Adw, Gtk  # noqa: E402
+from gi.repository import Adw, Gtk, GLib  # noqa: E402
 
 Adw.init()
 
@@ -85,18 +86,18 @@ class RencherFSHandler(FileSystemEventHandler):
 			mtime = int(src_path.stat().st_mtime)
 		except FileNotFoundError:
 			# something got deleted 🤷‍
-			if src_path.parent == games_path:
-				update_library_sidebar(self.app.window)
+			if src_path.parent.is_relative_to(games_path) or src_path.parent.is_relative_to(mods_path):
+				GLib.idle_add(update_library_sidebar, self.app.window)
 			mtime = 0
 
 		if mtime in self.mtimes:
 			return
 		else:
 			self.mtimes.append(mtime)
-			update_library_sidebar(self.app.window)
+			GLib.idle_add(update_library_sidebar, self.app.window)
 			row = self.app.window.library_list_box.get_selected_row()
 			if row:
-				update_library_view(self.app.window, row.game)
+				GLib.idle_add(update_library_view, self.app.window, row.game)
 
-		if src_path.is_relative_to(games_path) or src_path.is_relative_to(mods_path):
-			pass
+		# if src_path.is_relative_to(games_path) or src_path.is_relative_to(mods_path):
+		# 	pass

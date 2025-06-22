@@ -8,7 +8,23 @@ gi.require_version('Gtk', '4.0')
 from gi.repository import GLib, Gio, GObject  # noqa: E402
 
 
-def blp2ui() -> None:
+def return_comp(name: str) -> str:
+	if platform.system() == 'Linux':
+		comp_path = shutil.which(name)
+	else:  # Windows
+		result = subprocess.run(
+			['cygpath', '-m', f'/ucrt64/bin/{name}'],
+			capture_output=True,
+			text=True,
+			check=True
+		)
+		comp_path = result.stdout.strip()
+	if not comp_path:
+		raise FileNotFoundError(f'{name} is not installed. Exiting...')
+
+	return comp_path
+
+def compile_data() -> None:
 	"""
 		converts all .blp files in usable .ui files using blueprint-compiler (provided you have it installed)
 	"""
@@ -16,27 +32,24 @@ def blp2ui() -> None:
 	if '__compiled__' in globals():
 		return  # you can't build blp files if they don't exist 🤷
 
-	if platform.system() == 'Linux':
-		comp_path = shutil.which('blueprint-compiler')
-	else:  # Windows
-		result = subprocess.run(
-			['cygpath', '-m', '/ucrt64/bin/blueprint-compiler'],
-			capture_output=True,
-			text=True,
-			check=True
-		)
-		comp_path = result.stdout.strip()
-	if not comp_path:
-		raise FileNotFoundError('blueprint-compiler is not installed. Exiting...')
+	blpc_path = return_comp('blueprint-compiler')
+	resc_path = return_comp('glib-compile-resources')
 
-	ui_path = Path(__file__).parents[2] / 'src' / 'gtk' / 'ui'
-	blp_paths = ui_path.glob('*.blp')
-	args = ['python', comp_path, 'batch-compile', ui_path, ui_path]
+	ui_dir = Path(__file__).parents[2] / 'src' / 'gtk' / 'ui'
+	blp_files = ui_dir.glob('*.blp')
+	args = ['python', blpc_path, 'batch-compile', ui_dir, ui_dir]
 
-	for path in blp_paths:
-		args.extend([path])
+	for file in blp_files:
+		args.extend([file])
 
 	subprocess.run(args)
+	
+	res_dir = Path(__file__).parents[2] / 'src' / 'gtk' / 'res'
+	xml_file = res_dir / 'resources.gresource.xml'
+	if not xml_file.exists():
+		raise FileNotFoundError(f'resources.gresource.xml is not present in {res_dir}. redownload rencher and try again')
+	
+	subprocess.run([resc_path, xml_file], cwd=res_dir)
 
 def format_gdatetime(date: GLib.DateTime, style: str) -> str:
 	"""

@@ -1,3 +1,4 @@
+import logging
 import threading
 import zipfile
 from pathlib import Path
@@ -30,6 +31,7 @@ class RencherImport(Adw.PreferencesDialog):
 		super().__init__(*args, **kwargs)
 
 		self.window = window
+		self.cancel_flag = threading.Event()
 
 		string_list = Gio.ListStore.new(GameItem)
 		
@@ -42,6 +44,8 @@ class RencherImport(Adw.PreferencesDialog):
 		self.import_game_combo.set_expression(
 			Gtk.PropertyExpression.new(GameItem, None, 'name')
 		)
+
+		GLib.timeout_add(250, self.check_process)
 
 	@Gtk.Template.Callback()
 	def on_location_changed(self, entry_row: Adw.EntryRow):
@@ -70,12 +74,18 @@ class RencherImport(Adw.PreferencesDialog):
 		def import_thread():
 			import_game(self)
 			GLib.idle_add(lambda: (
+				self.import_progress_bar.set_visible(False),
 				update_library_sidebar(self.window),
 				self.close()
 			))
 		
-		self.thread = threading.Thread(target=import_thread)
-		self.thread.start()
+		if self.import_button.get_style_context().has_class('destructive-action'):
+			self.cancel_flag.set()
+			self.thread.join()
+			self.close()
+		else:
+			self.thread = threading.Thread(target=import_thread)
+			self.thread.start()
 
 	def on_file_selected(self, dialog: Gtk.FileDialog, result):
 		try:
@@ -84,3 +94,12 @@ class RencherImport(Adw.PreferencesDialog):
 		except GLib.GError:
 			pass  # dialog was dismissed by user
 		
+	def check_process(self):
+		if self.thread.is_alive():
+			self.import_button.get_style_context().add_class('destructive-action')
+			self.import_button.set_title('Cancel')
+		else:
+			self.import_button.get_style_context().remove_class('destructive-action')
+			self.import_button.set_title('Import')
+			
+		return True
