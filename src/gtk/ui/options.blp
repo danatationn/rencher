@@ -2,5 +2,106 @@ using Gtk 4.0;
 using Adw 1;
 
 template $RencherOptions: Adw.PreferencesDialog {
+	title: _("Options");
+	
+	Adw.PreferencesPage {
+		Adw.PreferencesGroup {
+			title: _("Info");
 
+			Adw.EntryRow options_nickname {
+				title: _("Title");
+			}
+			Adw.ActionRow options_location {
+				styles ["property"]
+				
+				title: _("Location");
+				
+				[suffix]
+                Button {
+                    icon-name: "folder-symbolic";
+                    styles ["flat"]
+
+                    clicked => $on_dir_clicked();
+                }
+			}
+			Adw.ComboRow options_codename {
+				title: _("Executable");
+			}
+			Adw.ButtonRow options_clear_info {
+				styles ["destructive-action"]
+				title: _("Clear Info");
+				
+				activated => $on_clear_info();
+			}
+			Adw.ButtonRow options_delete_game {
+				styles ["destructive-action"]
+				title: _("Delete Game");
+				
+				activated => $on_delete_game();
+			}
+		}
+
+		Adw.PreferencesGroup {
+			title: _("Config Settings");
+		
+			Adw.ExpanderRow {
+				title: _("Overwrite Skip Splash Screen");
+				expanded: bind overwrite_skip_splash_scr.active;
+				
+				[action]
+				Switch overwrite_skip_splash_scr {
+					halign: end;
+					valign: center;
+									
+					state-set => $on_switch_changed();
+				}
+				
+				Adw.SwitchRow options_skip_splash_scr {
+					title: _("Skip Splash Screen");
+					sensitive: bind overwrite_skip_splash_scr.active;
+									
+					activate => $on_switch_changed();
+				}
+			}
+			Adw.ExpanderRow {
+				title: _("Overwrite Skip Main Menu");
+				expanded: bind overwrite_skip_main_menu.active;
+				
+				[action]
+				Switch overwrite_skip_main_menu {
+					halign: end;
+					valign: center;
+									
+					state-set => $on_switch_changed();
+				}
+				
+				Adw.SwitchRow options_skip_main_menu {
+					title: _("Skip Main Menu");
+					sensitive: bind overwrite_skip_main_menu.active;
+				}
+			}
+			Adw.ExpanderRow {
+				title: _("Overwrite Contained Game Saves");
+				expanded: bind overwrite_forced_save_dir.active;
+				
+				[action]
+				Switch overwrite_forced_save_dir {
+					halign: end;
+					valign: center;
+					
+					state-set => $on_switch_changed();
+				}
+				
+				Adw.SwitchRow options_forced_save_dir {
+					title: _("Contained Game Saves");
+					sensitive: bind overwrite_forced_save_dir.active;
+									
+					activate => $on_switch_changed();}
+			}
+			Adw.SpinRow {
+				title: _("Save Slot");
+				sensitive: bind options_forced_save_dir.active;
+			}
+		}
+	}
 }

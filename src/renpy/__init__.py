@@ -33,7 +33,7 @@ class Game:
 		config_path = self.apath / 'game' / 'rencher.ini'
 		if not config_path.exists():
 			config = GameConfig(config_path)
-			config.write_config()
+			config.write()
 
 		self.config = GameConfig(config_path)
 
@@ -147,12 +147,14 @@ class Game:
 		env = os.environ
 		py_path = self.apath / f'{self.return_codename()}.py'
 
-		if self.config['options']['skip_splash_scr'] == 'true':
+		if self.config['overwritten']['skip_splash_scr'] == 'true':
 			env['RENPY_SKIP_SPLASHSCREEN'] = '1'
-		if self.config['options']['skip_main_menu'] == 'true':
+		if self.config['overwritten']['skip_main_menu'] == 'true':
 			env['RENPY_SKIP_MAIN_MENU'] = '1'
 
-		# if self.version[0] == '6':
+		for section in self.config['overwritten']:
+			logging.debug(f'{section}: {self.config['overwritten'][section]}')
+
 		librenpython_path = args[0].parent / 'librenpython.so'
 		if not librenpython_path.exists():
 			args.extend(['-EO', py_path])
@@ -167,7 +169,7 @@ class Game:
 	def cleanup(self, playtime: float) -> None:
 		self.config['info']['playtime'] = str(playtime)
 		self.config['info']['last_played'] = str(int(time.time()))
-		self.config.write_config()
+		self.config.write()
 
 
 class Mod(Game):

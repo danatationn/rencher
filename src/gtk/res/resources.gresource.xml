@@ -4,8 +4,6 @@
     <file preprocess="xml-stripblanks">xbox-controller-symbolic.svg</file>
     <file preprocess="xml-stripblanks">settings-symbolic.svg</file>
     <file preprocess="xml-stripblanks">cogged-wheel-symbolic.svg</file>
-    <file preprocess="xml-stripblanks">cross-small-symbolic.svg</file>
-    <file preprocess="xml-stripblanks">play-symbolic.svg</file>
     <file preprocess="xml-stripblanks">view-sort-ascending-symbolic.svg</file>
     <file preprocess="xml-stripblanks">wrench-wide-symbolic.svg</file>
     <file preprocess="xml-stripblanks">list-add-symbolic.svg</file>

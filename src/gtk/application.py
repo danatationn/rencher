@@ -74,6 +74,8 @@ class RencherFSHandler(FileSystemEventHandler):
 			return
 		if self.app.window.import_dialog.thread.is_alive():
 			return
+		if self.app.window.options_dialog.busy:
+			return
 
 		src_path = Path(event.src_path)
 		games_path = local_path / 'games'
@@ -81,7 +83,7 @@ class RencherFSHandler(FileSystemEventHandler):
 
 		if not src_path.is_relative_to(games_path) and not src_path.is_relative_to(mods_path):
 			return
-
+		
 		try:
 			mtime = int(src_path.stat().st_mtime)
 		except FileNotFoundError:
@@ -90,6 +92,8 @@ class RencherFSHandler(FileSystemEventHandler):
 				GLib.idle_add(update_library_sidebar, self.app.window)
 			mtime = 0
 
+		# if src_path.name == 'rencher.ini':
+		# 	GLib.idle_add(update_library_sidebar, self.app.window)			
 		if mtime in self.mtimes:
 			return
 		else:

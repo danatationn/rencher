@@ -34,4 +34,4 @@ class RencherCodename(Adw.AlertDialog):
 	def on_response(self, dialog, response):
 		codename = self.list_box.get_selected_row().get_title()
 		self.game.config['info']['codename'] = codename
-		self.game.config.write_config()
+		self.game.config.write()

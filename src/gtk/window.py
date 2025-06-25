@@ -1,7 +1,6 @@
 import logging
 import subprocess
 import time
-from enum import Enum
 
 from gi.repository import Adw, Gtk, GLib
 from thefuzz.fuzz import partial_token_sort_ratio
@@ -11,7 +10,7 @@ from src.gtk import open_file_manager
 from src.gtk._library import update_library_sidebar, update_library_view
 from src.gtk.import_dialog import RencherImport
 from src.gtk.settings_dialog import RencherSettings
-from src.gtk.codename_dialog import RencherCodename
+from src.gtk.options_dialog import RencherOptions
 from src.renpy import Game
 
 
@@ -24,6 +23,8 @@ class RencherWindow(Adw.ApplicationWindow):
 	projects: list[Game] = []
 	process: subprocess.Popen | None = None
 	process_time: float | None = None
+	process_row: Adw.ButtonRow = None
+	is_terminating: bool = False
 	filter_text: str = ''
 	combo_index: int = 0
 	ascending_order: bool = False
@@ -31,8 +32,10 @@ class RencherWindow(Adw.ApplicationWindow):
 	""" classes """
 	settings_dialog: Adw.PreferencesDialog = RencherSettings()
 	import_dialog: Adw.PreferencesDialog = None  # lol
+	options_dialog: Adw.PreferencesDialog = None
 
 	""" templates """
+	toast_overlay: Adw.ToastOverlay = Gtk.Template.Child()
 	split_view: Adw.OverlaySplitView = Gtk.Template.Child()
 	library_list_box: Gtk.ListBox = Gtk.Template.Child()
 	selected_status_page: Adw.ViewStackPage = Gtk.Template.Child()
@@ -54,8 +57,10 @@ class RencherWindow(Adw.ApplicationWindow):
 
 		update_library_sidebar(self)
 		self.import_dialog = RencherImport(self)
+		self.options_dialog = RencherOptions(self)
 		self.library_list_box.set_sort_func(self.sort_func)
 		self.library_list_box.set_filter_func(self.filter_func)
+		GLib.timeout_add(250, self.check_process)
 
 	@Gtk.Template.Callback()
 	def on_import_clicked(self, _widget: Adw.ButtonRow) -> None:
@@ -64,7 +69,7 @@ class RencherWindow(Adw.ApplicationWindow):
 			self.import_dialog = RencherImport(self)
 
 		self.import_dialog.present(self)
-
+		
 	@Gtk.Template.Callback()
 	def on_settings_clicked(self, _widget: Gtk.Button) -> None:
 		self.settings_dialog.present(self)
@@ -75,13 +80,14 @@ class RencherWindow(Adw.ApplicationWindow):
 		project = getattr(selected_button_row, 'game', None)
 
 		if _widget.get_style_context().has_class('suggested-action'):
-			self.toggle_play_button('stop')
 			self.process = project.run()
 			self.process_time = time.time()
-			GLib.timeout_add_seconds(1, self.check_process)
+			self.check_process()  # so the button changes instantly
+			self.process_row = selected_button_row 
 		else:
-			self.toggle_play_button('play')
 			if self.process:
+				self.play_button.set_label('Stopping')
+				self.is_terminating = True
 				self.process.terminate()
 
 	@Gtk.Template.Callback()
@@ -117,40 +123,44 @@ class RencherWindow(Adw.ApplicationWindow):
 	@Gtk.Template.Callback()
 	def on_options_clicked(self, _widget: Gtk.Button):
 		selected_button_row = self.library_list_box.get_selected_row()
-		project = getattr(selected_button_row, 'game', None)
+		game = getattr(selected_button_row, 'game', None)
 		
-		dialog = RencherCodename(project.rpath, self)
-		dialog.choose(self)
+		self.options_dialog.change_game(game)
+		self.options_dialog.present(self)
 			
 	def check_process(self) -> bool:
 		if not self.process or self.process.poll() is not None:
-			self.toggle_play_button('play')
+			self.play_button.set_label('Play')
+			self.play_button.get_style_context().remove_class('destructive-action')
+			self.play_button.get_style_context().add_class('suggested-action')
+			self.is_terminating = False
 
+			if self.process is None:
+				return True  # don't even bother looking down
+		
 			project = Game(apath=self.process.args[0].parents[2])
 			playtime = float(project.config['info']['playtime'])
 			if self.process_time:
 				playtime += time.time() - self.process_time
 			project.cleanup(playtime)
+
+			# if self.process_row: 
+			# 	self.process_row.game = project
+			# 	update_library_view(self, project)
+			# NOT DESIRED !
+
 			self.process = None
-			return False
+			self.process_row = None
+			
+			# update_library_sidebar(self)
 		else:
-			self.toggle_play_button('stop')
-			return True
-
-	def toggle_play_button(self, state: str) -> None:
-		"""
-		Args:
-			state: accepts two values: 'play' and 'stop'
-		"""
-
-		if state == 'play':
-			self.play_button.set_label('Play')
-			self.play_button.get_style_context().remove_class('destructive-action')
-			self.play_button.get_style_context().add_class('suggested-action')
-		elif state == 'stop':
-			self.play_button.set_label('Stop')
+			if self.is_terminating:
+				self.play_button.set_label('Stopping')
+			else:
+				self.play_button.set_label('Stop')
 			self.play_button.get_style_context().remove_class('suggested-action')
 			self.play_button.get_style_context().add_class('destructive-action')
+		return True
 
 	def filter_func(self, widget: Gtk.ListBoxRow) -> bool:
 		if not self.filter_text:
@@ -175,9 +185,6 @@ class RencherWindow(Adw.ApplicationWindow):
 		else:
 			game_one = one.game.config['info'].get('added_on', 0)
 			game_two = two.game.config['info'].get('added_on', 0)
-		# else:
-		# 	game_one = one.game.config['info'].get('size', 0)
-		# 	game_two = two.game.config['info'].get('size', 0)
 			
 		if game_one < game_two:
 			res = 1

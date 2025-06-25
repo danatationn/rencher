@@ -76,6 +76,7 @@ def update_library_sidebar(self) -> None:
 
 def update_library_view(self, project: Game) -> None:
 	self.selected_status_page.set_title(project.name)
+	project.config.read()
 
 	# for i in range(self.log_row.get_n_rows()):
 	# 	row = self.log_row.get_row_at_index(i)

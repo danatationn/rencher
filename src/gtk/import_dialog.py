@@ -3,15 +3,24 @@ import threading
 import zipfile
 from pathlib import Path
 
-from gi.repository import Adw, Gio, Gtk, GLib
+from gi.repository import Adw, Gio, Gtk, GLib, GObject
 import rarfile
 
 from src import tmp_path
-from src.gtk import GameItem
 from src.gtk._import import import_game
 from src.gtk._library import update_library_sidebar
 from src.renpy import Game, Mod
 
+
+class GameItem(GObject.Object):
+	__gtype_name__ = 'GameItem'
+	
+	name = GObject.Property(type=str)
+	
+	def __init__(self, name, game):
+		super().__init__()
+		self.name = name
+		self.game = game
 
 filename = tmp_path / 'src' / 'gtk' / 'ui' / 'import.ui'
 @Gtk.Template(filename=str(filename))
@@ -76,7 +85,8 @@ class RencherImport(Adw.PreferencesDialog):
 			GLib.idle_add(lambda: (
 				self.import_progress_bar.set_visible(False),
 				update_library_sidebar(self.window),
-				self.close()
+				self.close(),
+				
 			))
 		
 		if self.import_button.get_style_context().has_class('destructive-action'):

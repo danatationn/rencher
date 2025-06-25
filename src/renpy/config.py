@@ -1,21 +1,26 @@
 import time
 from configparser import ConfigParser
-from functools import lru_cache
 from pathlib import Path
+import logging
 
 from src import config_path
 
 
-@lru_cache
 class GameConfig(ConfigParser):
+	game_config_path: Path
+	
 	def __init__(self, game_config_path: Path):
 		super().__init__()
 		
 		self.game_config_path = game_config_path
-		
 		self.read(game_config_path)
-		self.validate_config()
 		
+	def read(self, filenames=None, encoding=None):
+		if not filenames:
+			filenames = self.game_config_path
+		super().read(filenames)
+		self.validate_config()
+	
 	def validate_config(self):
 		structure = {
 			'info': {
@@ -23,7 +28,7 @@ class GameConfig(ConfigParser):
 				'last_played': '',
 				'playtime': 0.0,
 				'added_on': int(time.time()),
-				'size': int(),
+				#'size': int(),
 				'codename': ''
 			},
 			
@@ -66,18 +71,21 @@ class GameConfig(ConfigParser):
 					self[section][key] = str(value)
 					
 		for key, values in structure['overwritten'].items():
-			if rencher_config['settings'][key] != '':
+			if self['options'][key]:
+				self['overwritten'][key] = self['options'][key]
+			else:
 				self['overwritten'][key] = rencher_config['settings'][key]
-					
-	def write_config(self):
+			
+	def write(self, fp=None, space_around_delimiters=True):
 		new_config = ConfigParser()
 		for section in ['info', 'options']:
 			new_config.add_section(section)
 			for key, values in self[section].items():
 				new_config[section][key] = values
 
-		with open(self.game_config_path, 'w') as f:
-			new_config.write(f)
+		if not fp:
+			fp = open(self.game_config_path, 'w')
+		new_config.write(fp, space_around_delimiters)
 
 def create_config() -> None:
 	config = ConfigParser()
@@ -92,6 +100,5 @@ def create_config() -> None:
 	
 	config_path.parent.mkdir(exist_ok=True)
 	# config_path.touch(exist_ok=True)
-	with open(config_path, 'w') as f:
-		config.write(f)
+	config.write()
 		

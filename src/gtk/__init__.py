@@ -5,7 +5,7 @@ from pathlib import Path
 
 import gi
 gi.require_version('Gtk', '4.0')
-from gi.repository import GLib, Gio, GObject  # noqa: E402
+from gi.repository import GLib, Gio  # noqa: E402
 
 
 def return_comp(name: str) -> str:
@@ -122,12 +122,3 @@ def windowficate_file(file: Path | str) -> Path | str:
 	else:
 		return new_name
 		
-class GameItem(GObject.Object):
-	__gtype_name__ = 'GameItem'
-	
-	name = GObject.Property(type=str)
-	
-	def __init__(self, name, game):
-		super().__init__()
-		self.name = name
-		self.game = game

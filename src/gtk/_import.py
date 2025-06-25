@@ -9,7 +9,7 @@ from src.gtk import windowficate_file
 from src.renpy import Game
 from src.renpy.paths import find_absolute_path
 
-from gi.repository import GLib
+from gi.repository import GLib, Adw
 import rarfile
 
 def import_game(self):
@@ -99,7 +99,19 @@ def import_game(self):
 			py_names.remove(game_codename)
 			game.config['info']['codename'] = py_names[0]
 	
-		game.config.write_config()
+		game.config.write()
+		
+		toast = Adw.Toast(
+			title=f'{game.name} has been imported',
+			timeout=5
+		)
+		self.window.toast_overlay.add_toast(toast)
 	else:
 		shutil.rmtree(rpath, ignore_errors=True)
+		
+		toast = Adw.Toast(
+			title='Import has been cancelled',
+			timeout=5
+		)
+		self.window.toast_overlay.add_toast(toast)
 		
