@@ -2,11 +2,11 @@
 	<img src="public/rencher-logo.png" width="400px"/>
 <p/>
 
-Rencher is a Ren'Py game manager, made with DDLC mods in mind
+rencher is a ren'py game manager, made with ddlc mods in mind
 
 it strives to be as simple as possible, while being as beautiful as possible
 
-here's [a link to the trello board](https://trello.com/b/CGaqf0xx/rencher) lmao
+[link to the trello board](https://trello.com/b/CGaqf0xx/rencher)
 
 ## running/compiling
 ! WARNING ! this is still *heavily* a WIP so expect bugs galore
@@ -43,7 +43,7 @@ here's [a link to the trello board](https://trello.com/b/CGaqf0xx/rencher) lmao
 
 ## license
 
-logo made by my good man[vl1](https://vl1.neocities.org/) . check him out!
+logo made by my good man [vl1](https://vl1.neocities.org/) . check him out!
 
 [GNU General Public License 3.0](https://github.com/danatationn/rencher?tab=GPL-3.0-1-ov-file)
 
