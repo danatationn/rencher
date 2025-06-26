@@ -9,6 +9,7 @@ dependencies = [
     "pygobject==3.50.0",
     "pygobject-stubs==2.12.0",
     "rarfile>=4.2",
+    "requests>=2.32.4",
     "thefuzz>=0.22.1",
     "watchdog>=6.0.0",
 ]

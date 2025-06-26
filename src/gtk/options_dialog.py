@@ -199,15 +199,24 @@ class RencherOptions(Adw.PreferencesDialog):
 				return
 			
 			def delete_thread():
-				self.busy = True
-				shutil.rmtree(self.game.rpath)
-				self.busy = False
-				self.close()
-				toast = Adw.Toast(
-					title=f'"{self.game.name}" succesfully deleted',
-					timeout=5
-				)
-				self.window.toast_overlay.add_toast(toast)
+				self.window.pause_fs = True
+				try:
+					shutil.rmtree(self.game.rpath)
+				except FileNotFoundError:
+					toast = Adw.Toast(
+						title='The deletion has failed',
+						timeout=5
+					)
+				else:
+					toast = Adw.Toast(
+						title=f'"{self.game.name}" succesfully deleted',
+						timeout=5
+					)
+				finally:
+					self.window.pause_fs = False
+					self.close()
+					update_library_sidebar(self.window)
+					self.window.toast_overlay.add_toast(toast)
 				
 			thread = threading.Thread(target=delete_thread)
 			thread.start()

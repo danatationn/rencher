@@ -4,15 +4,17 @@ from configparser import NoOptionError
 
 from gi.repository import Adw, GLib
 
-from src import local_path
 from src.renpy import Game, Mod
 from src.gtk import format_gdatetime
 from src.gtk.codename_dialog import RencherCodename
+from src.renpy.config import RencherConfig
 
 
 def return_projects(self) -> list[Game]:
-	games_path = local_path / 'games'
-	mods_path = local_path / 'mods'
+	config = RencherConfig()
+	data_dir = config.get_data_dir()
+	games_path = data_dir / 'games'
+	mods_path = data_dir / 'mods'
 
 	projects: list[Game] = []
 	for path in chain(games_path.glob('*'), mods_path.glob('*')):

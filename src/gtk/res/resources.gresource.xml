@@ -8,5 +8,6 @@
     <file preprocess="xml-stripblanks">wrench-wide-symbolic.svg</file>
     <file preprocess="xml-stripblanks">list-add-symbolic.svg</file>
     <file preprocess="xml-stripblanks">loupe-large-symbolic.svg</file>
+    <file preprocess="xml-stripblanks">folder-open-symbolic.svg</file>
   </gresource>
 </gresources>

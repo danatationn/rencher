@@ -28,10 +28,11 @@ class RencherWindow(Adw.ApplicationWindow):
 	filter_text: str = ''
 	combo_index: int = 0
 	ascending_order: bool = False
+	pause_fs: bool = False
 
 	""" classes """
-	settings_dialog: Adw.PreferencesDialog = RencherSettings()
-	import_dialog: Adw.PreferencesDialog = None  # lol
+	settings_dialog: Adw.PreferencesDialog = None
+	import_dialog: Adw.PreferencesDialog = None
 	options_dialog: Adw.PreferencesDialog = None
 
 	""" templates """
@@ -58,6 +59,7 @@ class RencherWindow(Adw.ApplicationWindow):
 		update_library_sidebar(self)
 		self.import_dialog = RencherImport(self)
 		self.options_dialog = RencherOptions(self)
+		self.settings_dialog = RencherSettings(self)
 		self.library_list_box.set_sort_func(self.sort_func)
 		self.library_list_box.set_filter_func(self.filter_func)
 		GLib.timeout_add(250, self.check_process)
@@ -73,6 +75,7 @@ class RencherWindow(Adw.ApplicationWindow):
 	@Gtk.Template.Callback()
 	def on_settings_clicked(self, _widget: Gtk.Button) -> None:
 		self.settings_dialog.present(self)
+		self.settings_dialog.on_show()
 
 	@Gtk.Template.Callback()
 	def on_play_clicked(self, _widget: Gtk.Button) -> None:

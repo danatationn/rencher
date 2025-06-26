@@ -76,7 +76,7 @@ class RencherImport(Adw.PreferencesDialog):
 	@Gtk.Template.Callback()
 	def on_picker_clicked(self, button: Gtk.Button) -> None:
 		dialog = Gtk.FileDialog()
-		dialog.open(None, None, self.on_file_selected)
+		dialog.open(self.window, None, self.on_file_selected)
 
 	@Gtk.Template.Callback()
 	def on_import_clicked(self, button_row: Adw.ButtonRow) -> None:

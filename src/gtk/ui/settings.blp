@@ -2,5 +2,62 @@ using Gtk 4.0;
 using Adw 1;
 
 template $RencherSettings : Adw.PreferencesDialog {
+	title: _("Settings");
+	
+	Adw.PreferencesPage {
+		Adw.PreferencesGroup {
+			title: _("App Settings");
 
+			Adw.EntryRow settings_data_dir {
+				title: _("Data Directory");
+				
+				[suffix]
+				Button {
+					styles ["flat"]
+					
+					icon-name: "folder-open-symbolic";
+					
+					clicked => $on_picker_clicked();
+				}
+			}
+			Adw.SwitchRow settings_updates {
+				title: _("Supress Update Notifications");
+			}
+			Adw.ButtonRow {
+				title: _("Reset Data Directory");
+				activated => $on_reset_data_dir();
+			}
+			Adw.ButtonRow {
+				styles ["destructive-action"]
+			
+				title: _("Delete All Games");
+				activated => $on_delete_games();				
+			}
+		}
+		
+		Adw.PreferencesGroup {
+			title: _("Config Defaults");
+			
+			Adw.SwitchRow settings_skip_splash_scr {
+				title: _("Skip Splash Screen");
+			}
+			Adw.SwitchRow settings_skip_main_menu {
+				title: _("Skip Main Menu");
+			}
+			Adw.SwitchRow settings_forced_save_dir {
+				title: _("Contained Game Saves");
+			}
+		}
+		
+		Adw.PreferencesGroup {
+			Button {
+				styles ["pill"]
+			
+				halign: center;
+				label: _("About Rencher");
+				
+				clicked => $on_about_clicked();
+			}
+		}
+	}
 }

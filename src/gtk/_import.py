@@ -4,10 +4,10 @@ import zipfile
 from pathlib import Path
 import secrets
 
-from src import local_path
 from src.gtk import windowficate_file
 from src.renpy import Game
 from src.renpy.paths import find_absolute_path
+from src.renpy.config import RencherConfig
 
 from gi.repository import GLib, Adw
 import rarfile
@@ -17,6 +17,7 @@ def import_game(self):
 	location = Path(self.import_location.get_text())
 	is_mod = self.import_game_combo.get_sensitive()
 	game_to_mod = self.import_game_combo.get_selected_item()
+	data_dir = RencherConfig().get_data_dir()
 	
 	try:
 		dir_name = windowficate_file(self.import_title.get_text())
@@ -27,12 +28,12 @@ def import_game(self):
 		except ValueError:
 			rpath = Path()  # so it shuts up
 	else:
-		rpath = local_path / ('mods' if is_mod else 'games') / dir_name
+		rpath = data_dir / ('mods' if is_mod else 'games') / dir_name
 	
 	while True:
 		if rpath.is_dir():
 			dir_name = secrets.token_urlsafe(4)  # simple random string like 'vRDQzw' so it's not difficult to remember
-			rpath = local_path / ('mods' if is_mod else 'games') / dir_name
+			rpath = data_dir / ('mods' if is_mod else 'games') / dir_name
 		else:
 			break
 		
@@ -55,9 +56,9 @@ def import_game(self):
 
 	if is_mod and not self.cancel_flag.is_set():
 		game = game_to_mod.game
-		target_dir = local_path / 'mods' / game_name
+		target_dir = data_dir / 'mods' / game_name
 		
-		if find_absolute_path(rpath) == local_path / 'mods':
+		if find_absolute_path(rpath) == data_dir / 'mods':
 			rpa_path = target_dir / 'game'
 			for file in rpath.glob('*'):
 				rpa_path.mkdir(exist_ok=True, parents=True)
@@ -92,12 +93,13 @@ def import_game(self):
 		game = Game(rpath=rpath)
 		game.config['info']['nickname'] = game_name
 	
-		game_codename = game_to_mod.game.codename
-		py_names = [py_path.stem for py_path in sorted(game.apath.glob('*.py'))]
-	
-		if len(py_names) == 2:
-			py_names.remove(game_codename)
-			game.config['info']['codename'] = py_names[0]
+		if is_mod:
+			game_codename = game_to_mod.game.codename
+			py_names = [py_path.stem for py_path in sorted(game.apath.glob('*.py'))]
+		
+			if len(py_names) == 2:
+				py_names.remove(game_codename)
+				game.config['info']['codename'] = py_names[0]
 	
 		game.config.write()
 		

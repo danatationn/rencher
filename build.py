@@ -30,6 +30,7 @@ args = [
 	f'--file-description={project['project']['description']}',
 	f'--include-data-dir={ui_path}=src/gtk/ui',
 	f'--include-data-files={gres_path}=src/gtk/res/{gres_path.name}',
+	f'--include-data-files={pyproject_path}={pyproject_path.name}',
 	'--assume-yes-for-downloads',
 ]
 
