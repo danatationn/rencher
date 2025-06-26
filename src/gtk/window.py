@@ -2,7 +2,7 @@ import logging
 import subprocess
 import time
 
-from gi.repository import Adw, Gtk, GLib
+from gi.repository import Adw, Gtk, GLib, Gdk
 from thefuzz.fuzz import partial_token_sort_ratio
 
 from src import tmp_path

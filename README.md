@@ -1,25 +1,17 @@
-# Rencher - a Ren'Py game manager
+<p align="center">
+	<img src="public/rencher-logo.png" width="400px"/>
+<p/>
 
-<img src="public/Screenshot From 2025-05-24 11-12-47.png" alt="WIP Screenshot of Rencher's UI">
+Rencher is a Ren'Py game manager, made with DDLC mods in mind
 
-### why?
-this was originally a ddlc mod manager because all of them suck. 
-
-however i thought it would've been better if it supported all ren'py games
-
-it was originally named Doki Doki Mod Swapper, then Dossier and now Rencher (Ren'py + Launcher)! 😁😁
-
-### when?
-idfk i've been trying to make this for like a year now 😭
-
-back when it was named dossier, i tried adding way too many features and it just slowed dev down to a halt
-
-also i didn't know anything about how to make your code good so,,
+it strives to be as simple as possible, while being as beautiful as possible
 
 here's [a link to the trello board](https://trello.com/b/CGaqf0xx/rencher) lmao
 
 ## running/compiling
 ! WARNING ! this is still *heavily* a WIP so expect bugs galore
+
+<img src="public/Screenshot From 2025-06-26 22-25-14.png" alt="WIP Screenshot of Rencher's UI" width="512px"/>
 
 ### linux
 1. install uv
@@ -33,6 +25,7 @@ here's [a link to the trello board](https://trello.com/b/CGaqf0xx/rencher) lmao
 2. install the required packages:
    ```
    pacman -S --needed --noconfirm\
+        git\
 		mingw-w64-ucrt-x86_64-python\
 		mingw-w64-ucrt-x86_64-python-pip\
 		mingw-w64-ucrt-x86_64-python-gobject\
@@ -43,11 +36,15 @@ here's [a link to the trello board](https://trello.com/b/CGaqf0xx/rencher) lmao
 		mingw-w64-ucrt-x86_64-python-nuitka\
 		mingw-w64-ucrt-x86_64-ntldd
    ```
-3. install pip packages from `requirements.txt`
+3. do `pip install -r requirements.txt`
 4. run:
 	* `python main.py` if you want to test it out
 	* `python build.py` if you want to compile it
 
 ## license
 
-[GNU General Public License 3.0](https://github.com/danatationn/rencher?tab=GPL-3.0-1-ov-file) © 2007  Free Software Foundation
+logo made by my good man[vl1](https://vl1.neocities.org/) . check him out!
+
+[GNU General Public License 3.0](https://github.com/danatationn/rencher?tab=GPL-3.0-1-ov-file)
+
+© 2025 danatationn

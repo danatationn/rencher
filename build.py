@@ -25,6 +25,7 @@ args = [
 	'--onefile',
 	'--output-filename=Rencher',
 	'--company-name=danatationn',
+	# '--lto=no',
 	f'--file-version={project['project']['version']}',
 	f'--product-version={project['project']['version']}',
 	f'--file-description={project['project']['description']}',
@@ -57,6 +58,28 @@ if platform.system() == 'Windows':
 		'gdbus.exe'
 	]
 
+	# again, fuck you nuitka
+	gi_dlls = [
+		'libbz2-1.dll',
+		'libcrypto-3-x64.dll',
+		'libexpat-1.dll',
+		'libffi-8.dll',
+		'libgcc_s_seh-1.dll',
+		'libgirepository-2.0-0.dll',
+		'libglib-2.0-0.dll',
+		'libgmodule-2.0-0.dll',
+		'libgobject-2.0-0.dll',
+		'libiconv-2.dll',
+		'libintl-8.dll',
+		'liblzma-5.dll',
+		'libmpdec-4.dll',
+		'libpcre2-8-0.dll',
+		'libpython3.12.dll',
+		'libssl-3-x64.dll',
+		'libwinpthread-1.dll',
+		'zlib1.dll'
+	]
+
 	for dll in required_ddls:
 		if Path(bin_path / dll).exists():
 			args.append(f'--include-data-files={bin_path}/{dll}={dll}')
@@ -69,6 +92,7 @@ if platform.system() == 'Windows':
 		msg = 'ntldd is not installed. Please install it and try again.'
 		FileNotFoundError(msg)
 		
+	dlls = {}
 	for dll_name in required_ddls:
 		result = subprocess.run(
 			['ntldd', '-R', dll_name],
@@ -76,7 +100,6 @@ if platform.system() == 'Windows':
 			text=True,
 			check=True)
 		output = result.stdout.strip()
-		dlls = {}
 	
 		for line in output.split('\n'):
 			parts = line.split('=>')
@@ -89,11 +112,11 @@ if platform.system() == 'Windows':
 			
 				dlls[dll_name] = Path(dll_path) 
 			
-		for dll in dlls:
-			if not dlls[dll].is_relative_to(bin_path):  # ignore all dlls that aren't in msys2
-				continue
+	for dll in dlls:
+		if not dlls[dll].is_relative_to(bin_path):  # ignore all dlls that aren't in msys2
+			continue
+		if dll not in gi_dlls:
 			args.append(f'--include-data-files={dlls[dll]}={dll}')
-		
+	
 sys.argv = sys.argv + args
-
 nuitka.main()

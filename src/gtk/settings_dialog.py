@@ -130,7 +130,7 @@ class RencherSettings(Adw.PreferencesDialog):
 			project = tomllib.loads(f.read())
 		
 		dialog = Adw.AboutDialog(
-			application_icon='wrench-wide-symbolic',
+			application_icon='rencher',
 			application_name=project['project']['name'],
 			developer_name='danatationn',
 			version=project['project']['version'],
@@ -139,7 +139,13 @@ class RencherSettings(Adw.PreferencesDialog):
 			issue_url='https://github.com/danatationn/rencher/issues',
 			support_url='https://github.com/danatationn/rencher/issues',
 			copyright='© 2025 danatationn',
-			license_type=Gtk.License.GPL_3_0_ONLY
+			license_type=Gtk.License.GPL_3_0_ONLY,
+			developers=['danatationn'],
+			designers=['danatationn', 'vl1']
 		)
+		dialog.add_acknowledgement_section('Credits', [
+			'vl1 (for the logo)',
+			'All my friends :)'
+		])
 		
 		dialog.present(self)
