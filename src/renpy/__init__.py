@@ -6,6 +6,7 @@ import platform
 import time
 from pathlib import Path
 from configparser import NoOptionError
+from pprint import pprint
 
 from src.renpy import paths
 from src.renpy.config import GameConfig
@@ -42,8 +43,8 @@ class Game:
 		else:
 			self.name = self.rpath.name
 
-		self.version = self.return_renpy_version()
-		self.codename = self.return_codename()
+		self.version = self.get_renpy_version()
+		self.codename = self.get_executable().stem
 
 	def __eq__(self, other) -> bool:
 		if isinstance(other, Game):
@@ -68,18 +69,18 @@ class Game:
 			)
 		)
 
-	def return_codename(self) -> str | None:
+	def get_executable(self) -> Path | None:
 		"""
 			returns a name based off of the .py scripts located in apath
 		"""
-		py_names = [py_path.stem for py_path in sorted(self.apath.glob('*.py'))]
+		py_files = [py_path for py_path in sorted(self.apath.glob('*.py'))]
 
-		if py_names:
-			return py_names[0]
+		if py_files:
+			return py_files[0]
 		else:
 			return None
 
-	def find_exec_path(self) -> Path | None:
+	def get_python_path(self) -> Path | None:
 		arch = platform.machine()
 		os = platform.system().lower()
 
@@ -90,14 +91,9 @@ class Game:
 			f'{os}-i686'  # last resort
 		)
 
+		exec_name = 'python'
 		if os == 'windows':
-			exec_name = 'python.exe'
-		elif os == 'linux':
-			codename = self.return_codename()
-			exec_name = Path(codename).stem
-		else:
-			err = f'{os} is not supported. Sorry !'
-			raise NotImplementedError(err)
+			exec_name += '.exe'
 
 		for lib_dir in lib_directories:
 			exec_path = self.apath / 'lib' / lib_dir / exec_name
@@ -105,7 +101,7 @@ class Game:
 				return exec_path
 		return None
 
-	def return_renpy_version(self) -> str | None:
+	def get_renpy_version(self) -> str | None:
 		"""
 			tries to retrieve the game's ren'py version from multiple known locations:
 
@@ -142,28 +138,33 @@ class Game:
 
 	def run(self) -> subprocess.Popen:
 		self.setup()
+		self.config.read()  # just to be SURE
 		
-		args = [self.find_exec_path()]
+		args = [self.get_python_path()]
 		env = os.environ
-		py_path = self.apath / f'{self.return_codename()}.py'
+		py_path = self.apath / self.get_executable()
 
 		if self.config['overwritten']['skip_splash_scr'] == 'true':
 			env['RENPY_SKIP_SPLASHSCREEN'] = '1'
 		if self.config['overwritten']['skip_main_menu'] == 'true':
 			env['RENPY_SKIP_MAIN_MENU'] = '1'
 
-		for section in self.config['overwritten']:
-			logging.debug(f'{section}: {self.config['overwritten'][section]}')
-
 		librenpython_path = args[0].parent / 'librenpython.so'
-		if not librenpython_path.exists():
+		if librenpython_path.exists():
+			args.extend([py_path])
+		else:
 			args.extend(['-EO', py_path])
 
+		config_dict = {}
+		for item in self.config['overwritten']:
+			config_dict[item] = self.config['overwritten'][item]
+		logging.debug(f'config: {config_dict}')
+		logging.debug(f'args: {args}')
 		return subprocess.Popen(args, env=env)
 
 	def setup(self) -> None:
 		# LINUX: make files executable
-		exec_path = self.find_exec_path()
+		exec_path = self.get_python_path()
 		exec_path.chmod(exec_path.stat().st_mode | 0o111)
 
 	def cleanup(self, playtime: float) -> None:
@@ -184,21 +185,22 @@ class Mod(Game):
 	def __init__(self, rpath: Path = None, apath: Path = None):
 		super().__init__(rpath=rpath, apath=apath)
 
-	def return_codename(self) -> str | None:
+	def get_executable(self) -> str | None:
 		"""
 			returns a name based off of the .py scripts located in apath
 
 			function modified as renpy tend to be independent of their base games
 		"""
-		py_names = [py_path.stem for py_path in sorted(self.apath.glob('*.py'))]
+		py_files = [py_path for py_path in sorted(self.apath.glob('*.py'))]
 		codename = self.config['info']['codename']
+		exec = self.apath / f'{codename}.py'
 
 		if codename != '':
-			return codename
-		elif len(py_names) == 0:
+			return exec
+		elif len(py_files) == 0:
 			raise FileNotFoundError
-		elif len(py_names) == 1:
-			return py_names[0]
+		elif len(py_files) == 1:
+			return py_files[0]
 		else:
 			raise NoOptionError('codename', 'info')
 
@@ -218,7 +220,7 @@ class Mod(Game):
 		super().setup()
 
 		try:
-			exec_path = self.find_exec_path()
+			exec_path = self.get_python_path()
 			libs_path = exec_path.parent / 'lib'
 			librenpython_path = exec_path.parent / 'librenpython.so'
 			if libs_path.is_dir() and librenpython_path.exists():

@@ -3,15 +3,20 @@
 <p/>
 
 rencher is a ren'py game manager, made with ddlc mods in mind
-
+<br/>
 it strives to be as simple as possible, while being as beautiful as possible
 
 [link to the trello board](https://trello.com/b/CGaqf0xx/rencher)
 
 ## running/compiling
-! WARNING ! this is still *heavily* a WIP so expect bugs galore
 
-<img src="public/Screenshot From 2025-06-26 22-25-14.png" alt="WIP Screenshot of Rencher's UI" width="512px"/>
+> [!WARNING]
+> because of how rencher is packaged, windows will flag it as a virus.
+> i seriously doubt i'll be able to fix this. the only thing *you* can do is exclude it in your antivirus software
+
+rencher is nearing v1.0 ! there are some glaring bugs, but it should still be usable
+<br/>
+<img src="public/Screenshot From 2025-06-26 22-25-14.png" alt="Screenshot of Rencher's UI" width="512px"/>
 
 ### linux
 1. install uv

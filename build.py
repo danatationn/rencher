@@ -23,6 +23,7 @@ args = [
 	f'--main={main_path}',
 	'--standalone',
 	'--onefile',
+	f'--onefile-windows-splash-screen-image={main_path.parent / 'public' / 'rencher-logo.png'}'
 	'--output-filename=Rencher',
 	'--company-name=danatationn',
 	# '--lto=no',

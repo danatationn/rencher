@@ -32,14 +32,22 @@ template $RencherImport: Adw.PreferencesDialog {
 				}
 				
 				Adw.PreferencesGroup {
-					Adw.SwitchRow import_mod_toggle {
-                        title: _("Is A Mod");
-                    }
-                    Adw.ComboRow import_game_combo {
-                        title: _("Game To Mod");
-                        enable-search: true;
-                        sensitive: bind import_mod_toggle.active;
-                    }
+					Adw.ExpanderRow {
+						title: _("Is A Mod");
+						expanded: bind import_mod_toggle.active bidirectional;
+					
+						[action]
+						Switch import_mod_toggle {
+							halign: end;
+							valign: center;
+						}
+	                    
+	                    Adw.ComboRow import_game_combo {
+	                        title: _("Game To Mod");
+	                        enable-search: true;
+	                        sensitive: bind import_mod_toggle.active;
+	                    }
+					}
 				}
 				
 				Adw.PreferencesGroup {
