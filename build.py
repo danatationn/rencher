@@ -11,7 +11,7 @@ from src.gtk import compile_data
 from nuitka import __main__ as nuitka
 
 ui_path = Path(__file__).parent / 'src' / 'gtk' / 'ui'
-gres_path = Path(__file__).parent / 'src' / 'gtk' / 'res' / 'resources.gresource' 
+gres_path = Path(__file__).parent / 'src' / 'gtk' / 'res' 
 main_path = Path(__file__).parent / 'main.py'
 yaml_path = Path(__file__).parent / 'build.yml'
 pyproject_path = Path(__file__).parent / 'pyproject.toml'
@@ -23,15 +23,13 @@ args = [
 	f'--main={main_path}',
 	'--standalone',
 	'--onefile',
-	f'--onefile-windows-splash-screen-image={main_path.parent / 'public' / 'rencher-logo.png'}',
 	'--output-filename=Rencher',
 	'--company-name=danatationn',
-	# '--lto=no',
 	f'--file-version={project['project']['version']}',
 	f'--product-version={project['project']['version']}',
 	f'--file-description={project['project']['description']}',
 	f'--include-data-dir={ui_path}=src/gtk/ui',
-	f'--include-data-files={gres_path}=src/gtk/res/{gres_path.name}',
+	f'--include-data-dir={gres_path}=src/gtk/res',
 	f'--include-data-files={pyproject_path}={pyproject_path.name}',
 	'--assume-yes-for-downloads',
 ]

@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<gresources>
+  <gresource prefix="/org/gtk/libgtk/icons/scalable/actions/">
+    <file>rencher.png</file>
+    <file>xbox-controller-symbolic.symbolic.png</file>
+    <file>cogged-wheel-symbolic.symbolic.png</file>
+    <file>view-sort-ascending-symbolic.symbolic.png</file>
+    <file>wrench-wide-symbolic.symbolic.png</file>
+    <file>list-add-symbolic.symbolic.png</file>
+    <file>loupe-large-symbolic.symbolic.png</file>
+    <file>folder-open-symbolic.symbolic.png</file>
+  </gresource>
+</gresources>

@@ -1,6 +1,6 @@
 [project]
 name = "Rencher"
-version = "0.1.0"
+version = "0.9.9"
 description = "A game manager for Ren'Py"
 requires-python = ">=3.13"
 dependencies = [

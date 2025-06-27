@@ -83,6 +83,8 @@ class Game:
 	def get_python_path(self) -> Path | None:
 		arch = platform.machine()
 		os = platform.system().lower()
+		if arch == 'AMD64':
+			arch = 'x86_64'  # for windose
 
 		lib_directories = (
 			f'py3-{os}-{arch}',
@@ -139,7 +141,7 @@ class Game:
 	def run(self) -> subprocess.Popen:
 		self.setup()
 		self.config.read()  # just to be SURE
-		
+
 		args = [self.get_python_path()]
 		env = os.environ
 		py_path = self.apath / self.get_executable()
