@@ -100,9 +100,10 @@ class RencherConfig(ConfigParser):
 			'settings': {
 				'data_dir': '',
 				'surpress_updates': 'false',
+				'delete_on_import': 'true',
 				'skip_splash_scr': 'false',
 				'skip_main_menu': 'false',
-				'forced_save_dir': 'false'	
+				'forced_save_dir': 'true'	
 			}
 		}
 

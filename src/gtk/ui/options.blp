@@ -18,7 +18,7 @@ template $RencherOptions: Adw.PreferencesDialog {
 				
 				[suffix]
                 Button {
-                    icon-name: "folder-symbolic";
+                    icon-name: "external-link-symbolic";
                     styles ["flat"]
 
                     clicked => $on_dir_clicked();
@@ -98,7 +98,7 @@ template $RencherOptions: Adw.PreferencesDialog {
 									
 					activate => $on_switch_changed();}
 			}
-			Adw.SpinRow {
+			Adw.SpinRow options_save_slot {
 				title: _("Save Slot");
 				sensitive: bind options_forced_save_dir.active;
 			}

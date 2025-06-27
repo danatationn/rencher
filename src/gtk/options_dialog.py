@@ -40,10 +40,10 @@ class RencherOptions(Adw.PreferencesDialog):
 	overwrite_skip_splash_scr: Gtk.Switch = Gtk.Template.Child()
 	overwrite_skip_main_menu: Gtk.Switch = Gtk.Template.Child()
 	overwrite_forced_save_dir: Gtk.Switch = Gtk.Template.Child()
+	options_save_slot: Adw.SpinRow = Gtk.Template.Child()
 	
 	game: Game = None
 	rencher_config: ConfigParser = None
-	busy: bool = False
 
 	def __init__(self, window):
 		super().__init__()
@@ -59,6 +59,14 @@ class RencherOptions(Adw.PreferencesDialog):
 			Gtk.PropertyExpression.new(StrItem, None, 'string')
 		)
 		
+		self.options_save_slot.set_adjustment(Gtk.Adjustment(
+			lower=1,
+			upper=10,
+			value=1,
+			step_increment=1,
+			page_increment=10
+		))
+		
 	def change_game(self, game: Game):
 		self.game = game
 		string_list = Gio.ListStore.new(StrItem)
@@ -70,6 +78,7 @@ class RencherOptions(Adw.PreferencesDialog):
 		
 		self.options_nickname.set_text(game.name)
 		self.options_location.set_subtitle(str(game.rpath))
+		self.options_save_slot.set_text(game.config['options']['save_slot'])
 		
 		py_names = [py_path.stem for py_path in sorted(game.apath.glob('*.py'))]
 		for i, name in enumerate(py_names):
@@ -101,6 +110,7 @@ class RencherOptions(Adw.PreferencesDialog):
 			self.game.config['info']['nickname'] = self.options_nickname.get_text()
 		if self.game.codename != self.options_codename.get_selected_item().string:
 			self.game.config['info']['codename'] = self.options_codename.get_selected_item().string
+		self.game.config['options']['save_slot'] = self.options_save_slot.get_text()
 
 		for overwrite_switch, switch, key in self.switches_list:
 			if overwrite_switch.get_active():

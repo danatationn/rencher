@@ -18,6 +18,7 @@ class RencherSettings(Adw.PreferencesDialog):
 
 	settings_data_dir: Adw.EntryRow = Gtk.Template.Child()
 	settings_updates: Adw.SwitchRow = Gtk.Template.Child()
+	settings_delete_import: Adw.SwitchRow = Gtk.Template.Child()
 	settings_skip_splash_scr: Adw.SwitchRow = Gtk.Template.Child()
 	settings_skip_main_menu: Adw.SwitchRow = Gtk.Template.Child()
 	settings_forced_save_dir: Adw.SwitchRow = Gtk.Template.Child()
@@ -29,6 +30,7 @@ class RencherSettings(Adw.PreferencesDialog):
 
 		self.window = window
 		self.switches_list = [
+			[self.settings_delete_import, 'delete_on_import'],
 			[self.settings_updates, 'surpress_updates'],
 			[self.settings_skip_splash_scr, 'skip_splash_scr'],
 			[self.settings_skip_main_menu, 'skip_main_menu'],

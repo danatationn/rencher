@@ -157,6 +157,16 @@ class Game:
 		else:
 			args.extend(['-EO', py_path])
 
+		if self.config['overwritten']['forced_save_dir'] == 'true':
+			save_dir = self.apath / 'game' / 'saves'
+			
+			save_slot = self.config['options'].getint('save_slot')
+			if save_slot > 1:
+				save_dir = save_dir.with_name(f'saves{save_slot}')
+				logging.debug(save_dir)
+				
+			args.extend(['--savedir', save_dir])
+
 		config_dict = {}
 		for item in self.config['overwritten']:
 			config_dict[item] = self.config['overwritten'][item]

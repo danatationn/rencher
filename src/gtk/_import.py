@@ -108,6 +108,11 @@ def import_game(self):
 			timeout=5
 		)
 		self.window.toast_overlay.add_toast(toast)
+	
+		config = RencherConfig()
+		if config['settings']['delete_on_import'] == 'true':
+			# todo this
+
 	else:
 		shutil.rmtree(rpath, ignore_errors=True)
 		
