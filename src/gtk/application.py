@@ -56,8 +56,8 @@ class RencherApplication(Gtk.Application):
 		version_thread.run()
 		
 	def check_version(self):
-		if '__compiled__' not in globals():
-			return
+		# if '__compiled__' not in globals():
+		# 	return
 		if self.config['settings']['surpress_updates'] == 'true':
 			return
 		
@@ -73,7 +73,7 @@ class RencherApplication(Gtk.Application):
 			
 			if version_tuple > VERSION:
 				if 'assets' in response.json() and len(response.json()['assets']) > 0:
-					download_url = response.json()['assets'][0]['browser_download_url']
+					download_url = response.json()['html_url']
 				else:
 					return
 				
