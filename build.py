@@ -15,6 +15,7 @@ gres_path = Path(__file__).parent / 'src' / 'gtk' / 'res'
 main_path = Path(__file__).parent / 'main.py'
 yaml_path = Path(__file__).parent / 'build.yml'
 pyproject_path = Path(__file__).parent / 'pyproject.toml'
+ico_path = Path(__file__).parent / 'public' / 'rencher.ico'
 
 with open(pyproject_path, 'rb') as f:
 	project = tomllib.load(f)
@@ -25,6 +26,8 @@ args = [
 	'--onefile',
 	'--output-filename=Rencher',
 	'--company-name=danatationn',
+	'--windows-console-mode=attach',
+	f'--windows-icon-from-ico={ico_path}',
 	f'--file-version={project['project']['version']}',
 	f'--product-version={project['project']['version']}',
 	f'--file-description={project['project']['description']}',
