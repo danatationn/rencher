@@ -39,7 +39,8 @@ rencher is nearing v1.0 ! there are some glaring bugs, but it should still be us
 		mingw-w64-ucrt-x86_64-libadwaita\
 		mingw-w64-ucrt-x86_64-gcc\
 		mingw-w64-ucrt-x86_64-python-nuitka\
-		mingw-w64-ucrt-x86_64-ntldd
+		mingw-w64-ucrt-x86_64-ntldd\
+        mingw-w64-ucrt-x86_64-imagemagick
    ```
 3. do `pip install -r requirements.txt`
 4. run:

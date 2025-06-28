@@ -26,6 +26,7 @@ jobs:
             mingw-w64-ucrt-x86_64-gcc 
             mingw-w64-ucrt-x86_64-python-nuitka 
             mingw-w64-ucrt-x86_64-ntldd
+            mingw-w64-ucrt-x86_64-imagemagick
       - name: Compile with Nuitka
         run: |
           pip install -r requirements.txt
