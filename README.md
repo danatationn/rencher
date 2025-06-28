@@ -8,16 +8,37 @@ it strives to be as simple as possible, while being as beautiful as possible
 
 [link to the trello board](https://trello.com/b/CGaqf0xx/rencher)
 
-## running/compiling
-
 > [!WARNING]
 > because of how rencher is packaged, windows will flag it as a virus.
-> i seriously doubt i'll be able to fix this. the only thing *you* can do is exclude it in your antivirus software
-
-rencher is nearing v1.0 ! there are some glaring bugs, but it should still be usable
+> i will try to fix this in the future, but the only thing *you* can do right now is exclude it in your antivirus software
 <br/>
-<img src="public/Screenshot From 2025-06-26 22-25-14.png" alt="Screenshot of Rencher's UI" width="512px"/>
+<p>
+	<img src="public/Screenshot From 2025-06-28 19-05-48.png" alt="Screenshot of Rencher's UI" width="256px"/>
+	<img src="public/Screenshot From 2025-06-28 19-05-58.png" alt="Screenshot of Rencher's UI" width="256px"/>
+	<img src="public/Screenshot From 2025-06-28 19-06-06.png" alt="Screenshot of Rencher's UI" width="256px"/>
+	<img src="public/Screenshot From 2025-06-28 19-06-14.png" alt="Screenshot of Rencher's UI" width="256px"/>
+</p>
 
+## download!
+[windows](https://github.com/danatationn/Rencher/releases/latest/download/Rencher.exe)
+[linux](https://github.com/danatationn/Rencher/releases/latest/download/Rencher)
+~~macos~~ (soon)
+
+## tips
+* in order to stop windows from thinking rencher is a virus, you can try the following:
+  * bring rencher back from quarantine, move it where you need it and exclude it
+  * turn off cloud protection (idk why this works)
+  * exclude C:\ (not recommended)
+* you can turn the update toasts in the settings ^^
+* if you're importing an already set up ddlc mod, then import it and set it to mod ddlc
+
+## possible upcoming features
+- [ ] store (vndb, itch.io, the old ddmc mod list thing)
+- [ ] asset viewer (unrpa + unrpyc)
+- [ ] discord rpc
+- [ ] more...
+
+## compiling
 ### linux
 1. install uv
 2. do `uv sync`
