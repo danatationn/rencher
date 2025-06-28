@@ -1,7 +1,7 @@
 [project]
 name = "Rencher"
-version = "0.9.9"
-description = "A game manager for Ren'Py"
+version = "1.0.0"
+description = "A Ren'Py game manager, made with DDLC mods in mind"
 requires-python = ">=3.13"
 dependencies = [
     "nuitka>=2.6.9",
