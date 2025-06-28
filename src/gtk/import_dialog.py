@@ -97,7 +97,10 @@ class RencherImport(Adw.PreferencesDialog):
 		else:
 			self.import_button.set_sensitive(True)
 			if not self.import_title.get_text():
-				name = Path(location_text).stem
+				if Path(location_text).is_file():
+					name = Path(location_text).stem
+				else:
+					name = Path(location_text).name
 				self.import_title.set_text(name)
 				
 	@Gtk.Template.Callback()

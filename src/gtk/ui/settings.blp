@@ -24,7 +24,7 @@ template $RencherSettings : Adw.PreferencesDialog {
 				title: _("Supress Update Notifications");
 			}
 			Adw.SwitchRow settings_delete_import {
-				title: _("Delete Original On Import");
+				title: _("Delete Files On Import");
 			}
 			Adw.ButtonRow {
 				title: _("Reset Data Directory");
@@ -40,6 +40,7 @@ template $RencherSettings : Adw.PreferencesDialog {
 		
 		Adw.PreferencesGroup {
 			title: _("Config Defaults");
+			description: _("These might break some games. Here be dragons!");
 			
 			Adw.SwitchRow settings_skip_splash_scr {
 				title: _("Skip Splash Screen");

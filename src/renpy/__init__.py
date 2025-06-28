@@ -148,8 +148,12 @@ class Game:
 
 		if self.config['overwritten']['skip_splash_scr'] == 'true':
 			env['RENPY_SKIP_SPLASHSCREEN'] = '1'
+		elif env.get('RENPY_SKIP_SPLASHSCREEN'):
+			env.pop('RENPY_SKIP_SPLASHSCREEN')
 		if self.config['overwritten']['skip_main_menu'] == 'true':
-			env['RENPY_SKIP_MAIN_MENU'] = '1'
+			env['RENPY_SKIP_MAIN_MENU'] = 'Did you know you can put anything here and it stills work like ren\'py doesn\'t even check for the value it\'s crazy'
+		elif env.get('RENPY_SKIP_MAIN_MENU'):
+			env.pop('RENPY_SKIP_MAIN_MENU')
 
 		librenpython_path = args[0].parent / 'librenpython.so'
 		if librenpython_path.exists():
