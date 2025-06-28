@@ -44,7 +44,7 @@ def import_game(self):
 			
 		rpath = library_dir / dir_name
 		if not rpath.is_dir():
-			rpath.mkdir(exist_ok=True)
+			rpath.mkdir(exist_ok=True, parents=True)
 			break
 		
 	if location.is_file():
@@ -167,10 +167,13 @@ def import_game(self):
 	
 		if config['settings']['delete_on_import'] == 'true':
 			location_path = Path(location)
-			if location_path.is_file():
-				location_path.unlink(missing_ok=True)
-			elif location_path.is_dir():
-				shutil.rmtree(location_path)
+			try:
+				if location_path.is_file():
+					location_path.unlink(missing_ok=True)
+				elif location_path.is_dir():
+					shutil.rmtree(location_path)
+			except PermissionError:
+				pass
 	else:
 		shutil.rmtree(rpath, ignore_errors=True)
 		
