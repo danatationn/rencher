@@ -1,3 +1,4 @@
+import platform
 import sys
 from src.gtk import compile_data
 from src import tmp_path
@@ -14,7 +15,10 @@ def main():
 	from src.gtk.application import RencherApplication  # noqa: E402	
 	app = RencherApplication()
 	
-	gres_path = tmp_path / 'src' / 'gtk' / 'res' / 'resources.gresource'
+	if platform.system() == 'Windows':
+		gres_path = tmp_path / 'src' / 'gtk' / 'res' / 'windows.resources.gresource'
+	else:
+		gres_path = tmp_path / 'src' / 'gtk' / 'res' / 'resources.gresource'
 	res = Gio.resource_load(str(gres_path))	
 	res._register()
 	

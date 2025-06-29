@@ -26,7 +26,7 @@ args = [
 	'--onefile',
 	'--output-filename=Rencher',
 	'--company-name=danatationn',
-	'--windows-console-mode=attach',
+	'--windows-console-mode=disable',
 	f'--windows-icon-from-ico={ico_path}',
 	f'--file-version={project['project']['version']}',
 	f'--product-version={project['project']['version']}',
