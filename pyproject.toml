@@ -1,6 +1,6 @@
 [project]
 name = "Rencher"
-version = "1.0.0"
+version = "1.0.1"
 description = "A Ren'Py game manager, made with DDLC mods in mind"
 requires-python = ">=3.13"
 dependencies = [

@@ -12,5 +12,6 @@
     <file preprocess="xml-stripblanks">external-link-symbolic.svg</file>
     <file preprocess="xml-stripblanks">file-cabinet-symbolic.svg</file>
     <file preprocess="xml-stripblanks">library-symbolic.svg</file>
+    <file preprocess="xml-stripblanks">edit-symbolic.svg</file>
   </gresource>
 </gresources>

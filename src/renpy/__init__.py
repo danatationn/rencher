@@ -93,7 +93,7 @@ class Game:
 			f'{os}-i686'  # last resort
 		)
 
-		exec_name = 'python'
+		exec_name = 'pythonw'
 		if os == 'windows':
 			exec_name += '.exe'
 

@@ -16,6 +16,12 @@ template $RencherImport: Adw.PreferencesDialog {
 					Adw.EntryRow import_title {
 						title: _("Title");
 					}
+					// currently broken
+					//Adw.ComboRow import_type {
+					//	title: _("Type");
+					//	
+					//	notify::selected-item => $on_type_changed();
+					//}
 					Adw.EntryRow import_location {
 						title: _("Archive Location");
 						
@@ -28,11 +34,6 @@ template $RencherImport: Adw.PreferencesDialog {
 							
 							clicked => $on_picker_clicked();
 						}
-					}
-					Adw.ComboRow import_type {
-						title: _("Type");
-						
-						notify::selected-item => $on_type_changed();
 					}
 				}
 				

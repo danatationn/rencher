@@ -30,7 +30,7 @@ class RencherImport(Adw.PreferencesDialog):
 	import_title: Adw.EntryRow = Gtk.Template.Child()
 	import_location: Adw.EntryRow = Gtk.Template.Child()
 	import_location_picker: Gtk.Button = Gtk.Template.Child()
-	import_type: Adw.ComboRow = Gtk.Template.Child()
+	# import_type: Adw.ComboRow = Gtk.Template.Child()
 	import_game_combo: Adw.ComboRow = Gtk.Template.Child()
 	import_button: Adw.ActionRow = Gtk.Template.Child()
 	import_progress_bar: Gtk.ProgressBar = Gtk.Template.Child()
@@ -62,22 +62,22 @@ class RencherImport(Adw.PreferencesDialog):
 		string_list = Gtk.StringList()
 		string_list.append('Archive (.zip, .rar)')
 		string_list.append('Folder')
-		self.import_type.set_model(string_list)
+		# self.import_type.set_model(string_list)
 		
 		GLib.timeout_add(250, self.check_process)
 		
-	@Gtk.Template.Callback()
-	def on_type_changed(self, combo_row: Adw.ComboRow, *args):
-		selected_item = self.import_type.get_selected_item()
-		self.selected_type = selected_item.get_string()
-		if self.selected_type == 'Folder':
-			self.import_location.set_title('Folder Location')
-			self.import_location_picker.set_icon_name('folder-open-symbolic')
-			self.import_location.set_text(self.folder_location)
-		else:
-			self.import_location.set_title('Archive Location')
-			self.import_location_picker.set_icon_name('file-cabinet-symbolic')
-			self.import_location.set_text(self.archive_location)
+	# @Gtk.Template.Callback()
+	# def on_type_changed(self, combo_row: Adw.ComboRow, *args):
+		# selected_item = self.import_type.get_selected_item()
+		# self.selected_type = selected_item.get_string()
+		# if self.selected_type == 'Folder':
+		# 	self.import_location.set_title('Folder Location')
+		# 	self.import_location_picker.set_icon_name('folder-open-symbolic')
+		# 	self.import_location.set_text(self.folder_location)
+		# else:
+		# 	self.import_location.set_title('Archive Location')
+		# 	self.import_location_picker.set_icon_name('file-cabinet-symbolic')
+		# 	self.import_location.set_text(self.archive_location)
 		
 	@Gtk.Template.Callback()
 	def on_location_changed(self, entry_row: Adw.EntryRow):

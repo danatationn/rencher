@@ -21,7 +21,7 @@ Adw.init()
 from src.gtk.window import RencherWindow  # noqa: E402
 from src.gtk._library import update_library_sidebar, update_library_view  # noqa: E402
 
-VERSION = (1, 0, 0)
+VERSION = (1, 0, 1)
 
 
 class RencherApplication(Gtk.Application):
