@@ -1,15 +1,15 @@
 import logging
-import platform
 import threading
+import tomllib
+
 import requests
 from pathlib import Path
-from configparser import ConfigParser
 
 import gi
 from watchdog.events import DirModifiedEvent, FileModifiedEvent, FileSystemEventHandler
 from watchdog.observers import Observer
 
-from src import local_path, config_path
+from src import local_path, config_path, tmp_path
 from src.renpy.config import RencherConfig
 
 gi.require_version('Gtk', '4.0')
@@ -20,8 +20,6 @@ Adw.init()
 
 from src.gtk.window import RencherWindow  # noqa: E402
 from src.gtk._library import update_library_sidebar, update_library_view  # noqa: E402
-
-VERSION = (1, 0, 1)
 
 
 class RencherApplication(Gtk.Application):
@@ -68,21 +66,21 @@ class RencherApplication(Gtk.Application):
 		else:
 			if response.status_code == 404:
 				return
-			version_list = response.json()['tag_name'].replace('v', '').split('.')
-			version_tuple = tuple(map(int, version_list))
+			version = response.json()['tag_name'].replace('v', '')
+
+			with open(tmp_path / 'pyproject.toml', 'r') as f:
+				project = tomllib.loads(f.read())
 			
-			if version_tuple > VERSION:
+			if version > project['project']['version']:
 				if 'assets' in response.json() and len(response.json()['assets']) > 0:
 					download_url = response.json()['html_url']
 				else:
 					return
 				
-				version_string = '.'.join(str(i) for i in version_tuple)
-				
-				logging.info(f'A new update is available! {version_string}')
+				logging.info(f'A new update is available! (v{version})')
 				logging.info(download_url)
 				toast = Adw.Toast(
-					title=f'A new update is available! ({version_string})',
+					title=f'A new update is available! (v{version})',
 					timeout=5,
 					button_label='Download'
 				)
@@ -91,6 +89,8 @@ class RencherApplication(Gtk.Application):
 				))
 				
 				self.window.toast_overlay.add_toast(toast)
+			else:
+				logging.info(f'You\'re up to date! (v{project['project']['version']})')
 
 	# def do_shutdown(self):
 	# 	Gtk.Application.do_activate(self)
