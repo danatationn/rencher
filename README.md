@@ -1,3 +1,4 @@
+# Rencher - yet another mod manager
 <p align="center">
 	<img src="public/rencher-logo.png" width="400px"/>
 <p/>
