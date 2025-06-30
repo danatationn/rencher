@@ -62,7 +62,9 @@ def update_library_sidebar(self) -> None:
 		buttons[i] = button
 
 	for button in buttons.values():
-		if button is not None and button.game in removed_projects:
+		if (button is not None 
+			and button.game in removed_projects
+			and button.get_parent() is self.library_list_box):
 			self.library_list_box.remove(button)
 
 	for project in added_projects:
