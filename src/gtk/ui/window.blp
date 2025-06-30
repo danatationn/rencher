@@ -15,10 +15,12 @@ template $RencherWindow : Adw.ApplicationWindow {
 		    Button {
 				icon-name: "list-add-symbolic";
 				clicked => $on_import_clicked();
+				tooltip-text: _("Import");
 		    }
 		    ToggleButton library_search_button {
 		        icon-name: "loupe-large-symbolic";
 		        sensitive: bind split_view.show-sidebar;
+		        tooltip-text: _("Search");
 		    }
 
 			[end]
@@ -74,6 +76,7 @@ template $RencherWindow : Adw.ApplicationWindow {
 							}
 							ToggleButton ascending_order_button {
 								icon-name: "view-sort-ascending";
+								tooltip-text: _("Reverse Sorting");
 								
 								toggled => $on_order_changed();
 							}

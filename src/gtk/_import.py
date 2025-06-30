@@ -6,21 +6,16 @@ import secrets
 
 from src.gtk import windowficate_file
 from src.renpy import Game
-from src.renpy.paths import find_absolute_path
+from src.renpy.paths import get_absolute_path, get_rpa_path
 from src.renpy.config import RencherConfig
 
 from gi.repository import GLib, Adw
 import rarfile
 
-def import_game(self):
-	game_name = self.import_title.get_text()
-	location = Path(self.import_location.get_text())
-	is_mod = self.import_game_combo.get_sensitive()
-	target_game = self.import_game_combo.get_selected_item()
-	config = RencherConfig()
-	data_dir = RencherConfig().get_data_dir()
-	
-	# determining a name for the game directory
+config = RencherConfig()
+data_dir = RencherConfig().get_data_dir()
+
+def get_dir_name(self, location: Path, is_mod: bool = False) -> Path:
 	library_dir = data_dir / ('mods' if is_mod else 'games') 
 	while True:
 		dir_name = None
@@ -45,7 +40,15 @@ def import_game(self):
 		rpath = library_dir / dir_name
 		if not rpath.is_dir():
 			rpath.mkdir(exist_ok=True, parents=True)
-			break
+			return rpath
+
+def import_game(self):
+	game_name = self.import_title.get_text()
+	location = Path(self.import_location.get_text())
+	is_mod = self.import_game_combo.get_sensitive()
+	target_game = self.import_game_combo.get_selected_item()
+	
+	rpath = get_dir_name(self, location, is_mod)
 		
 	if location.is_file():
 		if location.suffix == '.zip':
@@ -92,20 +95,23 @@ def import_game(self):
 
 	if is_mod and not self.cancel_flag.is_set():
 		game = target_game.game
-		target_dir = data_dir / 'mods' / game_name
-		
+
 		# some ren'py 6 mods only supply rpa files
 		# make sure the game/ folder exists
-		if find_absolute_path(rpath) == data_dir / 'mods':
-			rpa_path = target_dir / 'game'
-			for file in rpath.glob('*'):
-				rpa_path.mkdir(exist_ok=True, parents=True)
-				file.replace(rpa_path / file.name)
+		rpa_dir = get_rpa_path(rpath)
+		if rpa_dir.name != 'game':
+			logging.debug(rpa_dir)
+			new_rpa_dir = rpath / 'game'
+			new_rpa_dir.mkdir(exist_ok=True, parents=True)
+			for file in rpa_dir.glob('*'):
+				relative_path = file.relative_to(rpa_dir)
+				new_rpa_path = new_rpa_dir / relative_path
+				file.replace(new_rpa_path)
 
 		# we already did find_absolute_path, and it's possible that the directory has now changed completely
 		# we need to clear the cache in order for it to not return the same thing
-		find_absolute_path.cache_clear()
-		apath = find_absolute_path(rpath)
+		get_rpa_path.cache_clear()
+		apath = get_absolute_path(rpath)
 		if apath is None:
 			# mod is broken
 			toast = Adw.Toast(
@@ -136,8 +142,8 @@ def import_game(self):
 				GLib.idle_add(self.import_progress_bar.set_fraction, (total_mod_work + i) / total_work)
 		
 	if not self.cancel_flag.is_set():
-		find_absolute_path.cache_clear()
-		apath = find_absolute_path(rpath)
+		get_rpa_path.cache_clear()
+		apath = get_absolute_path(rpath)
 		if apath is None:
 			toast = Adw.Toast(
 				title='The mod is corrupt',  # ???
@@ -146,12 +152,18 @@ def import_game(self):
 			self.window.toast_overlay.add_toast(toast)
 			shutil.rmtree(rpath)
 			return
+		
+		py_names = [py_path.stem for py_path in sorted(apath.glob('*.py'))]
+		# if not is_mod and len(py_names) > 1:
+		# 	mod_rpath = get_dir_name(self, location, True)
+		# 	rpath.replace(mod_rpath)
+		# DOING THIS LATER
+		
 		game = Game(apath=apath)
 		game.config['info']['nickname'] = game_name
-	
+			
 		if is_mod:
 			game_codename = target_game.game.codename
-			py_names = [py_path.stem for py_path in sorted(game.apath.glob('*.py'))]
 		
 			if len(py_names) == 2:
 				py_names.remove(game_codename)

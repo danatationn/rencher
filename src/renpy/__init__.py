@@ -27,7 +27,7 @@ class Game:
 		if not rpath and apath:
 			self.rpath = apath
 		if not apath and rpath:
-			self.apath = paths.find_absolute_path(self.rpath)
+			self.apath = paths.get_absolute_path(self.rpath)
 			if self.apath is None:
 				raise FileNotFoundError('This is not a real game!')
 

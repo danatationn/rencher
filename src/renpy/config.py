@@ -80,6 +80,8 @@ class GameConfig(ConfigParser):
 			for key, values in self[section].items():
 				new_config[section][key] = values
 
+		self.game_config_path.parent.mkdir(exist_ok=True, parents=True)
+		self.game_config_path.touch(exist_ok=True)
 		if not fp:
 			fp = open(self.game_config_path, 'w')
 		new_config.write(fp, space_around_delimiters)
@@ -100,10 +102,10 @@ class RencherConfig(ConfigParser):
 			'settings': {
 				'data_dir': '',
 				'surpress_updates': 'false',
-				'delete_on_import': 'true',
+				'delete_on_import': 'false',
 				'skip_splash_scr': 'false',
 				'skip_main_menu': 'false',
-				'forced_save_dir': 'true'	
+				'forced_save_dir': 'false'	
 			}
 		}
 
@@ -121,6 +123,7 @@ class RencherConfig(ConfigParser):
 	def write(self, fp=None, space_around_delimiters=True):
 		config_path.parent.mkdir(exist_ok=True)
 		
+		config_path.touch(exist_ok=True)
 		if not fp:
 			fp = open(config_path, 'w')
 		super().write(fp, space_around_delimiters)

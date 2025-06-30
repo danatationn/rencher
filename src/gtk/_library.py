@@ -15,6 +15,7 @@ def return_projects(self) -> list[Game]:
 	data_dir = config.get_data_dir()
 	games_path = data_dir / 'games'
 	mods_path = data_dir / 'mods'
+	dialog = RencherCodename(self)
 
 	projects: list[Game] = []
 	for path in chain(games_path.glob('*'), mods_path.glob('*')):
@@ -23,11 +24,15 @@ def return_projects(self) -> list[Game]:
 				projects.append(Game(rpath=path))
 			else:
 				projects.append(Mod(rpath=path))
+		except NoOptionError:
+			dialog.change_game(path)
+			dialog.choose(self)
 		except FileNotFoundError:
 			pass
-		except NoOptionError:
-			dialog = RencherCodename(path, self)
-			dialog.choose(self)
+		except AttributeError:
+			pass
+		# except Exception as e:
+		# 	logging.debug(f'RANDOM NEW ERROR: {e}. YEY !!!')
 
 	return projects
 
@@ -57,7 +62,7 @@ def update_library_sidebar(self) -> None:
 		buttons[i] = button
 
 	for button in buttons.values():
-		if button.game in removed_projects:
+		if button is not None and button.game in removed_projects:
 			self.library_list_box.remove(button)
 
 	for project in added_projects:
