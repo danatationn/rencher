@@ -21,9 +21,7 @@ it strives to be as simple as possible, while being as beautiful as possible
 </p>
 
 ## download!
-[windows](https://github.com/danatationn/Rencher/releases/latest/download/Rencher.exe)
-[linux](https://github.com/danatationn/Rencher/releases/latest/download/Rencher)
-~~macos~~ (soon)
+### [windows](https://github.com/danatationn/Rencher/releases/latest/download/Rencher.exe) - [linux](https://github.com/danatationn/Rencher/releases/latest/download/Rencher) - ~~macos~~ (soon)
 
 ## tips
 * in order to stop windows from thinking rencher is a virus, you can try the following:
