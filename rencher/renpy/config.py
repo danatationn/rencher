@@ -3,7 +3,7 @@ from configparser import ConfigParser
 from pathlib import Path
 import logging
 
-from src import config_path, local_path
+from rencher import config_path, local_path
 
 
 class GameConfig(ConfigParser):

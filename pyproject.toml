@@ -1,10 +1,10 @@
 [project]
 name = "Rencher"
-version = "1.0.2"
+version = "1.1.0"
 description = "A Ren'Py game manager, made with DDLC mods in mind"
 requires-python = ">=3.13"
 dependencies = [
-    "nuitka>=2.6.9",
+    "cx-freeze>=8.3.0",
     "pycairo==1.27.0",
     "pygobject==3.50.0",
     "pygobject-stubs==2.12.0",

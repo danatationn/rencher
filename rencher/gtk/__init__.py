@@ -37,7 +37,7 @@ def compile_data() -> None:
 	resc_path = return_comp('glib-compile-resources')
 	mgck_path = return_comp('magick')
 
-	ui_dir = Path(__file__).parents[2] / 'src' / 'gtk' / 'ui'
+	ui_dir = Path(__file__).parents[2] / 'rencher' / 'gtk' / 'ui'
 	blp_files = ui_dir.glob('*.blp')
 	args = ['python', blpc_path, 'batch-compile', ui_dir, ui_dir]
 
@@ -47,7 +47,7 @@ def compile_data() -> None:
 	print('Compiling .blp files...')
 	subprocess.run(args)
 	
-	res_dir = Path(__file__).parents[2] / 'src' / 'gtk' / 'res'
+	res_dir = Path(__file__).parents[2] / 'rencher' / 'gtk' / 'res'
 		
 	if platform.system() == 'Windows':
 		xml_file = res_dir / 'windows.resources.gresource.xml'

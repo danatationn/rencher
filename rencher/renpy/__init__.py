@@ -8,8 +8,8 @@ from pathlib import Path
 from configparser import NoOptionError
 from pprint import pprint
 
-from src.renpy import paths
-from src.renpy.config import GameConfig
+from rencher.renpy import paths
+from rencher.renpy.config import GameConfig
 
 
 class Game:

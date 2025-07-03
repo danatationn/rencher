@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from src.renpy import Game
+from rencher.renpy import Game
 
 from gi.repository import Gtk, Adw
 

@@ -4,10 +4,10 @@ import zipfile
 from pathlib import Path
 import secrets
 
-from src.gtk import windowficate_file
-from src.renpy import Game
-from src.renpy.paths import get_absolute_path, get_rpa_path
-from src.renpy.config import RencherConfig
+from rencher.gtk import windowficate_file
+from rencher.renpy import Game
+from rencher.renpy.paths import get_absolute_path, get_rpa_path
+from rencher.renpy.config import RencherConfig
 
 from gi.repository import GLib, Adw
 import rarfile

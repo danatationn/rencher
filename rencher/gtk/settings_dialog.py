@@ -6,12 +6,12 @@ from pathlib import Path
 
 from gi.repository import Gtk, Adw, GLib
 
-from src import tmp_path, local_path
-from src.renpy.config import RencherConfig
-from src.gtk._library import update_library_sidebar
+from rencher import tmp_path, local_path
+from rencher.renpy.config import RencherConfig
+from rencher.gtk._library import update_library_sidebar
 
 
-filename = tmp_path / 'src' / 'gtk' / 'ui' / 'settings.ui'
+filename = tmp_path / 'rencher' / 'gtk' / 'ui' / 'settings.ui'
 @Gtk.Template(filename=str(filename))
 class RencherSettings(Adw.PreferencesDialog):
 	__gtype_name__ = 'RencherSettings'

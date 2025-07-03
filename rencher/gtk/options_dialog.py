@@ -5,10 +5,10 @@ import time
 from pathlib import Path
 from configparser import ConfigParser
 
-from src import tmp_path, config_path, local_path
-from src.renpy import Game, Mod
-from src.gtk import open_file_manager
-from src.gtk._library import update_library_view, update_library_sidebar
+from rencher import tmp_path, config_path, local_path
+from rencher.renpy import Game, Mod
+from rencher.gtk import open_file_manager
+from rencher.gtk._library import update_library_view, update_library_sidebar
 
 from gi.repository import Gtk, Adw, Gio, GObject, GLib
 
@@ -26,7 +26,7 @@ class StrItem(GObject.Object):
 		self.string = string
 
 
-filename = tmp_path / 'src' / 'gtk' / 'ui' / 'options.ui'
+filename = tmp_path / 'rencher' / 'gtk' / 'ui' / 'options.ui'
 @Gtk.Template(filename=str(filename))
 class RencherOptions(Adw.PreferencesDialog):
 	__gtype_name__ = 'RencherOptions'

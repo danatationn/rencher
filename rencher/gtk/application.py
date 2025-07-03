@@ -9,8 +9,8 @@ import gi
 from watchdog.events import DirModifiedEvent, FileModifiedEvent, FileSystemEventHandler
 from watchdog.observers import Observer
 
-from src import local_path, config_path, tmp_path
-from src.renpy.config import RencherConfig
+from rencher import local_path, config_path, tmp_path
+from rencher.renpy.config import RencherConfig
 
 gi.require_version('Gtk', '4.0')
 gi.require_version('Adw', '1')
@@ -18,8 +18,8 @@ from gi.repository import Adw, Gtk, GLib, Gdk  # noqa: E402
 
 Adw.init()
 
-from src.gtk.window import RencherWindow  # noqa: E402
-from src.gtk._library import update_library_sidebar, update_library_view  # noqa: E402
+from rencher.gtk.window import RencherWindow  # noqa: E402
+from rencher.gtk._library import update_library_sidebar, update_library_view  # noqa: E402
 
 
 class RencherApplication(Gtk.Application):

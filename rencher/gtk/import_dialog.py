@@ -6,10 +6,10 @@ from pathlib import Path
 from gi.repository import Adw, Gio, Gtk, GLib, GObject
 import rarfile
 
-from src import tmp_path
-from src.gtk._import import import_game
-from src.gtk._library import update_library_sidebar
-from src.renpy import Game, Mod
+from rencher import tmp_path
+from rencher.gtk._import import import_game
+from rencher.gtk._library import update_library_sidebar
+from rencher.renpy import Game, Mod
 
 
 class GameItem(GObject.Object):
@@ -22,7 +22,7 @@ class GameItem(GObject.Object):
 		self.name = name
 		self.game = game
 
-filename = tmp_path / 'src' / 'gtk' / 'ui' / 'import.ui'
+filename = tmp_path / 'rencher' / 'gtk' / 'ui' / 'import.ui'
 @Gtk.Template(filename=str(filename))
 class RencherImport(Adw.PreferencesDialog):
 	__gtype_name__ = 'RencherImport'

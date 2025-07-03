@@ -4,10 +4,10 @@ from configparser import NoOptionError
 
 from gi.repository import Adw, GLib
 
-from src.renpy import Game, Mod
-from src.gtk import format_gdatetime
-from src.gtk.codename_dialog import RencherCodename
-from src.renpy.config import RencherConfig
+from rencher.renpy import Game, Mod
+from rencher.gtk import format_gdatetime
+from rencher.gtk.codename_dialog import RencherCodename
+from rencher.renpy.config import RencherConfig
 
 
 def return_projects(self) -> list[Game]:
