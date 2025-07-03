@@ -1,15 +1,14 @@
-import logging
 import threading
 import zipfile
 from pathlib import Path
 
-from gi.repository import Adw, Gio, Gtk, GLib, GObject
 import rarfile
+from gi.repository import Adw, Gio, GLib, GObject, Gtk
 
 from rencher import tmp_path
 from rencher.gtk._import import import_game
 from rencher.gtk._library import update_library_sidebar
-from rencher.renpy import Game, Mod
+from rencher.renpy import Mod
 
 
 class GameItem(GObject.Object):

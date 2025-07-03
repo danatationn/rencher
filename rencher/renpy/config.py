@@ -1,7 +1,7 @@
+import logging
 import time
 from configparser import ConfigParser
 from pathlib import Path
-import logging
 
 from rencher import config_path, local_path
 

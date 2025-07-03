@@ -1,12 +1,12 @@
 import logging
-from itertools import chain
 from configparser import NoOptionError
+from itertools import chain
 
 from gi.repository import Adw, GLib
 
-from rencher.renpy import Game, Mod
 from rencher.gtk import format_gdatetime
 from rencher.gtk.codename_dialog import RencherCodename
+from rencher.renpy import Game, Mod
 from rencher.renpy.config import RencherConfig
 
 
@@ -57,7 +57,7 @@ def update_library_sidebar(self) -> None:
 		logging.debug(log)
 
 	buttons = {}
-	for i, project in enumerate(self.projects):
+	for i, _ in enumerate(self.projects):
 		button = self.library_list_box.get_row_at_index(i)
 		buttons[i] = button
 
@@ -86,26 +86,6 @@ def update_library_sidebar(self) -> None:
 def update_library_view(self, project: Game) -> None:
 	self.selected_status_page.set_title(project.name)
 	project.config.read()
-
-	# for i in range(self.log_row.get_n_rows()):
-	# 	row = self.log_row.get_row_at_index(i)
-	# 	self.log_row.remove(row)
-	#
-	# log_path = project.apath / 'log.txt'
-	# if log_path.exists():
-	# 	with open(log_path, 'r') as f:
-	# 		log = f.read()
-	#
-	# 	row = Adw.ActionRow(title='Log File', subtitle=log)
-	# 	row.get_style_context().add_class('monospace')
-	# 	self.log_row.add_row(row)
-
-	# try:
-	# 	size = project.config['info']['size']
-	# 	formatted_size = HumanBytes.format(int(size), metric=True)
-	# 	self.size_row.set_subtitle(formatted_size)
-	# except KeyError:
-	# 	self.size_row.set_subtitle('N/A')
 
 	try:
 		last_played = int(float(project.config['info']['last_played']))

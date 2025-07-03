@@ -1,15 +1,13 @@
-import logging
 import shutil
 import threading
 import tomllib
 from pathlib import Path
 
-from gi.repository import Gtk, Adw, GLib
+from gi.repository import Adw, GLib, Gtk
 
-from rencher import tmp_path, local_path
-from rencher.renpy.config import RencherConfig
+from rencher import local_path, tmp_path
 from rencher.gtk._library import update_library_sidebar
-
+from rencher.renpy.config import RencherConfig
 
 filename = tmp_path / 'rencher' / 'gtk' / 'ui' / 'settings.ui'
 @Gtk.Template(filename=str(filename))

@@ -1,13 +1,7 @@
 # Rencher
-/games/
-/mods/
 *.ui
-
-# Nuitka
-/main.build/
-/main.dist/
-/main.onefile-build/
-/main.bin
+*.png
+*.gresource
 
 ### Python template
 # Byte-compiled / optimized / DLL files

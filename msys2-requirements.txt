@@ -1,6 +1,0 @@
-# this file is for windows/msys2
-
-thefuzz~=0.22.1
-watchdog~=6.0.0
-rarfile~=4.2
-requests~=2.32.4

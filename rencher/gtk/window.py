@@ -1,18 +1,16 @@
-import logging
 import subprocess
 import time
 
-from gi.repository import Adw, Gtk, GLib, Gdk
+from gi.repository import Adw, GLib, Gtk
 from thefuzz.fuzz import partial_token_sort_ratio
 
 from rencher import tmp_path
 from rencher.gtk import open_file_manager
 from rencher.gtk._library import update_library_sidebar, update_library_view
 from rencher.gtk.import_dialog import RencherImport
-from rencher.gtk.settings_dialog import RencherSettings
 from rencher.gtk.options_dialog import RencherOptions
+from rencher.gtk.settings_dialog import RencherSettings
 from rencher.renpy import Game
-
 
 filename = tmp_path / 'rencher' / 'gtk' / 'ui' / 'window.ui'
 @Gtk.Template(filename=str(filename))

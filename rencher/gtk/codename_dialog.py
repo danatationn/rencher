@@ -1,8 +1,8 @@
 from pathlib import Path
 
-from rencher.renpy import Game
+from gi.repository import Adw, Gtk
 
-from gi.repository import Gtk, Adw
+from rencher.renpy import Game
 
 
 class RencherCodename(Adw.AlertDialog):

@@ -1,13 +1,14 @@
 import platform
 import sys
-from rencher.gtk import compile_data
-from rencher import tmp_path
 from pathlib import Path
 
 from gi.repository import Gio
 
+from rencher import tmp_path
+from rencher.gtk import compile_data
 
-def main():
+
+def main() -> None:
 	compile_data()
 	
 	# ui files get loaded when the import happens

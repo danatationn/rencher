@@ -80,7 +80,7 @@ def format_gdatetime(date: GLib.DateTime, style: str) -> str:
 	if style not in ['detailed', 'neat', 'runtime']:
 		raise NotImplementedError('fucking idiot. choose something else')
 
-	formatted_date = ''
+	''
 	if style == 'neat':
 		formatted_date = date.format('%d %b %Y, %I:%M %p')
 	elif style == 'detailed':

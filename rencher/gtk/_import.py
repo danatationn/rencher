@@ -1,16 +1,16 @@
 import logging
+import secrets
 import shutil
 import zipfile
 from pathlib import Path
-import secrets
+
+import rarfile
+from gi.repository import Adw, GLib
 
 from rencher.gtk import windowficate_file
 from rencher.renpy import Game
-from rencher.renpy.paths import get_absolute_path, get_rpa_path
 from rencher.renpy.config import RencherConfig
-
-from gi.repository import GLib, Adw
-import rarfile
+from rencher.renpy.paths import get_absolute_path, get_rpa_path
 
 config = RencherConfig()
 data_dir = RencherConfig().get_data_dir()
@@ -58,7 +58,7 @@ def import_game(self):
 		else:
 			toast = Adw.Toast(
 				title='Only zip and rar files are supported at the moment',
-				timeout=5
+				timeout=5,
 			)
 			self.window.toast_overlay.add_toast(toast)
 			return
@@ -116,7 +116,7 @@ def import_game(self):
 			# mod is broken
 			toast = Adw.Toast(
 				title='The game is corrupt',  # ???
-				timeout=5
+				timeout=5,
 			)
 			self.window.toast_overlay.add_toast(toast)
 			shutil.rmtree(rpath)
@@ -147,7 +147,7 @@ def import_game(self):
 		if apath is None:
 			toast = Adw.Toast(
 				title='The mod is corrupt',  # ???
-				timeout=5
+				timeout=5,
 			)
 			self.window.toast_overlay.add_toast(toast)
 			shutil.rmtree(rpath)
@@ -173,7 +173,7 @@ def import_game(self):
 		
 		toast = Adw.Toast(
 			title=f'{game.name} has been imported',
-			timeout=5
+			timeout=5,
 		)
 		self.window.toast_overlay.add_toast(toast)
 	
@@ -191,7 +191,7 @@ def import_game(self):
 		
 		toast = Adw.Toast(
 			title='Import has been cancelled',
-			timeout=5
+			timeout=5,
 		)
 		self.window.toast_overlay.add_toast(toast)
 		

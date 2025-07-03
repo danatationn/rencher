@@ -1,12 +1,11 @@
 import logging
 import os
+import platform
 import shutil
 import subprocess
-import platform
 import time
-from pathlib import Path
 from configparser import NoOptionError
-from pprint import pprint
+from pathlib import Path
 
 from rencher.renpy import paths
 from rencher.renpy.config import GameConfig

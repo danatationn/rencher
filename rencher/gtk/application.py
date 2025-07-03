@@ -1,25 +1,24 @@
 import logging
 import threading
 import tomllib
-
-import requests
 from pathlib import Path
 
 import gi
+import requests
 from watchdog.events import DirModifiedEvent, FileModifiedEvent, FileSystemEventHandler
 from watchdog.observers import Observer
 
-from rencher import local_path, config_path, tmp_path
+from rencher import config_path, local_path, tmp_path
 from rencher.renpy.config import RencherConfig
 
 gi.require_version('Gtk', '4.0')
 gi.require_version('Adw', '1')
-from gi.repository import Adw, Gtk, GLib, Gdk  # noqa: E402
+from gi.repository import Adw, Gdk, GLib, Gtk  # noqa: E402
 
 Adw.init()
 
-from rencher.gtk.window import RencherWindow  # noqa: E402
 from rencher.gtk._library import update_library_sidebar, update_library_view  # noqa: E402
+from rencher.gtk.window import RencherWindow  # noqa: E402
 
 
 class RencherApplication(Gtk.Application):

@@ -1,16 +1,13 @@
-import logging
 import shutil
 import threading
-import time
-from pathlib import Path
 from configparser import ConfigParser
 
-from rencher import tmp_path, config_path, local_path
-from rencher.renpy import Game, Mod
-from rencher.gtk import open_file_manager
-from rencher.gtk._library import update_library_view, update_library_sidebar
+from gi.repository import Adw, Gio, GLib, GObject, Gtk
 
-from gi.repository import Gtk, Adw, Gio, GObject, GLib
+from rencher import config_path, local_path, tmp_path
+from rencher.gtk import open_file_manager
+from rencher.gtk._library import update_library_sidebar, update_library_view
+from rencher.renpy import Game, Mod
 
 
 class StrItem(GObject.Object):
