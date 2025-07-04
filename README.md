@@ -36,6 +36,9 @@ it strives to be as simple as possible, while being as beautiful as possible
 - [ ] more...
 
 ## compiling
+> [!NOTE]
+> rencher is currently going through major backend reworks
+> if you want to compile it, then please switch to the v1.0.2 tag
 ### linux
 1. install uv
 2. do `uv sync`
