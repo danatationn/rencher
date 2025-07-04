@@ -1,12 +1,12 @@
-import logging
 import platform
-import subprocess
 import shutil
+import subprocess
 from pathlib import Path
 
 import gi
+
 gi.require_version('Gtk', '4.0')
-from gi.repository import GLib, Gio  # noqa: E402
+from gi.repository import Gio, GLib  # noqa: E402
 
 
 def return_comp(name: str) -> str:

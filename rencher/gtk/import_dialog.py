@@ -29,7 +29,7 @@ class RencherImport(Adw.PreferencesDialog):
 	import_title: Adw.EntryRow = Gtk.Template.Child()
 	import_location: Adw.EntryRow = Gtk.Template.Child()
 	import_location_picker: Gtk.Button = Gtk.Template.Child()
-	# import_type: Adw.ComboRow = Gtk.Template.Child()
+	import_type: Adw.ComboRow = Gtk.Template.Child()
 	import_game_combo: Adw.ComboRow = Gtk.Template.Child()
 	import_button: Adw.ActionRow = Gtk.Template.Child()
 	import_progress_bar: Gtk.ProgressBar = Gtk.Template.Child()
@@ -55,28 +55,29 @@ class RencherImport(Adw.PreferencesDialog):
 			
 		self.import_game_combo.set_model(list_store)
 		self.import_game_combo.set_expression(
-			Gtk.PropertyExpression.new(GameItem, None, 'name')
+			Gtk.PropertyExpression.new(GameItem, None, 'name'),
 		)
 		
 		string_list = Gtk.StringList()
 		string_list.append('Archive (.zip, .rar)')
 		string_list.append('Folder')
-		# self.import_type.set_model(string_list)
+		self.import_type.set_model(string_list)
 		
 		GLib.timeout_add(250, self.check_process)
 		
-	# @Gtk.Template.Callback()
-	# def on_type_changed(self, combo_row: Adw.ComboRow, *args):
-		# selected_item = self.import_type.get_selected_item()
-		# self.selected_type = selected_item.get_string()
-		# if self.selected_type == 'Folder':
-		# 	self.import_location.set_title('Folder Location')
-		# 	self.import_location_picker.set_icon_name('folder-open-symbolic')
-		# 	self.import_location.set_text(self.folder_location)
-		# else:
-		# 	self.import_location.set_title('Archive Location')
-		# 	self.import_location_picker.set_icon_name('file-cabinet-symbolic')
-		# 	self.import_location.set_text(self.archive_location)
+	@Gtk.Template.Callback()
+	def on_type_changed(self, *_):
+		selected_item = self.import_type.get_selected_item()
+		assert isinstance(selected_item, Gtk.StringObject)
+		self.selected_type = selected_item.get_string()
+		if self.selected_type == 'Folder':
+			self.import_location.set_title('Folder Location')
+			self.import_location_picker.set_icon_name('folder-open-symbolic')
+			self.import_location.set_text(self.folder_location)
+		else:
+			self.import_location.set_title('Archive Location')
+			self.import_location_picker.set_icon_name('file-cabinet-symbolic')
+			self.import_location.set_text(self.archive_location)
 		
 	@Gtk.Template.Callback()
 	def on_location_changed(self, entry_row: Adw.EntryRow):
@@ -103,7 +104,7 @@ class RencherImport(Adw.PreferencesDialog):
 				self.import_title.set_text(name)
 				
 	@Gtk.Template.Callback()
-	def on_picker_clicked(self, button: Gtk.Button) -> None:
+	def on_picker_clicked(self, _) -> None:
 		dialog = Gtk.FileDialog()
 		if self.selected_type == 'Folder':
 			dialog.select_folder(self.window, None, self.on_file_selected)
@@ -121,7 +122,7 @@ class RencherImport(Adw.PreferencesDialog):
 			pass  # dialog was dismissed by user
 
 	@Gtk.Template.Callback()
-	def on_import_clicked(self, button_row: Adw.ButtonRow) -> None:
+	def on_import_clicked(self, _) -> None:
 		def import_thread():
 			import_game(self)
 			GLib.idle_add(lambda: (

@@ -22,10 +22,11 @@ from rencher.gtk.window import RencherWindow  # noqa: E402
 
 
 class RencherApplication(Gtk.Application):
+	config: dict
+	window: RencherWindow
+	
 	def __init__(self, *args, **kwargs):
 		super().__init__(*args, **kwargs, application_id='com.github.danatationn.rencher')
-		self.config: dict | None = None
-		self.window: RencherWindow | None = None
 		logging.basicConfig(format='(%(relativeCreated)d) %(levelname)s: %(msg)s', level=logging.NOTSET)
 
 		watchdog_logger = logging.getLogger('watchdog')
@@ -55,7 +56,7 @@ class RencherApplication(Gtk.Application):
 	def check_version(self):
 		# if '__compiled__' not in globals():
 		# 	return
-		if self.config['settings']['surpress_updates'] == 'true':
+		if self.config['settings']['suppress_updates'] == 'true':
 			return
 		
 		try:
@@ -67,7 +68,7 @@ class RencherApplication(Gtk.Application):
 				return
 			version = response.json()['tag_name'].replace('v', '')
 
-			with open(tmp_path / 'pyproject.toml', 'r') as f:
+			with open(tmp_path / 'pyproject.toml') as f:
 				project = tomllib.loads(f.read())
 			
 			if version > project['project']['version']:
@@ -81,7 +82,7 @@ class RencherApplication(Gtk.Application):
 				toast = Adw.Toast(
 					title=f'A new update is available! (v{version})',
 					timeout=5,
-					button_label='Download'
+					button_label='Download',
 				)
 				toast.connect('button-clicked', lambda *_: (
 					Gtk.show_uri(self.window, download_url, Gdk.CURRENT_TIME)
@@ -91,9 +92,6 @@ class RencherApplication(Gtk.Application):
 			else:
 				logging.info(f'You\'re up to date! (v{project['project']['version']})')
 
-	# def do_shutdown(self):
-	# 	Gtk.Application.do_activate(self)
-		
 		
 class RencherFSHandler(FileSystemEventHandler):
 	

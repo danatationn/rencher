@@ -101,7 +101,7 @@ class RencherConfig(ConfigParser):
 		structure = {
 			'settings': {
 				'data_dir': '',
-				'surpress_updates': 'false',
+				'suppress_updates': 'false',
 				'delete_on_import': 'false',
 				'skip_splash_scr': 'false',
 				'skip_main_menu': 'false',

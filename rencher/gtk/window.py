@@ -21,7 +21,7 @@ class RencherWindow(Adw.ApplicationWindow):
 	projects: list[Game] = []
 	process: subprocess.Popen | None = None
 	process_time: float | None = None
-	process_row: Adw.ButtonRow = None
+	process_row: Adw.ButtonRow = None  # type: ignore
 	is_terminating: bool = False
 	filter_text: str = ''
 	combo_index: int = 0
@@ -63,7 +63,7 @@ class RencherWindow(Adw.ApplicationWindow):
 		GLib.timeout_add(250, self.check_process)
 
 	@Gtk.Template.Callback()
-	def on_import_clicked(self, _widget: Adw.ButtonRow) -> None:
+	def on_import_clicked(self, _widget: Adw.ButtonRow) -> None:  # type: ignore
 		if not self.import_dialog.thread.is_alive():
 			self.import_dialog.force_close()
 			self.import_dialog = RencherImport(self)

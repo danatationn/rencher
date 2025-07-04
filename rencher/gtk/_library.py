@@ -68,7 +68,7 @@ def update_library_sidebar(self) -> None:
 			self.library_list_box.remove(button)
 
 	for project in added_projects:
-		button = Adw.ButtonRow(title=project.name)
+		button = Adw.ButtonRow(title=project.name)  # type: ignore
 		button.game = project
 		self.library_list_box.append(button)
 		continue

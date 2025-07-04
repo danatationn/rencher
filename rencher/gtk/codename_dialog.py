@@ -25,9 +25,9 @@ class RencherCodename(Adw.AlertDialog):
 		self.list_box.remove_all()
 
 		self.set_heading('Select Mod Executable')
-		self.set_body(f'The mod "{self.game.name}" provides multiple executables.\n'
-		              'Please choose the correct one below.\n'
-		              '(You can change this later in settings.)')
+		self.set_body( f'The mod "{self.game.name}" provides multiple executables.\n'
+						'Please choose the correct one below.\n'
+						'(You can change this later in settings.)')
 		
 		py_names = [py_path.stem for py_path in sorted(self.game.apath.glob('*.py'))]
 		for name in py_names:
@@ -35,6 +35,7 @@ class RencherCodename(Adw.AlertDialog):
 			self.list_box.append(row)
 		
 	def on_response(self, dialog, response):
-		codename = self.list_box.get_selected_row().get_title()
+		selected_row = self.list_box.get_selected_row()  # do some linter shutting up here
+		codename = selected_row.get_title()
 		self.game.config['info']['codename'] = codename
 		self.game.config.write()

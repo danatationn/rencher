@@ -1,10 +1,10 @@
 import shutil
 import threading
-import tomllib
 from pathlib import Path
 
 from gi.repository import Adw, GLib, Gtk
 
+import rencher
 from rencher import local_path, tmp_path
 from rencher.gtk._library import update_library_sidebar
 from rencher.renpy.config import RencherConfig
@@ -29,10 +29,10 @@ class RencherSettings(Adw.PreferencesDialog):
 		self.window = window
 		self.switches_list = [
 			[self.settings_delete_import, 'delete_on_import'],
-			[self.settings_updates, 'surpress_updates'],
+			[self.settings_updates, 'suppress_updates'],
 			[self.settings_skip_splash_scr, 'skip_splash_scr'],
 			[self.settings_skip_main_menu, 'skip_main_menu'],
-			[self.settings_forced_save_dir, 'forced_save_dir']
+			[self.settings_forced_save_dir, 'forced_save_dir'],
 		]
 
 	def on_show(self):
@@ -76,11 +76,11 @@ class RencherSettings(Adw.PreferencesDialog):
 			self.settings_data_dir.set_text(folder.get_path())
 			
 	@Gtk.Template.Callback()
-	def on_reset_data_dir(self, _widget: Adw.ButtonRow):
+	def on_reset_data_dir(self, _widget: Adw.ButtonRow):  # type: ignore
 		self.settings_data_dir.set_text(str(local_path))
 		
 	@Gtk.Template.Callback()
-	def on_delete_games(self, _widget: Adw.ButtonRow):
+	def on_delete_games(self, _widget: Adw.ButtonRow):  # type: ignore
 		dialog = Adw.AlertDialog(
 			heading='Are you sure?',
 			body='This will delete ALL the games in your data directory.\nThis action cannot be undone.',
@@ -93,7 +93,7 @@ class RencherSettings(Adw.PreferencesDialog):
 		dialog.connect('response', self.nuke_games)
 		dialog.choose(self)
 		
-	def nuke_games(self, dialog: Adw.AlertDialog, response: str):
+	def nuke_games(self, _, response: str):
 		if response == 'ok':
 			# oh boy
 			data_dir = Path(self.settings_data_dir.get_text())
@@ -101,20 +101,17 @@ class RencherSettings(Adw.PreferencesDialog):
 			mods_dir = data_dir / 'mods'
 			
 			def nuke_thread():
+				toast = Adw.Toast(
+					title='All games have been successfully deleted',
+					timeout=5,
+				)
+				
 				self.window.pause_fs = True
 				try:
 					shutil.rmtree(games_dir)
 					shutil.rmtree(mods_dir)
 				except FileNotFoundError:
-					toast = Adw.Toast(
-						title='The deletion has failed',
-						timeout=5
-					)
-				else:
-					toast = Adw.Toast(
-						title='All games have been successfully deleted',
-						timeout=5
-					)
+					toast.set_title('The deletion has failed')
 				finally:
 					self.window.pause_fs = False
 					self.close()
@@ -126,26 +123,23 @@ class RencherSettings(Adw.PreferencesDialog):
 			
 	@Gtk.Template.Callback()
 	def on_about_clicked(self, _widget: Gtk.Button):
-		with open(tmp_path / 'pyproject.toml', 'r') as f:
-			project = tomllib.loads(f.read())
-		
 		dialog = Adw.AboutDialog(
 			application_icon='rencher',
-			application_name=project['project']['name'],
-			developer_name='danatationn',
-			version=project['project']['version'],
-			comments=project['project']['description'],
-			website='https://github.com/danatationn/rencher',
-			issue_url='https://github.com/danatationn/rencher/issues',
-			support_url='https://github.com/danatationn/rencher/issues',
+			application_name='Rencher',
+			developer_name=rencher.__author__,
+			version=rencher.__version__,
+			comments=rencher.__description__,
+			website=rencher.__url__,
+			issue_url=rencher.__issue_url__,
+			support_url=rencher.__issue_url__,
 			copyright='© 2025 danatationn',
 			license_type=Gtk.License.GPL_3_0_ONLY,
 			developers=['danatationn'],
-			designers=['danatationn', 'vl1']
+			designers=['danatationn', 'vl1'],
 		)
 		dialog.add_acknowledgement_section('Credits', [
 			'vl1 (for the logo)',
-			'All my friends :)'
+			'All my friends :)',
 		])
 		
 		dialog.present(self)
