@@ -1,6 +1,6 @@
+import os.path
 import platform
 import sys
-from pathlib import Path
 
 from gi.repository import Gio
 
@@ -17,9 +17,9 @@ def main() -> None:
     app = RencherApplication()
 
     if platform.system() == 'Windows':
-        gres_path = tmp_path / 'rencher' / 'gtk' / 'res' / 'windows.resources.gresource'
+        gres_path = os.path.join(tmp_path, 'rencher/gtk/res/windows.resources.gresource') 
     else:
-        gres_path = tmp_path / 'rencher' / 'gtk' / 'res' / 'resources.gresource'
+        gres_path = os.path.join(tmp_path, 'rencher/gtk/res/resources.gresource')
     res = Gio.resource_load(str(gres_path))
     res._register()
 

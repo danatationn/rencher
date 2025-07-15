@@ -1,3 +1,4 @@
+import os.path
 import threading
 import zipfile
 from pathlib import Path
@@ -21,7 +22,7 @@ class GameItem(GObject.Object):
         self.name = name
         self.game = game
 
-filename = tmp_path / 'rencher' / 'gtk' / 'ui' / 'import.ui'
+filename = os.path.join(tmp_path, 'rencher/gtk/ui/import.ui')
 @Gtk.Template(filename=str(filename))
 class RencherImport(Adw.PreferencesDialog):
     __gtype_name__ = 'RencherImport'

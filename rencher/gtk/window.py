@@ -1,3 +1,4 @@
+import os.path
 import subprocess
 import time
 
@@ -12,7 +13,7 @@ from rencher.gtk.options_dialog import RencherOptions
 from rencher.gtk.settings_dialog import RencherSettings
 from rencher.renpy import Game
 
-filename = tmp_path / 'rencher' / 'gtk' / 'ui' / 'window.ui'
+filename = os.path.join(tmp_path, 'rencher/gtk/ui/window.ui')
 @Gtk.Template(filename=str(filename))
 class RencherWindow(Adw.ApplicationWindow):
     __gtype_name__ = 'RencherWindow'
@@ -29,9 +30,9 @@ class RencherWindow(Adw.ApplicationWindow):
     pause_fs: bool = False
 
     """ classes """
-    settings_dialog: Adw.PreferencesDialog = None
-    import_dialog: Adw.PreferencesDialog = None
-    options_dialog: Adw.PreferencesDialog = None
+    settings_dialog: RencherSettings = None
+    import_dialog: RencherImport = None
+    options_dialog: RencherOptions = None
 
     """ templates """
     toast_overlay: Adw.ToastOverlay = Gtk.Template.Child()
@@ -139,21 +140,16 @@ class RencherWindow(Adw.ApplicationWindow):
             if self.process is None:
                 return True  # don't even bother looking down
 
-            project = Game(apath=self.process.args[0].parents[2])
+            apath = os.path.abspath(os.path.join(self.process.args[0], '..', '..', '..'))
+            project = Game(apath=apath)
             playtime = float(project.config['info']['playtime'])
             if self.process_time:
                 playtime += time.time() - self.process_time
             project.cleanup(playtime)
 
-            # if self.process_row: 
-            # 	self.process_row.game = project
-            # 	update_library_view(self, project)
-            # NOT DESIRED !
-
             self.process = None
             self.process_row = None
 
-        # update_library_sidebar(self)
         else:
             if self.is_terminating:
                 self.play_button.set_label('Stopping')

@@ -1,91 +1,63 @@
-import glob
 import logging
-import os
-import time
+from pathlib import Path
 
-from gi.repository import Gio, GLib
+from gi.repository import Adw, Gio, GLib
+from watchdog.events import DirModifiedEvent, FileModifiedEvent, FileSystemEventHandler
 
 from rencher import config_path
+from rencher.gtk._library import update_library_sidebar, update_library_view
+from rencher.gtk.window import RencherWindow
 from rencher.renpy.config import RencherConfig
 
 config_path = str(config_path)  # stub
 
 
-class RencherFileMonitor:
-    """
-    shoutout to gio.file for SUCKING DICK    
-    
-    UGHHHHHH
-    
-    CONFIG:
-        whenever the config changes, check the data dir
-        is it different?
-            * unlink all current monitors
-            * recursively add new ones
-    
-    DATA DIR:
-        recursively monitor all directories in the data dir
-        
-    """
+class RencherFileMonitor(FileSystemEventHandler):
+    window: RencherWindow = None
+    mtimes: list[int] = []  # for debouncing :)
+    config: RencherConfig = RencherConfig()
 
-    monitor_config: Gio.FileMonitor = None
-    monitor_data_dir: Gio.FileMonitor = None
-    monitors: list[Gio.FileMonitor] = []
-
-    def __init__(self):
+    def __init__(self, window: RencherWindow):
         super().__init__()
-        self.setup_monitors()
+        self.window = window
+        self.mtimes: list[int] = []
 
-    def add_monitor(self, path: str):
-        file = Gio.File.new_for_path(path)
-        
-        if os.path.isfile(path):
-            monitor_file = file.monitor_file(Gio.FileMonitorFlags.NONE, None)
-            monitor_file.connect('changed', self.on_file_changed)
+    def on_modified(self, event: DirModifiedEvent | FileModifiedEvent) -> None:
+        if self.window.process:
+            return
+        if self.window.import_dialog.thread.is_alive():
+            return
+        if self.window.pause_fs:
+            return
+
+        src_path = Path(event.src_path)
+        if src_path == config_path:
+            self.config.read()
+
+        data_dir = self.config.get_data_dir()
+        games_path = data_dir / 'games'
+        mods_path = data_dir / 'mods'
+
+        if not src_path.is_relative_to(games_path) and not src_path.is_relative_to(mods_path):
+            return
+
+        try:
+            mtime = int(src_path.stat().st_mtime)
+        except FileNotFoundError:
+            # something got deleted 🤷‍
+            if src_path.parent.is_relative_to(games_path) or src_path.parent.is_relative_to(mods_path):
+                GLib.idle_add(update_library_sidebar, self.window)
+            mtime = 0
+
+        if mtime in self.mtimes:
+            return
         else:
-            monitor_file = file.monitor_directory(Gio.FileMonitorFlags.NONE, None)
-            monitor_file.connect('changed', self.on_dir_changed)
-        self.monitors.append(monitor_file)
+            self.mtimes.append(mtime)
+            GLib.idle_add(update_library_sidebar, self.window)
+            row = self.window.library_list_box.get_selected_row()
+            if row:
+                GLib.idle_add(update_library_view, self.window, row.game)
 
-    def setup_monitors(self):
-        start_time = time.perf_counter()
-
-        config_file = Gio.File.new_for_path(config_path)
-        self.monitor_config = config_file.monitor_file(Gio.FileMonitorFlags.NONE)
-        self.monitor_config.connect('changed', self.on_config_changed)
-        logging.info('config updated')
-
-        data_dir_path = RencherConfig().get_data_dir()
-        data_dir = str(data_dir_path)
-        self.monitor_subdirs(data_dir)
-
-        logging.debug(f'time: {time.perf_counter() - start_time}s')
-        logging.debug(f'monitors: {len(self.monitors)}')
-
-    def monitor_subdirs(self, dir: str):
-        for root, dirs, files in os.walk(dir):
-            if os.path.samefile(root, dir):
-                pass
-                # continue
-            for path in dirs:
-                self.add_monitor(path)
-            for path in files:
-                self.add_monitor(path)
-
-    def on_config_changed(self, *_):
-        self.setup_monitors()
-        
-    def on_file_changed(self, monitor: Gio.FileMonitor, file: Gio.File, 
-                        other_file: Gio.File, event_type: Gio.FileMonitorEvent):
-        path = file.get_path()
-        
-        logging.debug(f'file changed: {path}')
-    
-    def on_dir_changed(self, monitor: Gio.FileMonitor, file: Gio.File,
-                       other_file: Gio.File, event_type: Gio.FileMonitorEvent):
-        path = file.get_path()
-
-        logging.debug(f'dir changed: {path}')
 
 if __name__ == '__main__':
     logging.basicConfig(
@@ -93,9 +65,3 @@ if __name__ == '__main__':
         format='[%(levelname)s %(asctime)s.%(msecs)d %(module)s] > %(message)s',
         datefmt='%H:%M:%S',
     )
-    fm = RencherFileMonitor()
-    loop = GLib.MainLoop()
-    try:
-        loop.run()
-    except KeyboardInterrupt:
-        loop.quit()

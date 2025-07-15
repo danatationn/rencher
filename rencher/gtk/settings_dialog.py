@@ -1,3 +1,4 @@
+import os.path
 import shutil
 import threading
 from pathlib import Path
@@ -9,7 +10,7 @@ from rencher import local_path, tmp_path
 from rencher.gtk._library import update_library_sidebar
 from rencher.renpy.config import RencherConfig
 
-filename = tmp_path / 'rencher' / 'gtk' / 'ui' / 'settings.ui'
+filename = os.path.join(tmp_path, 'rencher/gtk/ui/settings.ui')
 @Gtk.Template(filename=str(filename))
 class RencherSettings(Adw.PreferencesDialog):
     __gtype_name__ = 'RencherSettings'

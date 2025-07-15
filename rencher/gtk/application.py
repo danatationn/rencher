@@ -1,33 +1,37 @@
 import logging
+import os
 import threading
 import tomllib
-from pathlib import Path
 
 import gi
 import requests
-from watchdog.events import DirModifiedEvent, FileModifiedEvent, FileSystemEventHandler
 from watchdog.observers import Observer
 
-from rencher import config_path, local_path, tmp_path
+import rencher
+from rencher import local_path, tmp_path
 from rencher.renpy.config import RencherConfig
 
 gi.require_version('Gtk', '4.0')
 gi.require_version('Adw', '1')
-from gi.repository import Adw, Gdk, GLib, Gtk  # noqa: E402
+from gi.repository import Adw, Gdk, Gtk  # noqa: E402
 
 Adw.init()
 
-from rencher.gtk._library import update_library_sidebar, update_library_view  # noqa: E402
+from rencher.gtk.filemonitor import RencherFileMonitor  # noqa: E402
 from rencher.gtk.window import RencherWindow  # noqa: E402
 
 
 class RencherApplication(Gtk.Application):
-    config: dict
-    window: RencherWindow
+    config: dict = None
+    window: RencherWindow = None
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs, application_id='com.github.danatationn.rencher')
-        logging.basicConfig(format='(%(relativeCreated)d) %(levelname)s: %(msg)s', level=logging.NOTSET)
+        logging.basicConfig(
+            level=logging.NOTSET,
+            format='[%(levelname)s\t%(asctime)s.%(msecs)-3d %(module)-16s] %(message)s',
+            datefmt='%H:%M:%S', 
+        )
 
         watchdog_logger = logging.getLogger('watchdog')
         watchdog_logger.propagate = False
@@ -45,8 +49,9 @@ class RencherApplication(Gtk.Application):
         self.window.present()
 
         observer = Observer()
-        handler = RencherFSHandler(self)
-        local_path.mkdir(exist_ok=True)
+        handler = RencherFileMonitor(self.window)
+        if not os.path.isdir(local_path):
+            os.mkdir(local_path)
         observer.schedule(handler, local_path, recursive=True)
         observer.start()
 
@@ -68,10 +73,7 @@ class RencherApplication(Gtk.Application):
                 return
             version = response.json()['tag_name'].replace('v', '')
 
-            with open(tmp_path / 'pyproject.toml') as f:
-                project = tomllib.loads(f.read())
-
-            if version > project['project']['version']:
+            if version > rencher.__version__:
                 if 'assets' in response.json() and len(response.json()['assets']) > 0:
                     download_url = response.json()['html_url']
                 else:
@@ -90,57 +92,4 @@ class RencherApplication(Gtk.Application):
 
                 self.window.toast_overlay.add_toast(toast)
             else:
-                logging.info(f'You\'re up to date! (v{project['project']['version']})')
-
-
-class RencherFSHandler(FileSystemEventHandler):
-
-    app: Adw.ApplicationWindow = None
-    mtimes: list[int] = []  # for debouncing :)
-    config: RencherConfig = RencherConfig()
-
-    def __init__(self, app):
-        super().__init__()
-        self.app = app
-        self.mtimes: list[int] = []
-
-    def on_modified(self, event: DirModifiedEvent | FileModifiedEvent) -> None:
-        if self.app.window.process:
-            return
-        if self.app.window.import_dialog.thread.is_alive():
-            return
-        if self.app.window.pause_fs:
-            return
-
-        src_path = Path(event.src_path)
-        if src_path == config_path:
-            self.config.read()
-
-        data_dir = self.config.get_data_dir()
-        games_path = data_dir / 'games'
-        mods_path = data_dir / 'mods'
-
-        if not src_path.is_relative_to(games_path) and not src_path.is_relative_to(mods_path):
-            return
-
-        try:
-            mtime = int(src_path.stat().st_mtime)
-        except FileNotFoundError:
-            # something got deleted 🤷‍
-            if src_path.parent.is_relative_to(games_path) or src_path.parent.is_relative_to(mods_path):
-                GLib.idle_add(update_library_sidebar, self.app.window)
-            mtime = 0
-
-        # if src_path.name == 'rencher.ini':
-        # 	GLib.idle_add(update_library_sidebar, self.app.window)			
-        if mtime in self.mtimes:
-            return
-        else:
-            self.mtimes.append(mtime)
-            GLib.idle_add(update_library_sidebar, self.app.window)
-            row = self.app.window.library_list_box.get_selected_row()
-            if row:
-                GLib.idle_add(update_library_view, self.app.window, row.game)
-
-    # if src_path.is_relative_to(games_path) or src_path.is_relative_to(mods_path):
-    # 	pass
+                logging.info(f'You\'re up to date! (v{rencher.__version__})')

@@ -1,3 +1,4 @@
+import os
 import shutil
 import threading
 from configparser import ConfigParser
@@ -9,7 +10,7 @@ from rencher.gtk import open_file_manager
 from rencher.gtk._library import update_library_sidebar, update_library_view
 from rencher.renpy import Game, Mod
 
-filename = tmp_path / 'rencher' / 'gtk' / 'ui' / 'options.ui'
+filename = os.path.join(tmp_path, 'rencher/gtk/ui/options.ui')
 @Gtk.Template(filename=str(filename))
 class RencherOptions(Adw.PreferencesDialog):
     __gtype_name__ = 'RencherOptions'
@@ -178,9 +179,9 @@ class RencherOptions(Adw.PreferencesDialog):
     def on_delete_game_response(self, _, response: str):
         if response == 'ok':
             # some safety measures
-            if isinstance(self.game, Mod) and self.game.rpath == local_path / 'mods':
+            if isinstance(self.game, Mod) and self.game.rpath == os.path.join(local_path, 'mods'):
                 return
-            elif self.game.rpath == local_path / 'games':
+            elif self.game.rpath == os.path.join(local_path, 'games'):
                 return
 
             def delete_thread():

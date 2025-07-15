@@ -1,15 +1,14 @@
-import logging
+import os.path
 import time
 from configparser import ConfigParser
-from pathlib import Path
 
 from rencher import config_path, local_path
 
 
 class GameConfig(ConfigParser):
-	game_config_path: Path
+	game_config_path: str
 	
-	def __init__(self, game_config_path: Path):
+	def __init__(self, game_config_path: str):
 		super().__init__()
 		self.game_config_path = game_config_path
 		self.read(game_config_path)
@@ -27,22 +26,21 @@ class GameConfig(ConfigParser):
 				'last_played': '',
 				'playtime': 0.0,
 				'added_on': int(time.time()),
-				#'size': int(),
-				'codename': ''
+				'codename': '',
 			},
 			
 			'options': {
 				'skip_splash_scr': '',
 				'skip_main_menu': '',
 				'forced_save_dir': '',
-				'save_slot': 1
+				'save_slot': 1,
 			},
 			
 			'overwritten': {
 				'skip_splash_scr': '',
 				'skip_main_menu': '',
-				'forced_save_dir': ''
-			}
+				'forced_save_dir': '',
+			},
 		}
 		
 		rencher_config = RencherConfig()
@@ -67,7 +65,7 @@ class GameConfig(ConfigParser):
 						
 					self[section][key] = str(value)
 					
-		for key, values in structure['overwritten'].items():
+		for key, _ in structure['overwritten'].items():
 			if self['options'][key]:
 				self['overwritten'][key] = self['options'][key]
 			else:
@@ -80,8 +78,10 @@ class GameConfig(ConfigParser):
 			for key, values in self[section].items():
 				new_config[section][key] = values
 
-		self.game_config_path.parent.mkdir(exist_ok=True, parents=True)
-		self.game_config_path.touch(exist_ok=True)
+		game_config_dir = os.path.dirname(self.game_config_path)
+		if not os.path.isdir(game_config_dir):
+			os.mkdir(game_config_dir)
+		open(self.game_config_path, 'a').close()
 		if not fp:
 			fp = open(self.game_config_path, 'w')
 		new_config.write(fp, space_around_delimiters)
@@ -105,8 +105,8 @@ class RencherConfig(ConfigParser):
 				'delete_on_import': 'false',
 				'skip_splash_scr': 'false',
 				'skip_main_menu': 'false',
-				'forced_save_dir': 'false'	
-			}
+				'forced_save_dir': 'false',
+			},
 		}
 
 		for section, keys in structure.items():
@@ -117,20 +117,22 @@ class RencherConfig(ConfigParser):
 				if key not in self[section]:
 					self[section][key] = values
 					
-		if not config_path.is_file():
+		if not os.path.isfile(config_path):
 			self.write()
 					
 	def write(self, fp=None, space_around_delimiters=True):
-		config_path.parent.mkdir(exist_ok=True)
+		config_dir = os.path.dirname(config_path)
+		if not os.path.isdir(config_dir):
+			os.mkdir(config_dir)
 		
-		config_path.touch(exist_ok=True)
+		open(config_path, 'a').close()
 		if not fp:
 			fp = open(config_path, 'w')
 		super().write(fp, space_around_delimiters)
 		fp.close()
 		
-	def get_data_dir(self) -> Path:
+	def get_data_dir(self) -> str:
 		if self['settings']['data_dir'] == '':
 			return local_path
 		else:
-			return Path(self['settings']['data_dir'])
+			return self['settings']['data_dir']

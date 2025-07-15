@@ -1,4 +1,6 @@
+import glob
 import logging
+import os.path
 from configparser import NoOptionError
 from itertools import chain
 
@@ -13,26 +15,29 @@ from rencher.renpy.config import RencherConfig
 def return_projects(self) -> list[Game]:
     config = RencherConfig()
     data_dir = config.get_data_dir()
-    games_path = data_dir / 'games'
-    mods_path = data_dir / 'mods'
+    games_path = os.path.join(data_dir, 'games')
+    mods_path = os.path.join(data_dir, 'mods')
     dialog = RencherCodename(self)
 
     projects: list[Game] = []
-    for path in chain(games_path.glob('*'), mods_path.glob('*')):
+    for path in chain(
+        glob.iglob(os.path.join(games_path, '*')),
+        glob.iglob(os.path.join(mods_path, '*')),
+    ):
         try:
-            if path.parent == games_path:
+            if os.path.dirname(path) == games_path:
                 projects.append(Game(rpath=path))
             else:
                 projects.append(Mod(rpath=path))
         except NoOptionError:
             dialog.change_game(path)
             dialog.choose(self)
-        except FileNotFoundError:
-            pass
+        except FileNotFoundError as e:
+            logging.debug(f'{path} -> {repr(e)}')
         except AttributeError:
             pass
-    # except Exception as e:
-    # 	logging.debug(f'RANDOM NEW ERROR: {e}. YEY !!!')
+        # except Exception as e:  # uncomment when testing
+        #     logging.debug(f'RANDOM NEW ERROR: {e}. YEY !!!')
 
     return projects
 
@@ -119,4 +124,4 @@ def update_library_view(self, project: Game) -> None:
     self.version_row.set_subtitle(project.version if project.version else 'N/A')
     self.rpath_row.set_subtitle(str(project.rpath))
     self.codename_row.set_subtitle(project.codename)
-	
+    
