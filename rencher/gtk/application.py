@@ -1,5 +1,6 @@
 import logging
 import os
+import sys
 import threading
 
 import gi
@@ -74,9 +75,9 @@ class RencherApplication(Gtk.Application):
         version_thread = threading.Thread(target=self.check_version)
         version_thread.run()
 
-    def check_version(self) -> tuple[str]:
-        # if '__compiled__' not in globals():
-        # 	return
+    def check_version(self) -> tuple[str] | None:
+        if getattr(sys, 'frozen', False):
+            return
         if self.config['settings']['suppress_updates'] == 'true':
             return
 

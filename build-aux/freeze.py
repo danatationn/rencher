@@ -1,13 +1,26 @@
+import os.path
+
 from cx_Freeze import Executable, setup
 
-build_options = {'packages': [], 'excludes': []}
-base = 'gui'
-executables = [
-	Executable('rencher.py', base=base, target_name='rencher'),
-]
+import rencher
 
-setup(name='Rencher',
-      version = '1.1.0',
-      description = "A Ren'Py game manager, made with DDLC mods in mind",
-      options = {'build_exe': build_options},
-      executables = executables)
+setup(
+    name='Rencher',
+    version=rencher.__version__,
+    description=rencher.__description__,
+    options={
+        'build_exe': {
+            # 'packages': ['rencher'],
+            'excludes': [],
+            'optimize': 2,
+        },
+    },
+    executables=[
+        Executable(
+            script='rencher.py', 
+            base='gui',
+            target_name='rencher',
+            icon=os.path.join(rencher.tmp_path, 'rencher/gtk/res/rencher.svg'),
+        ),
+    ],
+)

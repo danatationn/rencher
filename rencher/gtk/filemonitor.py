@@ -52,7 +52,7 @@ class RencherFileMonitor(FileSystemEventHandler):
     def monitor_data_dir(self) -> None:
         if self.observer is not None:
             self.observer.stop()
-            self.observer.join()
+            # self.observer.join()
 
         if not os.path.isdir(local_path):
             self.config.write()  # automatically makes the dir and config

@@ -1,6 +1,7 @@
 import platform
 import shutil
 import subprocess
+import sys
 from pathlib import Path
 
 import gi
@@ -30,7 +31,7 @@ def compile_data() -> None:
         converts all .blp files in usable .ui files using blueprint-compiler (provided you have it installed)
     """
 
-    if '__compiled__' in globals():
+    if getattr(sys, 'frozen', False):
         return  # you can't build blp files if they don't exist 🤷
 
     blpc_path = return_comp('blueprint-compiler')

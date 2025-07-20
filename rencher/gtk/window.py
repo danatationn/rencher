@@ -1,6 +1,7 @@
 import logging
 import os.path
 import subprocess
+import sys
 import time
 
 from gi.repository import Adw, GLib, Gtk
@@ -55,7 +56,7 @@ class RencherWindow(Adw.ApplicationWindow):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        if '__compiled__' not in globals():
+        if not getattr(sys, 'frozen', False):
             self.get_style_context().add_class('devel')
 
         update_library_sidebar(self)
