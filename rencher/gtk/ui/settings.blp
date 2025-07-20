@@ -27,6 +27,10 @@ template $RencherSettings : Adw.PreferencesDialog {
 				title: _("Delete Files On Import");
 			}
 			Adw.ButtonRow {
+				title: _("Check for Updates");
+				activated => $on_check_updates();
+			}
+			Adw.ButtonRow {
 				title: _("Reset Data Directory");
 				activated => $on_reset_data_dir();
 			}

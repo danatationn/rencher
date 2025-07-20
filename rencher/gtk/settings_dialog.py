@@ -1,3 +1,4 @@
+import logging
 import os.path
 import shutil
 import threading
@@ -77,6 +78,10 @@ class RencherSettings(Adw.PreferencesDialog):
             self.settings_data_dir.set_text(folder.get_path())
 
     @Gtk.Template.Callback()
+    def on_check_updates(self, _):
+        logging.debug(rencher.__version__)
+
+    @Gtk.Template.Callback()
     def on_reset_data_dir(self, _widget: Adw.ButtonRow):  # type: ignore
         self.settings_data_dir.set_text(str(local_path))
 
@@ -99,7 +104,6 @@ class RencherSettings(Adw.PreferencesDialog):
             # oh boy
             data_dir = Path(self.settings_data_dir.get_text())
             games_dir = data_dir / 'games'
-            mods_dir = data_dir / 'mods'
 
             def nuke_thread():
                 toast = Adw.Toast(
@@ -107,14 +111,13 @@ class RencherSettings(Adw.PreferencesDialog):
                     timeout=5,
                 )
 
-                self.window.pause_fs = True
+                self.window.pause_monitoring = True
                 try:
                     shutil.rmtree(games_dir)
-                    shutil.rmtree(mods_dir)
                 except FileNotFoundError:
                     toast.set_title('The deletion has failed')
                 finally:
-                    self.window.pause_fs = False
+                    self.window.pause_monitoring = False
                     self.close()
                     update_library_sidebar(self.window)
                     self.window.toast_overlay.add_toast(toast)

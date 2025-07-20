@@ -1,3 +1,5 @@
+import glob
+import logging
 import os
 import shutil
 import threading
@@ -7,7 +9,7 @@ from gi.repository import Adw, GLib, Gtk
 
 from rencher import config_path, local_path, tmp_path
 from rencher.gtk import open_file_manager
-from rencher.gtk._library import update_library_sidebar, update_library_view
+from rencher.gtk._library import update_library_sidebar
 from rencher.renpy import Game, Mod
 
 filename = os.path.join(tmp_path, 'rencher/gtk/ui/options.ui')
@@ -29,7 +31,7 @@ class RencherOptions(Adw.PreferencesDialog):
     game: Game = None
     rencher_config: ConfigParser = None
 
-    def __init__(self, window):
+    def __init__(self, window: 'RencherWindow'):
         super().__init__()
 
         self.window = window
@@ -61,11 +63,15 @@ class RencherOptions(Adw.PreferencesDialog):
         self.options_location.set_subtitle(str(game.rpath))
         self.options_save_slot.set_text(game.config['options']['save_slot'])
 
-        py_names = [py_path.stem for py_path in sorted(game.apath.glob('*.py'))]
-        for i, name in enumerate(py_names):
-            if name == game.config['info']['codename']:
+        py_files = glob.glob(os.path.join(game.apath, '*.py'))
+
+        for i, path in enumerate(py_files):
+            name = os.path.basename(path)
+            codename = os.path.splitext(name)[0]
+            if codename == game.config['info']['codename']:
+                logging.debug(f'{i}: {codename}')
                 self.options_codename.set_selected(i)
-            string_list.append(name)
+            string_list.append(codename)
 
         self.options_codename.set_model(string_list)
 
@@ -80,7 +86,7 @@ class RencherOptions(Adw.PreferencesDialog):
                 switch.set_active(True)
 
     def do_closed(self):
-        if not self.game.rpath.is_dir():
+        if not os.path.isdir(self.game.rpath):
             return  # it got deleted
 
         if self.game.name != self.options_nickname.get_text():
@@ -108,7 +114,7 @@ class RencherOptions(Adw.PreferencesDialog):
         def select():
             for row in self.window.library_list_box:
                 if row.game.rpath == self.game.rpath:
-                    update_library_view(self.window, self.game)
+                    self.window.current_game.refresh()
                     self.window.library_list_box.select_row(row)
                     break
 
@@ -185,7 +191,7 @@ class RencherOptions(Adw.PreferencesDialog):
                 return
 
             def delete_thread():
-                self.window.pause_fs = True
+                self.window.pause_monitoring = True
                 toast = Adw.Toast(
                     title=f'"{self.game.name}" succesfully deleted',
                     timeout=5,
@@ -196,7 +202,7 @@ class RencherOptions(Adw.PreferencesDialog):
                 except FileNotFoundError:
                     toast.set_title('The deletion has failed')
                 finally:
-                    self.window.pause_fs = False
+                    self.window.pause_monitoring = False
                     self.close()
                     update_library_sidebar(self.window)
                     self.window.toast_overlay.add_toast(toast)

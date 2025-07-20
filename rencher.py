@@ -12,7 +12,7 @@ def main() -> None:
     compile_data()
 
     # ui files get loaded when the import happens
-    # we want the ui that we just compiled
+    # we want the ui that we just compiled`
     from rencher.gtk.application import RencherApplication  # noqa: E402	
     app = RencherApplication()
 

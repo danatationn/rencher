@@ -1,3 +1,4 @@
+import logging
 import os.path
 import subprocess
 import time
@@ -7,7 +8,8 @@ from thefuzz.fuzz import partial_token_sort_ratio
 
 from rencher import tmp_path
 from rencher.gtk import open_file_manager
-from rencher.gtk._library import update_library_sidebar, update_library_view
+from rencher.gtk._library import update_library_sidebar
+from rencher.gtk.game_item import GameItem
 from rencher.gtk.import_dialog import RencherImport
 from rencher.gtk.options_dialog import RencherOptions
 from rencher.gtk.settings_dialog import RencherSettings
@@ -19,15 +21,16 @@ class RencherWindow(Adw.ApplicationWindow):
     __gtype_name__ = 'RencherWindow'
 
     """ variables """
-    projects: list[Game] = []
-    process: subprocess.Popen | None = None
-    process_time: float | None = None
+    games: list[Game] = []
+    game_process: subprocess.Popen = None
+    process_time: float = None
     process_row: Adw.ButtonRow = None  # type: ignore
     is_terminating: bool = False
     filter_text: str = ''
     combo_index: int = 0
     ascending_order: bool = False
-    pause_fs: bool = False
+    pause_monitoring: str = None
+    current_game: GameItem = None
 
     """ classes """
     settings_dialog: RencherSettings = None
@@ -79,18 +82,18 @@ class RencherWindow(Adw.ApplicationWindow):
     @Gtk.Template.Callback()
     def on_play_clicked(self, _widget: Gtk.Button) -> None:
         selected_button_row = self.library_list_box.get_selected_row()
-        project = getattr(selected_button_row, 'game', None)
+        game = getattr(selected_button_row, 'game', None)
 
         if _widget.get_style_context().has_class('suggested-action'):
-            self.process = project.run()
+            self.game_process = game.run()
             self.process_time = time.time()
             self.check_process()  # so the button changes instantly
             self.process_row = selected_button_row
         else:
-            if self.process:
+            if self.game_process:
                 self.play_button.set_label('Stopping')
                 self.is_terminating = True
-                self.process.terminate()
+                self.game_process.terminate()
 
     @Gtk.Template.Callback()
     def on_dir_clicked(self, _widget: Gtk.Button) -> None:
@@ -101,11 +104,26 @@ class RencherWindow(Adw.ApplicationWindow):
 
     @Gtk.Template.Callback()
     def on_game_selected(self, _widget: Gtk.ListBox, row: Gtk.ListBoxRow) -> None:
-        project = getattr(row, 'game', None)
-        if project:
+        game = getattr(row, 'game', None)
+        if game:
             self.library_view_stack.set_visible_child_name('selected')
 
-            update_library_view(self, project)
+            if self.current_game is None:
+                self.current_game = GameItem(game=game)
+                self.current_game.bind_property('name', self.selected_status_page, 'title')
+                self.current_game.bind_property('last_played', self.last_played_row, 'subtitle')
+                self.current_game.bind_property('playtime', self.playtime_row, 'subtitle')
+                self.current_game.bind_property('added_on', self.added_on_row, 'subtitle')
+                self.current_game.bind_property('version', self.version_row, 'subtitle')
+                self.current_game.bind_property('rpath', self.rpath_row, 'subtitle')
+                self.current_game.bind_property('codename', self.codename_row, 'subtitle')
+                self.current_game.refresh()
+            else:
+                start_time = time.perf_counter()
+                self.current_game.game = game
+                # self.current_game = GameItem(game=game)
+                self.current_game.refresh()
+                logging.debug(time.perf_counter() - start_time)
 
     @Gtk.Template.Callback()
     def on_search_changed(self, _widget: Gtk.SearchEntry):
@@ -131,23 +149,23 @@ class RencherWindow(Adw.ApplicationWindow):
         self.options_dialog.present(self)
 
     def check_process(self) -> bool:
-        if not self.process or self.process.poll() is not None:
+        if not self.game_process or self.game_process.poll() is not None:
             self.play_button.set_label('Play')
             self.play_button.get_style_context().remove_class('destructive-action')
             self.play_button.get_style_context().add_class('suggested-action')
             self.is_terminating = False
 
-            if self.process is None:
+            if self.game_process is None:
                 return True  # don't even bother looking down
 
-            apath = os.path.abspath(os.path.join(self.process.args[0], '..', '..', '..'))
+            apath = os.path.abspath(os.path.join(self.game_process.args[0], '..', '..', '..'))  # we hate os.path
             project = Game(apath=apath)
-            playtime = float(project.config['info']['playtime'])
+            playtime = project.config.get_value('playtime')
             if self.process_time:
                 playtime += time.time() - self.process_time
             project.cleanup(playtime)
 
-            self.process = None
+            self.game_process = None
             self.process_row = None
 
         else:

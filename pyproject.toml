@@ -35,13 +35,17 @@ select = [
     "E",
     "F",
     "UP",
-    "I"
+    "I",
 ]
 extend-select = [
     "B",
-    "COM"
+    "COM",
 ]
+
 
 [tool.ruff.format]
 quote-style = "single"
 indent-style = "space"
+
+[tool.ruff.lint.flake8-implicit-str-concat]
+allow-multiline = false

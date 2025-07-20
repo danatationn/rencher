@@ -1,5 +1,6 @@
 import glob
-import os.path
+import os
+import pprint
 from functools import lru_cache
 
 
@@ -14,13 +15,14 @@ def get_rpa_path(rpath: str) -> str | None:
         if os.path.splitext(rp_file)[1] != '.rpyb'  # cache file
     ]
 
-    try:
-        return os.path.dirname(game_files[0])
-    except IndexError:
+    if not game_files:
         return None
-    except TypeError:
-        return None
-
+    
+    # some mods apparently store ren'py files in lib/
+    # those are further nested inside the game so just try and get the top folder
+    rpa_path = min(game_files, key=lambda path: len(path.split(os.sep)))
+    return os.path.dirname(rpa_path)
+ 
 def get_absolute_path(rpath: str) -> str | None:
     try:
         return os.path.dirname(get_rpa_path(rpath))

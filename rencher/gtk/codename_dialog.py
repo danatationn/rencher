@@ -1,4 +1,5 @@
-from pathlib import Path
+import glob
+import os.path
 
 from gi.repository import Adw, Gtk
 
@@ -20,7 +21,7 @@ class RencherCodename(Adw.AlertDialog):
 
         self.connect('response', self.on_response)
 
-    def change_game(self, rpath: Path) -> None:
+    def change_game(self, rpath: str) -> None:
         self.game = Game(rpath=rpath)
         self.list_box.remove_all()
 
@@ -29,12 +30,13 @@ class RencherCodename(Adw.AlertDialog):
                        'Please choose the correct one below.\n'
                        '(You can change this later in settings.)')
 
-        py_names = [py_path.stem for py_path in sorted(self.game.apath.glob('*.py'))]
-        for name in py_names:
+        py_files = glob.glob(os.path.join(self.game.apath, '*.py'))
+        for path in py_files:
+            name = os.path.basename(path)
             row = Adw.ActionRow(title=name)
             self.list_box.append(row)
 
-    def on_response(self, dialog, response):
+    def on_response(self, *_):
         selected_row = self.list_box.get_selected_row()  # do some linter shutting up here
         codename = selected_row.get_title()
         self.game.config['info']['codename'] = codename

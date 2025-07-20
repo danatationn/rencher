@@ -1,9 +1,9 @@
-from cx_Freeze import setup, Executable
+from cx_Freeze import Executable, setup
 
 build_options = {'packages': [], 'excludes': []}
 base = 'gui'
 executables = [
-	Executable('rencher.py', base=base, target_name='rencher')
+	Executable('rencher.py', base=base, target_name='rencher'),
 ]
 
 setup(name='Rencher',

@@ -4,23 +4,13 @@ import zipfile
 from pathlib import Path
 
 import rarfile
-from gi.repository import Adw, Gio, GLib, GObject, Gtk
+from gi.repository import Adw, Gio, GLib, Gtk
 
 from rencher import tmp_path
 from rencher.gtk._import import import_game
 from rencher.gtk._library import update_library_sidebar
+from rencher.gtk.game_item import GameItem
 from rencher.renpy import Mod
-
-
-class GameItem(GObject.Object):
-    __gtype_name__ = 'GameItem'
-
-    name = GObject.Property(type=str)
-
-    def __init__(self, name, game):
-        super().__init__()
-        self.name = name
-        self.game = game
 
 filename = os.path.join(tmp_path, 'rencher/gtk/ui/import.ui')
 @Gtk.Template(filename=str(filename))
@@ -49,9 +39,9 @@ class RencherImport(Adw.PreferencesDialog):
 
         list_store = Gio.ListStore.new(GameItem)
 
-        for project in window.projects:
-            if not isinstance(project, Mod):
-                game_item = GameItem(name=project.name, game=project)
+        for game in window.games:
+            if not isinstance(game, Mod):
+                game_item = GameItem(game=game)
                 list_store.append(game_item)
 
         self.import_game_combo.set_model(list_store)
