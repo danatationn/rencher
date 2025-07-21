@@ -3,6 +3,7 @@ __author__ = 'danatationn'
 __description__ = 'A Ren\'Py game manager, made with DDLC mods in mind'
 __url__ = 'https://github.com/danatationn/Rencher'
 __issue_url__ = 'https://github.com/danatationn/Rencher/issues'
+__copyright__ = '© 2025 danatationn'
 
 import os.path
 import platform

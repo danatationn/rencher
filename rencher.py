@@ -10,6 +10,12 @@ from rencher.gtk import compile_data
 def main() -> None:
     compile_data()
 
+    if sys.platform == "win32":
+        os.environ["PANGOCAIRO_BACKEND"] = "fontconfig"
+        os.environ["GTK_CSD"] = "0"
+        os.environ["GDK_DISABLE"] = "gl,vulkan"
+        os.environ["GSK_RENDERER"] = "cairo"
+
     # ui files get loaded when the import happens
     # we want the ui that we just compiled`
     from rencher.gtk.application import RencherApplication  # noqa: E402	

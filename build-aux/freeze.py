@@ -98,6 +98,7 @@ setup(
     name='Rencher',
     description='Rencher',
     version=rencher.__version__,
+    author=rencher.__author__,
     options={
         'build_exe': {
             'packages': [],
@@ -108,10 +109,11 @@ setup(
     },
     executables=[
         Executable(
-            script='rencher.py',
             base=gui,
+            script='rencher.py',
             target_name='rencher',
             icon=os.path.join(rencher.tmp_path, 'assets/rencher-icon.ico'),
+            copyright=rencher.__copyright__,
         ),
     ],
 )
