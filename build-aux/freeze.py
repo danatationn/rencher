@@ -111,7 +111,7 @@ setup(
             script='rencher.py',
             base=gui,
             target_name='rencher',
-            icon=os.path.join(rencher.tmp_path, 'rencher/gtk/res/rencher.svg'),
+            icon=os.path.join(rencher.tmp_path, 'assets/rencher-icon.ico'),
         ),
     ],
 )
