@@ -13,7 +13,7 @@ from rencher.gtk.game_item import GameItem
 from rencher.renpy import Mod
 
 filename = os.path.join(tmp_path, 'rencher/gtk/ui/import.ui')
-@Gtk.Template(filename=str(filename))
+@Gtk.Template(filename=filename)
 class RencherImport(Adw.PreferencesDialog):
     __gtype_name__ = 'RencherImport'
 

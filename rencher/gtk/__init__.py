@@ -36,7 +36,7 @@ def compile_data() -> None:
 
     blpc_path = return_comp('blueprint-compiler')
     resc_path = return_comp('glib-compile-resources')
-    mgck_path = return_comp('magick')
+    # mgck_path = return_comp('magick')
 
     ui_dir = Path(__file__).parents[2] / 'rencher' / 'gtk' / 'ui'
     blp_files = ui_dir.glob('*.blp')
@@ -50,17 +50,17 @@ def compile_data() -> None:
 
     res_dir = Path(__file__).parents[2] / 'rencher' / 'gtk' / 'res'
 
-    if platform.system() == 'Windows':
-        xml_file = res_dir / 'windows.resources.gresource.xml'
-        print('Converting .svg files...')
-        for svg in res_dir.glob('*symbolic.svg'):
-            if not svg.with_suffix('.symbolic.png').is_file():  # for performance reasons
-                subprocess.run([mgck_path, '-density', '2500', '-background', 'none', svg, '-colorize', '100%', svg.with_suffix('.symbolic.png')])
-        rencher_svg = res_dir / 'rencher.svg'
-        if not rencher_svg.with_suffix('.png').is_file():
-            subprocess.run([mgck_path, '-density', '250', '-background', 'none', rencher_svg, rencher_svg.with_suffix('.png')])
-    else:
-        xml_file = res_dir / 'resources.gresource.xml'
+    # if platform.system() == 'Windows':
+    #     xml_file = res_dir / 'windows.resources.gresource.xml'
+    #     print('Converting .svg files...')
+    #     for svg in res_dir.glob('*symbolic.svg'):
+    #         if not svg.with_suffix('.symbolic.png').is_file():  # for performance reasons
+    #             subprocess.run([mgck_path, '-density', '2500', '-background', 'none', svg, '-colorize', '100%', svg.with_suffix('.symbolic.png')])
+    #     rencher_svg = res_dir / 'rencher.svg'
+    #     if not rencher_svg.with_suffix('.png').is_file():
+    #         subprocess.run([mgck_path, '-density', '250', '-background', 'none', rencher_svg, rencher_svg.with_suffix('.png')])
+    # else:
+    xml_file = res_dir / 'resources.gresource.xml'
 
     print('Compiling resources...')
     subprocess.run([resc_path, xml_file], cwd=res_dir)
