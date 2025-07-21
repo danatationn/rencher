@@ -50,7 +50,8 @@ def main():
         
     add_files('libgtk-4*'+ext, lib_dir, 'lib')
     add_files('libadwaita-1*'+ext, lib_dir, 'lib')
-    add_files('gschemas.compiled', os.path.join(sys.base_prefix, 'share/glib-2.0/schemas'), 'lib/schemas')
+    # add_files('gschemas.compiled', os.path.join(sys.base_prefix, 'share/glib-2.0/schemas'), 'lib/schemas')
+    add_files('gschemas.compiled', os.path.join(sys.base_prefix, 'share/glib-2.0/schemas'), 'share/glib-2.0/schemas')
     add_files('**/*.conf', os.path.join(sys.base_prefix, 'etc/fonts'), 'share/fonts')
     typelibs = [
         "Adw-",
@@ -98,7 +99,7 @@ setup(
     name='Rencher',
     description='Rencher',
     version=rencher.__version__,
-    author=rencher.__author__,
+    author='danatationn',
     options={
         'build_exe': {
             'packages': [],
