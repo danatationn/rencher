@@ -10,19 +10,19 @@ import tempfile
 
 from cx_Freeze import Executable, setup
 
-# try:
-#     from cx_Freeze.hooks import gi  # pylint: disable=import-error
-# except ImportError:
-#     from cx_Freeze.hooks import _gi_ as gi  # pylint: disable=import-error,import-private-name
-# 
-# del gi.load_gi
-
 cwd = os.path.dirname(os.path.abspath(__file__))
 tmp_path = os.path.abspath(os.path.dirname(cwd))
 sys.path.append(tmp_path)
 import rencher  # noqa: E402
+from rencher.gtk import compile_data  # noqa: E402
 
 include_files = []
+
+if sys.platform == 'win32':
+    gui = 'Win32GUI'
+else:
+    gui = 'gui'
+
 def add_files(name: str, search_dir: str, target_dir: str) -> None:
     if '*' in name:
         paths = glob.glob(os.path.join(search_dir, name), recursive=True)
@@ -38,6 +38,8 @@ def add_files(name: str, search_dir: str, target_dir: str) -> None:
             raise FileNotFoundError(f'{path} could\'nt be found')
 
 def main():
+    compile_data()
+    
     if sys.platform == 'win32':
         ext = '.dll'
         lib_dir = os.path.join(sys.base_prefix, 'bin')
@@ -94,8 +96,8 @@ if __name__ == '__main__':
 
 setup(
     name='Rencher',
+    description='Rencher',
     version=rencher.__version__,
-    description=rencher.__description__,
     options={
         'build_exe': {
             'packages': [],
@@ -107,7 +109,7 @@ setup(
     executables=[
         Executable(
             script='rencher.py',
-            base='gui',
+            base=gui,
             target_name='rencher',
             icon=os.path.join(rencher.tmp_path, 'rencher/gtk/res/rencher.svg'),
         ),
