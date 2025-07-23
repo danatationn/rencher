@@ -4,12 +4,12 @@
 !include "FileFunc.nsh"
 !define NAME "Rencher"
 !define APPFILE "rencher.exe"
-!define MUI_ICON "assets\rencher-inst.ico"
-!define MUI_UNICON "assets\rencher-uninst.ico"
+!define MUI_ICON "..\assets\rencher-inst.ico"
+!define MUI_UNICON "..\assets\rencher-uninst.ico"
 !define MUI_HEADERIMAGE
-!define MUI_HEADERIMAGE_BITMAP "assets\header_img.bmp"
-!define MUI_HEADERIMAGE_BITMAP_RTL "assets\header_img_rtl.bmp"
-!define MUI_WELCOMEFINISHPAGE_BITMAP "assets\welcome_img.bmp"
+!define MUI_HEADERIMAGE_BITMAP "..\assets\header_img.bmp"
+!define MUI_HEADERIMAGE_BITMAP_RTL "..\assets\header_img_rtl.bmp"
+!define MUI_WELCOMEFINISHPAGE_BITMAP "..\assets\welcome_img.bmp"
 ;!define MUI_BGCOLOR 791512
 ;!define MUI_BGCOLOR 671E14
 !define MUI_BGCOLOR 8F000E
@@ -65,7 +65,7 @@ Section "Install"
 	SetShellVarContext all
 
 	SetOutPath $INSTDIR
-	File /r "build\exe.mingw_x86_64_ucrt_gnu-3.12\*.*"
+	File /r "..\build\exe.mingw_x86_64_ucrt_gnu-3.12\*.*"
 	WriteUninstaller "$INSTDIR\uninstaller.exe"
 	
     ${If} $CHECK_DESKTOP == ${BST_CHECKED}

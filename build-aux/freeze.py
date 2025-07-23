@@ -20,8 +20,10 @@ include_files = []
 
 if sys.platform == 'win32':
     gui = 'Win32GUI'
+    icon_path = os.path.join(tmp_path, 'assets/rencher-icon.ico')
 else:
     gui = 'gui'
+    icon_path = ''
 
 def add_files(name: str, search_dir: str, target_dir: str) -> None:
     if '*' in name:
@@ -99,8 +101,10 @@ setup(
     name='Rencher',
     description='Rencher',
     version=rencher.__version__,
-    author='danatationn',
     options={
+        'build': {
+            'build_base': os.path.join(tmp_path, 'build'),
+        },
         'build_exe': {
             'packages': [],
             'excludes': [],
@@ -110,10 +114,10 @@ setup(
     },
     executables=[
         Executable(
-            base=gui,
-            script='rencher.py',
+            base='console',
+            script=os.path.join(tmp_path, 'rencher.py'),
             target_name='rencher',
-            icon=os.path.join(rencher.tmp_path, 'assets/rencher-icon.ico'),
+            icon=icon_path,
             copyright=rencher.__copyright__,
         ),
     ],

@@ -18,7 +18,7 @@ def return_comp(name: str) -> str:
             ['cygpath', '-m', f'/ucrt64/bin/{name}'],
             capture_output=True,
             text=True,
-            check=True
+            check=True,
         )
         comp_path = result.stdout.strip()
     if not comp_path:

@@ -1,6 +1,6 @@
 # Rencher - yet another mod manager
 <p align="center">
-	<img src="public/rencher-logo.png" width="400px"/>
+	<img src="assets/rencher-logo.png" width="400px"/>
 <p/>
 
 rencher is a ren'py game manager, made with ddlc mods in mind
@@ -14,8 +14,8 @@ it strives to be as simple as possible, while being as beautiful as possible
 > i will try to fix this in the future, but the only thing *you* can do right now is exclude it in your antivirus software
 <br/>
 <p>
-	<img src="public/Screenshot From 2025-06-28 19-05-48.png" alt="Screenshot of Rencher's UI" width="384px"/>
-	<img src="public/Screenshot From 2025-07-01 17-11-18.png" alt="Screenshot of Rencher's UI" width="384px"/>
+	<img src="assets/Screenshot From 2025-06-28 19-05-48.png" alt="Screenshot of Rencher's UI" width="384px"/>
+	<img src="assets/Screenshot From 2025-07-01 17-11-18.png" alt="Screenshot of Rencher's UI" width="384px"/>
 </p>
 
 ## download!
