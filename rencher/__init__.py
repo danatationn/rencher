@@ -6,6 +6,9 @@ __copyright__ = '© 2025 danatationn'
 
 import os.path
 import platform
+import sys
+
+from rencher.gtk import compile_data
 
 local_path: str = ''
 config_path: str = ''
@@ -18,3 +21,46 @@ if platform.system() == 'Linux':
 elif platform.system() == 'Windows':
     local_path = os.path.join(home_path, 'AppData/Local/Rencher') 
     config_path = os.path.join(home_path, 'AppData/Local/Rencher/config.ini')
+
+
+def launch() -> None:
+    compile_data()
+
+    """
+        sourced from nicotine+ ^^
+        https://github.com/nicotine-plus/nicotine-plus/blob/master/pynicotine/gtkgui/__init__.py
+    """
+    if getattr(sys, 'frozen', False):
+        executable_folder = os.path.dirname(sys.executable)
+        
+        os.environ['GTK_EXE_PREFIX'] = executable_folder
+        os.environ['GTK_DATA_PREFIX'] = executable_folder
+        os.environ['GTK_PATH'] = executable_folder
+        os.environ['XDG_DATA_DIRS'] = os.path.join(executable_folder, 'share')
+        os.environ['FONTCONFIG_FILE'] = os.path.join(executable_folder, 'share/fonts/fonts.conf')
+        os.environ['FONTCONFIG_PATH'] = os.path.join(executable_folder, 'share/fonts')
+        os.environ['GDK_PIXBUF_MODULE_FILE'] = os.path.join(executable_folder, 'lib/pixbuf-loaders.cache')
+        os.environ['GI_TYPELIB_PATH'] = os.path.join(executable_folder, 'lib/girepository-1.0')
+        os.environ['GSETTINGS_SCHEMA_DIR'] = os.path.join(executable_folder, 'share/glib-2.0/schemas')
+        print(os.path.join(executable_folder, 'lib/girepository-1.0'))
+
+    # if sys.platform == 'win32':
+    #     os.environ['PANGOCAIRO_BACKEND'] = 'fontconfig'
+    #     os.environ['GTK_CSD'] = '0'
+    #     os.environ['GDK_DISABLE'] = 'gl,vulkan'
+    #     os.environ['GSK_RENDERER'] = 'cairo'
+
+    # ui files get loaded when the import happens
+    # we want the ui that we just compiled
+    from rencher.gtk.application import RencherApplication  # noqa: E402	
+    app = RencherApplication()
+
+    from gi.repository import Gio
+    gres_path = os.path.join(tmp_path, 'rencher/gtk/res/resources.gresource')
+    res = Gio.resource_load(gres_path)
+    res._register()  # pylint: disable=W0212
+
+    try:
+        app.run(sys.argv)
+    except KeyboardInterrupt:
+        pass

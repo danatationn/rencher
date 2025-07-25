@@ -29,3 +29,5 @@ jobs:
 #        with:
 #          name: Rencher-Windows
 #          path: 'Rencher.exe'
+#     wget this https://sourceforge.net/projects/nsis/files/NSIS%203/3.11/nsis-3.11.zip/download
+#     and then do shit with it

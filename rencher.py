@@ -1,35 +1,6 @@
-import os.path
-import sys
-
-from gi.repository import Gio
-
-from rencher import tmp_path
-from rencher.gtk import compile_data
-
-
-def main() -> None:
-    compile_data()
-
-    if sys.platform == "win32":
-        os.environ["PANGOCAIRO_BACKEND"] = "fontconfig"
-        os.environ["GTK_CSD"] = "0"
-        os.environ["GDK_DISABLE"] = "gl,vulkan"
-        os.environ["GSK_RENDERER"] = "cairo"
-
-    # ui files get loaded when the import happens
-    # we want the ui that we just compiled`
-    from rencher.gtk.application import RencherApplication  # noqa: E402	
-    app = RencherApplication()
-
-    gres_path = os.path.join(tmp_path, 'rencher/gtk/res/resources.gresource')
-    res = Gio.resource_load(gres_path)
-    res._register()  # type: ignore
-
-    try:
-        app.run(sys.argv)
-    except KeyboardInterrupt:
-        pass
-
+def main():
+    import rencher
+    rencher.launch()
 
 if __name__ == '__main__':
     main()

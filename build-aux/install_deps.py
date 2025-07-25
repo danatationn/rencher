@@ -13,7 +13,7 @@ def run_sudo(args: list[str]):
         try:
             subprocess.check_call(sudo_args)
         except subprocess.CalledProcessError as err:
-            raise RuntimeError('The installation failed anyway.') from err
+            raise RuntimeError('The installation failed anyway. (couldn\'t prompt super user?)') from err
 
 def main() -> None:
     if sys.platform == 'win32':
@@ -48,7 +48,10 @@ def main() -> None:
             f'{package_prefix}gtk4',
             f'{package_prefix}libadwaita',
             f'{package_prefix}gcc',
+            f'{package_prefix}python-cx-freeze',
         ]
+        if package_prefix:
+            packages.append(f'{package_prefix}nsis')
         
         run_sudo(['pacman', '-Sy', '--needed', '--noconfirm', *packages])
     
@@ -63,21 +66,31 @@ def main() -> None:
             'patchelf',
             'libadwaita-1-dev',
             'ccache',
+            # cx-freeze
         ]
         
+        run_sudo(['apt', 'update'])
+        run_sudo(['apt', 'install', '-y', *packages])
         print('WARNING: Depending on what distro and what version you have you might not be able to build Rencher.\n'
               'e.g. Ubuntu 24.04 has an out of date version of libadwaita which doesn\'t include certain widgets that\n'
               'Rencher uses. Here be dragons!')
-        run_sudo(['apt', 'update'])
-        run_sudo(['apt', 'install', '-y', *packages])
         
     elif distro == 'fedora':
         ...  # 
     
     else:
-        raise OSError('Sorry but your distro isn\'t included in this script! You should try and install the packages yourself\n'
+        raise OSError('Sorry but your distro isn\'t included in this script! You should try and install the packages yourself\n'  # noqa: E501
                       'Here\'s a list of the required packages:\n'
                       '"python3", "gtk", "adwaita", "gobject-introspection", "libgirepository", "cmake"')
+    
+    
+    tmp_path = os.path.abspath(os.path.join(__file__, '../..'))
+    try:
+        subprocess.check_call(['pip', 'install', tmp_path])
+    except subprocess.CalledProcessError as err:
+        raise OSError('PyPI package installation failed.') from err
+    else:
+        print('Success!')
         
 if __name__ == '__main__':
     main()

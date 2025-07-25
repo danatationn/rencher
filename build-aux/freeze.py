@@ -4,7 +4,7 @@
 """
 
 import glob
-import os.path
+import os
 import sys
 import tempfile
 
@@ -39,64 +39,66 @@ def add_files(name: str, search_dir: str, target_dir: str) -> None:
         else:
             raise FileNotFoundError(f'{path} could\'nt be found')
 
-def main():
-    compile_data()
-    
-    if sys.platform == 'win32':
-        ext = '.dll'
-        lib_dir = os.path.join(sys.base_prefix, 'bin')
-        add_files('gdbus.exe', lib_dir, 'lib')
-    else:
-        ext = '.so'
-        lib_dir = os.path.join(sys.base_prefix, 'lib')
-        
-    add_files('libgtk-4*'+ext, lib_dir, 'lib')
-    add_files('libadwaita-1*'+ext, lib_dir, 'lib')
-    # add_files('gschemas.compiled', os.path.join(sys.base_prefix, 'share/glib-2.0/schemas'), 'lib/schemas')
-    add_files('gschemas.compiled', os.path.join(sys.base_prefix, 'share/glib-2.0/schemas'), 'share/glib-2.0/schemas')
-    add_files('**/*.conf', os.path.join(sys.base_prefix, 'etc/fonts'), 'share/fonts')
-    typelibs = [
-        "Adw-",
-        "Gtk-4",
-        "Gio-",
-        "Gdk-4",
-        "GLib-",
-        "Graphene-",
-        "Gsk-",
-        "HarfBuzz-",
-        "Pango-",
-        "PangoCairo-",
-        "GObject-",
-        "GdkPixbuf-",
-        "cairo-",
-        "GModule-",
-        "freetype2-",
-    ]
-    if sys.platform == 'win32':
-        typelibs.append('GdkWin32-4')
-        typelibs.append('Win32-')
-    
-    for typelib in typelibs:
-        add_files(typelib+'*.typelib', os.path.join(sys.base_prefix, 'lib/girepository-1.0'), 'lib/girepository-1.0')
-        
-    loaders_path = 'lib/gdk-pixbuf-2.0/2.10.0/loaders.cache'
-    temp_loaders_path = os.path.join(tempfile.mkdtemp(), 'pixbuf-loaders.cache')
-    
-    # if it wasn't for nicotine+ i wouldn't have ever fucking figured this out 🥹🥹
-    with open(temp_loaders_path, 'w') as temp_loaders_f, \
-        open(os.path.join(sys.base_prefix, loaders_path)) as loaders_f:
-        data = loaders_f.read()
-        
-        if sys.platform == 'win32':
-            data = data.replace('lib\\\\gdk-pixbuf-2.0\\\\2.10.0\\\\loaders', 'lib')
-        temp_loaders_f.write(data)
-        
-    add_files('pixbuf-loaders.cache', os.path.dirname(temp_loaders_path), 'lib')
-    add_files(f'*{ext}', os.path.join(sys.base_prefix, 'lib/gdk-pixbuf-2.0/2.10.0/loaders'), 'lib')
-            
-if __name__ == '__main__':
-    main()
+compile_data()
 
+if sys.platform == 'win32':
+    ext = '.dll'
+    lib_dir = os.path.join(sys.base_prefix, 'bin')
+    add_files('gdbus.exe', lib_dir, 'lib')
+    add_files('libgthread-2.0-0.dll', lib_dir, 'lib')
+else:
+    ext = '.so'
+    lib_dir = os.path.join(sys.base_prefix, 'lib')
+    
+add_files('libgtk-4*'+ext, lib_dir, 'lib')
+add_files('libadwaita-1*'+ext, lib_dir, 'lib')
+add_files('gschemas.compiled', os.path.join(sys.base_prefix, 'share/glib-2.0/schemas'), 'share/glib-2.0/schemas')
+
+mingw_prefix = os.environ.get('MINGW_PREFIX', None)
+if mingw_prefix is None:
+    add_files('**/*.conf', '/etc/fonts', 'share/fonts')
+else:
+    add_files('**/*.conf', os.path.join(mingw_prefix, 'etc/fonts'), 'share/fonts')
+    
+typelibs = [
+    "Adw-",
+    "Gtk-4",
+    "Gio-",
+    "Gdk-4",
+    "GLib-",
+    "Graphene-",
+    "Gsk-",
+    "HarfBuzz-",
+    "Pango-",
+    "PangoCairo-",
+    "GObject-",
+    "GdkPixbuf-",
+    "cairo-",
+    "GModule-",
+    "freetype2-",
+]
+if sys.platform == 'win32':
+    typelibs.append('GdkWin32-4')
+    typelibs.append('Win32-')
+
+for typelib in typelibs:
+    add_files(typelib+'*.typelib', os.path.join(sys.base_prefix, 'lib/girepository-1.0'), 'lib/girepository-1.0')
+    
+loaders_path = 'lib/gdk-pixbuf-2.0/2.10.0/loaders.cache'
+temp_loaders_path = os.path.join(tempfile.mkdtemp(), 'pixbuf-loaders.cache')
+
+# if it wasn't for nicotine+ i wouldn't have ever fucking figured this out 🥹🥹
+with open(temp_loaders_path, 'w') as temp_loaders_f, \
+    open(os.path.join(sys.base_prefix, loaders_path)) as loaders_f:
+    data = loaders_f.read()
+    
+    if sys.platform == 'win32':
+        data = data.replace('lib\\\\gdk-pixbuf-2.0\\\\2.10.0\\\\loaders', 'lib')
+    temp_loaders_f.write(data)
+    
+add_files('pixbuf-loaders.cache', os.path.dirname(temp_loaders_path), 'lib')
+add_files(f'*{ext}', os.path.join(sys.base_prefix, 'lib/gdk-pixbuf-2.0/2.10.0/loaders'), 'lib')
+            
 setup(
     name='Rencher',
     description='Rencher',
@@ -110,6 +112,7 @@ setup(
             'excludes': [],
             'optimize': 2,
             'include_files': include_files,
+            'include_msvcr': True,
         },
     },
     executables=[

@@ -1,8 +1,9 @@
+import glob
+import os.path
 import platform
 import shutil
 import subprocess
 import sys
-from pathlib import Path
 
 import gi
 
@@ -38,8 +39,9 @@ def compile_data() -> None:
     resc_path = return_comp('glib-compile-resources')
     # mgck_path = return_comp('magick')
 
-    ui_dir = Path(__file__).parents[2] / 'rencher' / 'gtk' / 'ui'
-    blp_files = ui_dir.glob('*.blp')
+    ui_dir = os.path.join(os.path.dirname(__file__), 'ui')
+    
+    blp_files = glob.glob(os.path.join(ui_dir, '*.blp'))
     args = ['python', blpc_path, 'batch-compile', ui_dir, ui_dir]
 
     for file in blp_files:
@@ -48,7 +50,7 @@ def compile_data() -> None:
     print('Compiling .blp files...')
     subprocess.run(args)
 
-    res_dir = Path(__file__).parents[2] / 'rencher' / 'gtk' / 'res'
+    res_dir = os.path.join(os.path.dirname(__file__), 'res')
 
     # if platform.system() == 'Windows':
     #     xml_file = res_dir / 'windows.resources.gresource.xml'
@@ -60,7 +62,7 @@ def compile_data() -> None:
     #     if not rencher_svg.with_suffix('.png').is_file():
     #         subprocess.run([mgck_path, '-density', '250', '-background', 'none', rencher_svg, rencher_svg.with_suffix('.png')])
     # else:
-    xml_file = res_dir / 'resources.gresource.xml'
+    xml_file = os.path.join(res_dir, 'resources.gresource.xml')
 
     print('Compiling resources...')
     subprocess.run([resc_path, xml_file], cwd=res_dir)
@@ -81,7 +83,6 @@ def format_gdatetime(date: GLib.DateTime, style: str) -> str:
     if style not in ['detailed', 'neat', 'runtime']:
         raise NotImplementedError('fucking idiot. choose something else')
 
-    ''
     if style == 'neat':
         formatted_date = date.format('%d %b %Y, %I:%M %p')
     elif style == 'detailed':
@@ -105,36 +106,27 @@ def open_file_manager(path: str):
     elif platform.system() == 'Windows':
         subprocess.run(['explorer', path.replace('/', '\\')])
 
-def windowficate_file(file: Path | str) -> Path | str:
+def windowficate_file(path: str) -> str:
     """
     returns a file that abides by the windows file naming conventions
     
     Args:
-        file (Path | str): is used
+        path (str): is used
     Returns:
-        Path: the new path
+        str: the new path
     """
     forbidden_characters = ['<', '>', ':', '"', '/', '\\', '|', '?', '*']
-    forbidden_names = ['CON', 'PRN', 'AUX', 'NUL', 'COM1', 'COM2', 'COM3', 'COM4', 'COM5', 'COM6', 'COM7', 'COM8', 'COM9', 'COM¹', 'COM²', 'COM³', 'LPT1', 'LPT2', 'LPT3', 'LPT4', 'LPT5', 'LPT6', 'LPT7', 'LPT8', 'LPT9', 'LPT¹', 'LPT²', 'LPT³']
+    forbidden_names = ['CON', 'PRN', 'AUX', 'NUL', 'COM1', 'COM2', 'COM3', 'COM4', 'COM5', 'COM6', 'COM7', 'COM8', 
+                       'COM9', 'COM¹', 'COM²', 'COM³', 'LPT1', 'LPT2', 'LPT3', 'LPT4', 'LPT5', 'LPT6', 'LPT7', 'LPT8',
+                       'LPT9', 'LPT¹', 'LPT²', 'LPT³']
 
-    if isinstance(file, Path):
-        name = file.stem
-    elif isinstance(file, str):
-        name = file
-    else:
-        raise TypeError()
-
-    new_name = ''
-    for character in name:
+    new_path = ''
+    for character in path:
         if character in forbidden_characters:
-            new_name += '_'
+            new_path += '_'
         else:
-            new_name += character
-    if name in forbidden_names:
+            new_path += character
+    if path in forbidden_names:
         raise ValueError()
 
-    if isinstance(file, Path):
-        return file.with_stem(new_name)
-    else:
-        return new_name
-		
+    return new_path

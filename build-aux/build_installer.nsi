@@ -30,7 +30,7 @@ Var CHECK_DESKTOP
 Var CHECK_STARTMENU
 
 !insertmacro MUI_PAGE_WELCOME
-!insertmacro MUI_PAGE_LICENSE "LICENSE.txt"
+!insertmacro MUI_PAGE_LICENSE "..\LICENSE.txt"
 !insertmacro MUI_PAGE_DIRECTORY
 Page custom CustomOptionsPage CustomOptionsPageLeave
 !insertmacro MUI_PAGE_INSTFILES
