@@ -5,7 +5,7 @@ from configparser import NoOptionError
 
 from gi.repository import Adw, GLib
 
-from rencher.gtk import format_gdatetime
+from rencher import GameInvalidError
 from rencher.gtk.codename_dialog import RencherCodename
 from rencher.renpy import Game
 from rencher.renpy.config import RencherConfig
@@ -21,15 +21,15 @@ def return_games(self) -> list[Game]:
     for path in glob.iglob(os.path.join(games_path, '*')):
         try:
             games.append(Game(rpath=path))
-        except NoOptionError:
-            dialog.change_game(path)
-            dialog.choose(self)
-        except FileNotFoundError as e:
-            logging.debug(f'{path} -> {repr(e)}')
-        except AttributeError:
-            pass
-        # except Exception as e:  # comment when testing
-        #     logging.debug(f'RANDOM NEW ERROR: {e}. YEY !!!')
+        except GameInvalidError:
+            pass  # possibly add some warning dialog that your game isn't valid
+        # except NoOptionError:
+        #     dialog.change_game(path)
+        #     dialog.choose(self)
+        # except AttributeError:
+        #     pass
+        # except Exception as e:  # comment when testing so you get the full traceback
+        #     logging.debug(f'{repr(e)} - Oops!')
 
     return games
 

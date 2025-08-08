@@ -41,7 +41,6 @@ class RencherOptions(Adw.PreferencesDialog):
             [self.overwrite_forced_save_dir, self.options_forced_save_dir, 'forced_save_dir'],
         ]
 
-
         self.options_save_slot.set_adjustment(Gtk.Adjustment(
             lower=1,
             upper=10,
@@ -71,6 +70,7 @@ class RencherOptions(Adw.PreferencesDialog):
             if codename == game.config['info']['codename']:
                 logging.debug(f'{i}: {codename}')
                 self.options_codename.set_selected(i)
+                logging.debug(self.options_codename.get_selected())
             string_list.append(codename)
 
         self.options_codename.set_model(string_list)

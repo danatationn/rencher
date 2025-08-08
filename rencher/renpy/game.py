@@ -7,8 +7,9 @@ import subprocess
 import time
 from configparser import NoOptionError
 
+from rencher import GameInvalidError
 from rencher.renpy.config import GameConfig
-from rencher.renpy.paths import get_absolute_path
+from rencher.renpy.paths import get_absolute_path, get_py_files, validate_game_files
 
 
 class Game:
@@ -25,13 +26,10 @@ class Game:
         if not apath and rpath:
             self.apath = get_absolute_path(self.rpath)
             if self.apath is None:
-                raise FileNotFoundError('This is not a real game!')
+                name = os.path.basename(rpath)
+                raise GameInvalidError(f'{name} is not a valid game! ({rpath})')
 
         config_path = os.path.join(self.apath, 'game/rencher.ini')
-        # if not os.path.exists(config_path):
-        #     config = GameConfig(config_path)
-        #     config.write()
-
         self.config = GameConfig(config_path)
 
     def __eq__(self, other) -> bool:
@@ -57,18 +55,27 @@ class Game:
             ),
         )
 
+    def validate(self) -> bool:
+        """
+            returns false if game cannot be run/isn't a real game
+        """
+        
+        files = glob.glob(f'{self.apath}/**', recursive=True)
+        return validate_game_files(files)
+        
+
     def get_executable(self) -> str:
         """
             returns a name based off of the .py scripts located in apath
         """
-        py_files = glob.glob(os.path.join(self.apath, '*.py'))
+        py_files = get_py_files(self.apath)
         codename = self.config.get_value('codename')
         exec_path = os.path.join(self.apath, f'{codename}.py')
     
         if codename != '':
             return exec_path
         elif len(py_files) == 0:
-            raise FileNotFoundError(self.apath)
+            raise GameInvalidError(f'No executable found in {self.apath}')
         elif len(py_files) == 1:
             return py_files[0]
         else:
@@ -224,12 +231,22 @@ class Game:
     @property
     def name(self):
         return self.get_name()
-    
     @property
     def codename(self):
         return self.get_codename()
-    
     @property
     def version(self):
         return self.get_renpy_version()
+    @property
+    def is_mod(self):
+        py_files = get_py_files(self.apath)
+        if len(py_files) > 1:
+            return True
+        elif len(py_files) <= 1:
+            return False
+        else:
+            raise FileNotFoundError
+    @property
+    def is_valid(self):
+        return self.validate()
     

@@ -6,12 +6,12 @@ requires-python = ">=3.12"
 dependencies = [
     "pycairo==1.27.0; sys.platform == 'linux'",
     "pygobject==3.50.0; sys.platform == 'linux'",
-    "pygobject-stubs==2.12.0; sys.platform == 'linux'",
-    "cx-freeze>=8.3.0; sys.platform == 'linux'",  # apparently doesn't build on windows?
+    "cx-freeze>=8.3.0; sys.platform == 'linux'", # apparently doesn't build on windows?
     "rarfile>=4.2",
     "requests>=2.32.4",
     "thefuzz>=0.22.1",
     "watchdog>=6.0.0",
+    "pygobject-stubs>=2.13.0",
 ]
 
 

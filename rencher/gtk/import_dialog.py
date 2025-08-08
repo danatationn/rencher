@@ -1,16 +1,28 @@
+import glob
+import logging
+import os
 import os.path
+import shutil
 import threading
+import time
 import zipfile
+from optparse import OptionError
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 import rarfile
 from gi.repository import Adw, Gio, GLib, Gtk
 
-from rencher import tmp_path
-from rencher.gtk._import import import_game
+from rencher import ImportCancelError, ImportCorruptArchiveError, ImportInvalidError, tmp_path
 from rencher.gtk._library import update_library_sidebar
 from rencher.gtk.game_item import GameItem
-from rencher.renpy import Mod
+from rencher.renpy import Game
+from rencher.renpy.config import RencherConfig
+from rencher.renpy.paths import get_absolute_path, get_py_files, get_rpa_files, get_rpa_path, validate_game_files
+
+if TYPE_CHECKING:
+    from rencher.gtk.window import RencherWindow
+
 
 filename = os.path.join(tmp_path, 'rencher/gtk/ui/import.ui')
 @Gtk.Template(filename=filename)
@@ -24,23 +36,22 @@ class RencherImport(Adw.PreferencesDialog):
     import_game_combo: Adw.ComboRow = Gtk.Template.Child()
     import_button: Adw.ActionRow = Gtk.Template.Child()
     import_progress_bar: Gtk.ProgressBar = Gtk.Template.Child()
+    import_mod_toggle: Adw.SwitchRow = Gtk.Template.Child()
 
-    thread: threading.Thread = threading.Thread()
-    progress: int = 0
+    thread = threading.Thread()
+    cancel_flag = threading.Event()
     selected_type: str = 'Archive (.zip, .rar)'
     archive_location: str = ''
     folder_location: str = ''
 
-    def __init__(self, window, *args, **kwargs):
+    def __init__(self, window: 'RencherWindow', *args, **kwargs):
         super().__init__(*args, **kwargs)
 
         self.window = window
-        self.cancel_flag = threading.Event()
-
         list_store = Gio.ListStore.new(GameItem)
 
         for game in window.games:
-            if not isinstance(game, Mod):
+            if not game.is_mod:
                 game_item = GameItem(game=game)
                 list_store.append(game_item)
 
@@ -115,21 +126,34 @@ class RencherImport(Adw.PreferencesDialog):
     @Gtk.Template.Callback()
     def on_import_clicked(self, _) -> None:
         def import_thread():
-            import_game(self)
-            GLib.idle_add(lambda: (
-                self.import_progress_bar.set_visible(False),
-                update_library_sidebar(self.window),
-                self.close(),
+            try:
+                self.import_game()
+            except ImportInvalidError:
+                toast = Adw.Toast(title='The game supplied is invalid!', timeout=5)
+                self.window.toast_overlay.add_toast(toast)
+            except ImportCorruptArchiveError:
+                toast = Adw.Toast(title='The archive supplied is corrupt!', timeout=5)
+                self.window.toast_overlay.add_toast(toast)
+            except TimeoutError:
+                toast = Adw.Toast(title='Couldn\'t come up with a name', timeout=5)
+                self.window.toast_overlay.add_toast(toast)
+            except ImportCancelError:
+                toast = Adw.Toast(title='Importing cancelled', timeout=5)
+                self.window.toast_overlay.add_toast(toast)
+            finally:
+                GLib.idle_add(lambda: (
+                    self.import_progress_bar.set_visible(False),
+                    update_library_sidebar(self.window),
+                    self.close(),
+                ))
 
-            ))
-
-        if self.import_button.get_style_context().has_class('destructive-action'):
+        if not self.import_button.get_style_context().has_class('destructive-action'):
+            self.thread = threading.Thread(target=import_thread)
+            self.thread.start()
+        else:
             self.cancel_flag.set()
             self.thread.join()
             self.close()
-        else:
-            self.thread = threading.Thread(target=import_thread)
-            self.thread.start()
 
     def check_process(self):
         if self.thread.is_alive():
@@ -138,5 +162,143 @@ class RencherImport(Adw.PreferencesDialog):
         else:
             self.import_button.get_style_context().remove_class('destructive-action')
             self.import_button.set_title('Import')
-
         return True
+
+    def import_game(self):
+        name = self.import_title.get_text()
+        location = self.import_location.get_text()
+        location_stem = os.path.splitext(os.path.basename(location))[0]
+        is_mod = self.import_mod_toggle.get_active()
+        modded_game: Game = self.import_game_combo.get_selected_item()  # type: ignore
+        archive: zipfile | rarfile = None
+        
+        data_dir = RencherConfig().get_data_dir()
+        game_dir = os.path.join(data_dir, 'games')
+        self.import_progress_bar.set_visible(True)
+
+        if not os.path.exists(location):
+            return 
+        
+        suffix = os.path.splitext(location)[1]
+        if suffix in ['.zip', '.rar']:
+            logging.debug(f'Archive detected ("{location})"')
+            try:
+                if suffix == '.zip':
+                    archive = zipfile.ZipFile(location)
+                else:
+                    archive = rarfile.RarFile(location)
+            except (rarfile.BadRarFile, rarfile.NotRarFile, zipfile.BadZipFile) as err:
+                raise ImportCorruptArchiveError('The archive supplied is invalid!') from err
+            else:
+                files = archive.namelist()
+    
+        elif os.path.isdir(location):
+            logging.debug(f'Folder detected ("{location}/")')
+            files = glob.glob(f'{location}/**/*', recursive=True)
+        else:
+            return
+        
+        # if not is_mod and not validate_game_files(files):
+        #     raise ImportInvalidError()
+    
+        count = 2
+        start = time.perf_counter()
+        rpath = None
+        while rpath is None or not os.path.exists(rpath):
+            if time.perf_counter() - start > 1:
+                # this will never happen unless you're a freak
+                raise TimeoutError('shit took too long. sorry !')
+            
+            possible_paths = [
+                os.path.join(game_dir, name),
+                os.path.join(game_dir, location_stem),
+                os.path.join(game_dir, f'{name} ({count})'),
+                os.path.join(game_dir, f'{location_stem} ({count})'),
+            ]
+            for path in possible_paths:
+                if not os.path.exists(path):
+                    os.mkdir(path)
+                    rpath = path
+                    break
+            
+            count += 1
+           
+        if not self.cancel_flag.is_set():
+            logging.info(f'Importing the game at "{rpath}/"')
+        start = time.perf_counter()
+
+        if is_mod:
+            game_files = glob.glob(f'{modded_game.rpath}/**', recursive=True)
+            total_work = len(files) + len(game_files)
+            mod_work = len(files)
+        else:
+            total_work = len(files)
+        
+        for i, path in enumerate(files):
+            if self.cancel_flag.is_set():
+                break
+            if archive:
+                archive.extract(path, rpath)
+            else:
+                relative_path = os.path.relpath(path, location)
+                target_path = os.path.join(rpath, relative_path)
+                shutil.copy(path, target_path)
+            GLib.idle_add(self.import_progress_bar.set_fraction, i / total_work)
+            
+        if is_mod:
+            rpa_path = get_rpa_path(rpath)
+            if rpa_path == rpath:
+                new_rpa_path = os.path.join(rpath, 'game')
+                rpa_files = get_rpa_files(rpath)
+                if not os.path.exists(new_rpa_path):
+                    os.mkdir(new_rpa_path)
+                for path in rpa_files:
+                    if self.cancel_flag.is_set():
+                        break
+                    relative_path = os.path.relpath(path, rpa_path)
+                    target_path = os.path.join(new_rpa_path, relative_path)
+                    shutil.move(path, target_path)
+    
+                # get_absolute_path is based off of get_rpa_files so we need to clear the cache
+                # otherwise it will dump the game files outside the folder
+                get_rpa_files.cache_clear()
+                    
+            apath = get_absolute_path(rpath)
+    
+            for i, path in enumerate(glob.iglob(f'{modded_game.apath}/**', recursive=True)):
+                if self.cancel_flag.is_set():
+                    break
+                
+                relative_path = os.path.relpath(path, modded_game.apath)
+                target_path = os.path.join(apath, relative_path)
+                
+                if os.path.exists(target_path):
+                    continue
+                if os.path.basename(target_path) == 'rencher.ini':
+                    continue
+                if os.path.isdir(path):
+                    os.mkdir(target_path)
+                else:
+                    shutil.copy(path, target_path)
+                    
+                GLib.idle_add(self.import_progress_bar.set_fraction, mod_work + i / total_work)
+            
+        if not self.cancel_flag.is_set():
+            game = Game(rpath=rpath)
+            game.config.set('info', 'nickname', name)
+            game.config.set('info', 'added_on', str(time.time()))
+            game_scripts = glob.glob(os.path.join(game.apath, '*.py')) 
+            if len(game_scripts) == 2 and is_mod:
+                try:
+                    game_scripts.remove(modded_game.codename)
+                    game.config.set('info', 'codename', game_scripts[0])
+                except ValueError:
+                    pass
+            game.config.write()        
+
+            logging.info(f'Importing done in {time.perf_counter() - start:.2f}s')
+        else:
+            GLib.idle_add(self.import_progress_bar.set_fraction, 1)
+            shutil.rmtree(rpath)
+            logging.info(f'Importing #cancelled. Total thread runtime: {time.perf_counter() - start:.2f}s')
+            raise ImportCancelError()

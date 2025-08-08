@@ -5,14 +5,6 @@ from rencher import config_path, local_path
 
 
 class GameConfig(ConfigParser):
-    game_config_path: str
-
-    lister = [
-        'a'
-        'b'
-        'c',
-    ]
-
     structure = {
         'info': {
             'nickname': '',

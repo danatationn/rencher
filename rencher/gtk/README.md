@@ -69,4 +69,23 @@ i haven't figured all the code currently i will need to think long and hard on h
 
 TODO right a book about this when you finish it
 
-## TODO the rest
+## _import
+1. establish directory name
+   * try and use the name used in the import dialog
+   * if it's already taken 
+     * use the archive's\folder's name
+   * if it's also already taken
+     * take the name and put some random characters after it
+2. verify game
+   * if get_rpa_path() fails 
+     * cancel the importing process 
+   * if this is not a mod, then try and initiate a game instance
+     * if it fails then cancel the importing process
+3. copy files
+   * count how many files are being moved for the progress bar
+     * if this is a mod then take the game and the mod into account 
+   * check to see if there are .rpa files but no game/ folder
+     * if this is the case, make the folder and reset the apath
+   * copy game files skillfully over mod files like a boss
+4. set up config files and shi
+5. i'll figure it out later

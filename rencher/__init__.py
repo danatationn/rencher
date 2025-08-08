@@ -7,6 +7,7 @@ __copyright__ = '© 2025 danatationn'
 import os.path
 import platform
 import sys
+import traceback
 
 from rencher.gtk import compile_data
 
@@ -23,7 +24,32 @@ elif platform.system() == 'Windows':
     config_path = os.path.join(home_path, 'AppData/Local/Rencher/config.ini')
 
 
+class GameInvalidError(Exception):
+    pass
+class GameNoExecutableError(Exception):
+    pass
+class ImportInvalidError(Exception):
+    pass
+class ImportCorruptArchiveError(Exception):
+    pass
+class ImportCancelError(Exception):
+    pass  # """error"""
+
+def handle_global_exception(exc_type, exc_value, exc_traceback):
+    if issubclass(exc_type, KeyboardInterrupt):
+        sys.__excepthook__(exc_type, exc_value, exc_traceback)
+        return 
+    # if issubclass(exc_type, InvalidGameError):
+    #     return
+    
+    err_message = ''.join(traceback.format_exception(exc_type, exc_value, exc_traceback))
+    print(err_message, file=sys.stderr)
+    
+    sys.exit(1)
+
 def launch() -> None:
+    sys.excepthook = handle_global_exception
+    
     compile_data()
 
     """
@@ -58,9 +84,9 @@ def launch() -> None:
     from gi.repository import Gio
     gres_path = os.path.join(tmp_path, 'rencher/gtk/res/resources.gresource')
     res = Gio.resource_load(gres_path)
-    res._register()  # pylint: disable=W0212
+    res._register()
 
     try:
         app.run(sys.argv)
-    except KeyboardInterrupt:
-        pass
+    except Exception as err:
+        handle_global_exception(type(err), err, err.__traceback__)
