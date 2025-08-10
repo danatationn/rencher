@@ -9,12 +9,11 @@ from thefuzz.fuzz import partial_token_sort_ratio
 
 from rencher import tmp_path
 from rencher.gtk import open_file_manager
-from rencher.gtk._library import update_library_sidebar
-from rencher.gtk.game_item import GameItem
 from rencher.gtk.import_dialog import RencherImport
+from rencher.gtk.library import GameItem, RencherLibrary
 from rencher.gtk.options_dialog import RencherOptions
 from rencher.gtk.settings_dialog import RencherSettings
-from rencher.renpy import Game
+from rencher.renpy.game import Game
 
 filename = os.path.join(tmp_path, 'rencher/gtk/ui/window.ui')
 @Gtk.Template(filename=str(filename))
@@ -25,7 +24,7 @@ class RencherWindow(Adw.ApplicationWindow):
     games: list[Game] = []
     game_process: subprocess.Popen = None
     process_time: float = None
-    process_row: Adw.ButtonRow = None  # type: ignore
+    process_row: Gtk.ListBoxRow = None  # type: ignore
     is_terminating: bool = False
     filter_text: str = ''
     combo_index: int = 0
@@ -37,6 +36,7 @@ class RencherWindow(Adw.ApplicationWindow):
     settings_dialog: RencherSettings = None
     import_dialog: RencherImport = None
     options_dialog: RencherOptions = None
+    library = RencherLibrary()
 
     """ templates """
     toast_overlay: Adw.ToastOverlay = Gtk.Template.Child()
@@ -59,13 +59,32 @@ class RencherWindow(Adw.ApplicationWindow):
         if not getattr(sys, 'frozen', False):
             self.get_style_context().add_class('devel')
 
-        update_library_sidebar(self)
         self.import_dialog = RencherImport(self)
         self.options_dialog = RencherOptions(self)
         self.settings_dialog = RencherSettings(self)
         self.library_list_box.set_sort_func(self.sort_func)
         self.library_list_box.set_filter_func(self.filter_func)
+        
+        self.library.connect('game-added', self.on_game_added)
+        self.library.connect('game-removed', self.on_game_removed)
+        self.library.connect('game-changed', self.on_game_changed)
+        self.library.load_games()
+        
         GLib.timeout_add(250, self.check_process)
+
+    def on_game_added(self, _, game_item: GameItem):
+        button = Adw.ButtonRow(title=game_item.name)  # type: ignore
+        button.game = game_item.game
+        self.library_list_box.append(button)
+    
+    def on_game_removed(self, _, game_item: GameItem):
+        for row in self.library_list_box:  # type: ignore
+            if getattr(row, 'game', None) == game_item.game:
+                self.library_list_box.remove(row)
+    
+    def on_game_changed(self, _, game_item: GameItem):
+        if self.current_game.rpath == game_item.rpath:
+            self.current_game.refresh()
 
     @Gtk.Template.Callback()
     def on_import_clicked(self, _widget: Adw.ButtonRow) -> None:  # type: ignore
@@ -120,11 +139,8 @@ class RencherWindow(Adw.ApplicationWindow):
                 self.current_game.bind_property('codename', self.codename_row, 'subtitle')
                 self.current_game.refresh()
             else:
-                start_time = time.perf_counter()
                 self.current_game.game = game
-                # self.current_game = GameItem(game=game)
                 self.current_game.refresh()
-                logging.debug(time.perf_counter() - start_time)
 
     @Gtk.Template.Callback()
     def on_search_changed(self, _widget: Gtk.SearchEntry):

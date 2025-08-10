@@ -5,10 +5,8 @@ import threading
 
 import gi
 import requests
-from watchdog.observers import Observer
 
 import rencher
-from rencher import local_path
 from rencher.renpy.config import RencherConfig
 
 gi.require_version('Gtk', '4.0')
@@ -39,7 +37,8 @@ class RencherApplication(Gtk.Application):
 
         logging.basicConfig(
             level=logging.INFO,
-            format='[%(levelname)s\t%(asctime)s.%(msecs)-3d %(module)-16s] %(message)s',
+            # format='[%(levelname)s\t%(asctime)s.%(msecs)-3d %(module)-16s] %(message)s',
+            format='[%(levelname)s\t%(asctime)s.%(msecs)-3d %(module)s] %(message)s',
             datefmt='%H:%M:%S', 
         )
 

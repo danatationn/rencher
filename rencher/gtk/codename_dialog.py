@@ -3,7 +3,7 @@ import os.path
 
 from gi.repository import Adw, Gtk
 
-from rencher.renpy import Game
+from rencher.renpy.game import Game
 
 
 class RencherCodename(Adw.AlertDialog):

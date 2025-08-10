@@ -10,7 +10,7 @@ from gi.repository import Adw, GLib, Gtk
 from rencher import config_path, local_path, tmp_path
 from rencher.gtk import open_file_manager
 from rencher.gtk._library import update_library_sidebar
-from rencher.renpy import Game, Mod
+from rencher.renpy.game import Game
 
 filename = os.path.join(tmp_path, 'rencher/gtk/ui/options.ui')
 @Gtk.Template(filename=str(filename))
@@ -185,11 +185,6 @@ class RencherOptions(Adw.PreferencesDialog):
     def on_delete_game_response(self, _, response: str):
         if response == 'ok':
             # some safety measures
-            if isinstance(self.game, Mod) and self.game.rpath == os.path.join(local_path, 'mods'):
-                return
-            elif self.game.rpath == os.path.join(local_path, 'games'):
-                return
-
             def delete_thread():
                 self.window.pause_monitoring = True
                 toast = Adw.Toast(

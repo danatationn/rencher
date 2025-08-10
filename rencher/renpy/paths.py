@@ -59,7 +59,7 @@ def validate_game_files(files: list[str]) -> bool:
         if os.path.splitext(rp_file)[1] != '.rpyb'  # cache file
     ]
     rpa_path = min(game_files, key=lambda path: len(path.split(os.sep)))
-    apath = os.path.dirname(rpa_path)
+    apath = os.path.abspath(os.path.join(rpa_path, '..', '..'))
 
     rel_files = [os.path.relpath(file, apath) for file in files]
 

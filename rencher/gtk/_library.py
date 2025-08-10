@@ -1,14 +1,13 @@
 import glob
 import logging
 import os.path
-from configparser import NoOptionError
 
-from gi.repository import Adw, GLib
+from gi.repository import Adw
 
 from rencher import GameInvalidError
 from rencher.gtk.codename_dialog import RencherCodename
-from rencher.renpy import Game
 from rencher.renpy.config import RencherConfig
+from rencher.renpy.game import Game
 
 
 def return_games(self) -> list[Game]:
@@ -23,7 +22,7 @@ def return_games(self) -> list[Game]:
             games.append(Game(rpath=path))
         except GameInvalidError:
             pass  # possibly add some warning dialog that your game isn't valid
-        # except NoOptionError:
+        # except NoOptionError: 
         #     dialog.change_game(path)
         #     dialog.choose(self)
         # except AttributeError:
@@ -80,42 +79,4 @@ def update_library_sidebar(self) -> None:
 
     self.games = games
 
-""" not to be used anymore
-def update_library_view(self, game: Game) -> None:
-    self.selected_status_page.set_title(game.name)
-    game.config.read()
 
-    try:
-        last_played = int(float(game.config['info']['last_played']))
-        datetime = GLib.DateTime.new_from_unix_utc(last_played)
-        formatted_last_played = format_gdatetime(datetime, 'neat')
-        self.last_played_row.set_subtitle(formatted_last_played)
-    except KeyError:
-        self.last_played_row.set_subtitle('N/A')
-    except ValueError:
-        self.last_played_row.set_subtitle('Never')
-
-    try:
-        playtime = int(float(game.config['info']['playtime']))
-        datetime = GLib.DateTime.new_from_unix_utc(playtime)
-        formatted_playtime = format_gdatetime(datetime, 'runtime')
-
-        self.playtime_row.set_subtitle(formatted_playtime)
-    except KeyError:
-        self.playtime_row.set_subtitle('N/A')
-    except ValueError:
-        self.playtime_row.set_subtitle('N/A')
-
-    try:
-        added_on = int(game.config['info']['added_on'])
-        datetime = GLib.DateTime.new_from_unix_utc(added_on)
-        formatted_datetime = format_gdatetime(datetime, 'neat')
-        self.added_on_row.set_subtitle(formatted_datetime)
-    except KeyError:
-        self.added_on_row.set_subtitle('N/A')
-
-    self.version_row.set_subtitle(game.version if game.version else 'N/A')
-    self.rpath_row.set_subtitle(str(game.rpath))
-    self.codename_row.set_subtitle(game.codename)
-"""
-    

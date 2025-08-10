@@ -10,7 +10,7 @@ then it creates args, sets up the logging and checks to see if there's a new ver
 and now it displays the window
 
 ## window
-the window is a bit complex
+the window is a bit more complex
 <br>
 it consists of:
 * the sidebar (where all the game buttons are)

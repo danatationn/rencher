@@ -77,7 +77,7 @@ class GameConfig(ConfigParser):
 
         game_config_dir = os.path.dirname(self.game_config_path)
         if not os.path.isdir(game_config_dir):
-            os.mkdir(game_config_dir)
+            os.makedirs(game_config_dir)
         open(self.game_config_path, 'a').close()
         if not fp:
             fp = open(self.game_config_path, 'w')
@@ -144,7 +144,7 @@ class RencherConfig(ConfigParser):
     def write(self, fp=None, space_around_delimiters=True):
         config_dir = os.path.dirname(config_path)
         if not os.path.isdir(config_dir):
-            os.mkdir(config_dir)
+            os.makedirs(config_dir)
 
         open(config_path, 'a').close()
         if not fp:
