@@ -58,9 +58,11 @@ def validate_game_files(files: list[str]) -> bool:
         if '.rpym' not in os.path.splitext(rp_file)[1]  # .rpym files can be compiled (.rypmc)
         if os.path.splitext(rp_file)[1] != '.rpyb'  # cache file
     ]
+    if not game_files:
+        return False
+
     rpa_path = min(game_files, key=lambda path: len(path.split(os.sep)))
     apath = os.path.abspath(os.path.join(rpa_path, '..', '..'))
-
     rel_files = [os.path.relpath(file, apath) for file in files]
 
     required_folders = [file for file in rel_files

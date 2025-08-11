@@ -1,6 +1,8 @@
 import logging
 import os
 import sys
+import time
+from collections import defaultdict
 
 from gi.repository import GLib
 from watchdog.events import (
@@ -40,11 +42,14 @@ class RencherFileMonitor(FileSystemEventHandler):
     config: RencherConfig = RencherConfig()
     observer: Observer = None
     data_dir: str
+    pending_changes = defaultdict(lambda: {'last': 0.0, 'path': '', 'action': ''})
+    pause_rpaths: list[str] = []
 
     def __init__(self, window: RencherWindow):
         super().__init__()
         self.window = window
         self.monitor_data_dir()
+        GLib.timeout_add(250, self.flush_pending)
 
     def monitor_data_dir(self) -> None:
         if self.observer is not None:
@@ -62,9 +67,56 @@ class RencherFileMonitor(FileSystemEventHandler):
         self.observer.start()
         logging.debug(f'Watching "{self.data_dir}/" for changes')
     
+    def queue_event(self, event: FileSystemEvent) -> None:
+        if event.dest_path:
+            path = event.dest_path
+        else:
+            path = event.src_path
+
+        for rpath, game_item in self.window.library.game_items.items():
+            if path.startswith(rpath + os.sep):
+                break
+        if not game_item:
+            game_item = None
+            
+        if game_item:
+            if game_item.game.is_valid:
+                key = game_item.rpath
+                action = 'changed'
+            else:
+                key = game_item.rpath
+                action = 'removed'
+        else:
+            games_dir = os.path.join(self.data_dir, 'games')
+            rel_path = os.path.relpath(path, games_dir)
+            top_dir = rel_path.split(os.sep, 1)[0]
+            key = os.path.join(games_dir, top_dir)
+            action = 'added'
+        
+        self.pending_changes[key]['last'] = time.time()
+        self.pending_changes[key]['path'] = path
+        self.pending_changes[key]['action'] = action
+    
+    def flush_pending(self) -> bool:
+        now = time.time()
+        to_emit = []
+        for rpath, info in list(self.pending_changes.items()):
+            if now - info['last'] >= 0.5:
+                to_emit.append((rpath, info['action']))
+                del self.pending_changes[rpath]
+
+        for rpath, action in to_emit:
+            logging.debug(f'"{rpath}": {action}')
+            if action == 'changed':
+                self.window.library.change_game(rpath)
+            elif action == 'removed':
+                self.window.library.remove_game(rpath)
+            else:
+                self.window.library.add_game(rpath)
+        return True
+    
     def on_moved(self, event: DirMovedEvent | FileMovedEvent) -> None:
-        logging.debug(f'something got moved {event.src_path} -> {event.dest_path}')
-        self.emit_changed(event.dest_path)
+        self.queue_event(event)
             
     def on_deleted(self, event: DirDeletedEvent | FileDeletedEvent) -> None:
         if os.path.exists(event.src_path):
@@ -72,33 +124,15 @@ class RencherFileMonitor(FileSystemEventHandler):
             # idk either ok??
             self.on_closed(event)
         else:
-            ...
+            self.queue_event(event)
         
     def on_closed(self, event: FileClosedEvent | DirDeletedEvent | FileDeletedEvent) -> None:
+        # edited
         if event.src_path == config_path:
             self.monitor_data_dir()
         else:
-            ...
+            self.queue_event(event)
 
-    def get_game_item(self, path: str) -> GameItem | None:
-        for rpath, game_item in self.window.library.game_items.items():
-            if path.startswith(rpath + os.sep):
-                return game_item
-        return None
-        
     def on_modified(self, event: DirModifiedEvent | FileModifiedEvent) -> None:
-        self.emit_changed(event.src_path)
-    
-    def emit_changed(self, path: str) -> None:
-        game_item = self.get_game_item(path)
-        if game_item:
-            if game_item.game.is_valid:
-                self.window.library.change_game(game_item.rpath)
-            else:
-                self.window.library.remove_game(game_item.rpath)
-        else:
-            games_dir = os.path.join(self.data_dir, 'games')
-            rel_path = os.path.relpath(path, games_dir)
-            top_dir = rel_path.split(os.sep, 1)[0]
-            rpath = os.path.join(games_dir, top_dir)
-            self.window.library.add_game(rpath)
+        self.queue_event(event)
+        

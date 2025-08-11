@@ -42,15 +42,25 @@ class GameItem(GObject.Object):
         self.game = game
         
     def refresh(self):
-        self.game.config.read()
-        self.name = self.game.get_name()
-        self.rpath = self.game.rpath
-        self.apath = self.game.apath
-        self.last_played = self.game.config.get_value('last_played')
-        self.added_on = self.game.config.get_value('added_on')
-        self.playtime = self.game.config.get_value('playtime')
-        self.version = self.game.get_renpy_version()
-        self.codename = self.game.get_codename()
+        if self.game:
+            self.game.config.read()
+            self.name = self.game.get_name()
+            self.rpath = self.game.rpath
+            self.apath = self.game.apath
+            self.last_played = self.game.config.get_value('last_played')
+            self.added_on = self.game.config.get_value('added_on')
+            self.playtime = self.game.config.get_value('playtime')
+            self.version = self.game.get_renpy_version()
+            self.codename = self.game.get_codename()
+        else:
+            self.name = ''
+            self.rpath = ''
+            self.apath = ''
+            self.last_played = ''
+            self.added_on = ''
+            self.playtime = ''
+            self.version = ''
+            self.codename = ''
         
     @property
     def game(self) -> Game:
@@ -73,12 +83,12 @@ class RencherLibrary(GObject.Object):
     def __init__(self):
         super().__init__()
         
-    def load_games(self):
+    def load_games(self) -> None:
         data_dir = RencherConfig().get_data_dir()
         for rpath in glob.iglob(os.path.join(data_dir, 'games', '*')):
             self.add_game(rpath)
         
-    def add_game(self, rpath: str):
+    def add_game(self, rpath: str) -> None:
         try:
             game_item = GameItem(rpath=rpath)
         except GameInvalidError:
@@ -88,13 +98,13 @@ class RencherLibrary(GObject.Object):
             self.emit('game-added', game_item)
             logging.debug(f'+{game_item.name}')
         
-    def remove_game(self, rpath: str):
+    def remove_game(self, rpath: str) -> None:
         game_item = self.game_items.pop(rpath, None)
-        if game_item:
+        if isinstance(game_item, GameItem):  # if i don't do this my type checker will tell me the code is unreachable
             self.emit('game-removed', game_item)
             logging.debug(f'-{game_item.name}')
             
-    def change_game(self, rpath: str):
+    def change_game(self, rpath: str) -> None:
         if rpath in self.game_items:
             self.emit('game-changed', self.game_items[rpath])
             logging.debug(f'~{self.game_items[rpath].name}')
