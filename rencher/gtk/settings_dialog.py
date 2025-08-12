@@ -8,7 +8,6 @@ from gi.repository import Adw, GLib, Gtk
 
 import rencher
 from rencher import local_path, tmp_path
-from rencher.gtk._library import update_library_sidebar
 from rencher.renpy.config import RencherConfig
 
 filename = os.path.join(tmp_path, 'rencher/gtk/ui/settings.ui')
@@ -62,7 +61,6 @@ class RencherSettings(Adw.PreferencesDialog):
                 self.config['settings'][key] = 'false'
 
         self.config.write()
-        update_library_sidebar(self.window)  # for data_dir
 
     @Gtk.Template.Callback()
     def on_picker_clicked(self, _widget: Gtk.Button):
@@ -119,7 +117,6 @@ class RencherSettings(Adw.PreferencesDialog):
                 finally:
                     self.window.pause_monitoring = False
                     self.close()
-                    update_library_sidebar(self.window)
                     self.window.toast_overlay.add_toast(toast)
 
             thread = threading.Thread(target=nuke_thread)

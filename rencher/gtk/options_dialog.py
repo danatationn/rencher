@@ -9,7 +9,6 @@ from gi.repository import Adw, GLib, Gtk
 
 from rencher import config_path, local_path, tmp_path
 from rencher.gtk import open_file_manager
-from rencher.gtk._library import update_library_sidebar
 from rencher.renpy.game import Game
 
 filename = os.path.join(tmp_path, 'rencher/gtk/ui/options.ui')
@@ -118,9 +117,8 @@ class RencherOptions(Adw.PreferencesDialog):
                     self.window.library_list_box.select_row(row)
                     break
 
-        update_library_sidebar(self.window)
+        # update_library_sidebar(self.window)
         GLib.idle_add(select)
-
 
     @Gtk.Template.Callback()
     def on_switch_changed(self, _widget: Gtk.Switch | Adw.SwitchRow, _):
@@ -199,7 +197,6 @@ class RencherOptions(Adw.PreferencesDialog):
                 finally:
                     self.window.pause_monitoring = False
                     self.close()
-                    update_library_sidebar(self.window)
                     self.window.toast_overlay.add_toast(toast)
 
             thread = threading.Thread(target=delete_thread)

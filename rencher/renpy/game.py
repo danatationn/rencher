@@ -34,32 +34,17 @@ class Game:
 
     def __eq__(self, other) -> bool:
         if isinstance(other, Game):
-            return (
-                    self.name == other.name
-                    and self.codename == other.codename
-                    and self.rpath == other.rpath
-                    and self.apath == other.apath
-                    and self.version == other.version
-            )
+            return self.rpath == other.rpath
         else:
             return False
 
     def __hash__(self):
-        return hash(
-            (
-                self.name,
-                self.codename,
-                self.rpath,
-                self.apath,
-                self.version,
-            ),
-        )
+        return hash(self.rpath)
 
     def validate(self) -> bool:
         """
             returns false if game cannot be run/isn't a real game
         """
-        
         files = glob.glob(f'{self.apath}/**', recursive=True)
         return validate_game_files(files)
         
@@ -131,6 +116,7 @@ class Game:
                 exec(f.read(), {}, vc_dict)
                 if vc_dict.get('version'):
                     return vc_dict['version']
+                
         if os.path.isfile(init_path):
             with open(init_path) as f:
                 """

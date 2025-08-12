@@ -14,8 +14,7 @@ import rarfile
 from gi.repository import Adw, Gio, GLib, Gtk
 
 from rencher import ImportCancelError, ImportCorruptArchiveError, ImportInvalidError, tmp_path
-from rencher.gtk._library import update_library_sidebar
-from rencher.gtk.library import GameItem
+from rencher.gtk.game_item import GameItem
 from rencher.renpy.config import RencherConfig
 from rencher.renpy.game import Game
 from rencher.renpy.paths import get_absolute_path, get_py_files, get_rpa_files, get_rpa_path, validate_game_files
@@ -143,7 +142,6 @@ class RencherImport(Adw.PreferencesDialog):
             finally:
                 GLib.idle_add(lambda: (
                     self.import_progress_bar.set_visible(False),
-                    update_library_sidebar(self.window),
                     self.close(),
                 ))
 

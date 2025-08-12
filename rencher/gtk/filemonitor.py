@@ -22,20 +22,14 @@ from watchdog.events import (
 from watchdog.observers import Observer
 
 from rencher import config_path, local_path
-from rencher.gtk.library import GameItem
+from rencher.gtk.game_item import GameItem
 from rencher.gtk.window import RencherWindow
 from rencher.renpy.config import RencherConfig
 
 
 class RencherFileMonitor(FileSystemEventHandler):
     """
-        watch over rencher files and act accordingly
-        
-        rencher config:
-            * when updated reset the observer so it checks the new data directory
-        data directory:
-            * if something got updated in the running game, add the event to a queue
-            * after the game stops, sort the queue out
+        watch over files and act accordingly
     """
     
     window: RencherWindow = None
@@ -55,6 +49,7 @@ class RencherFileMonitor(FileSystemEventHandler):
         if self.observer is not None:
             self.observer.stop()
 
+        self.config.read()
         if not os.path.isdir(local_path):
             self.config.write()  # automatically makes the dir and config
         self.data_dir = self.config.get_data_dir()
@@ -68,16 +63,19 @@ class RencherFileMonitor(FileSystemEventHandler):
         logging.debug(f'Watching "{self.data_dir}/" for changes')
     
     def queue_event(self, event: FileSystemEvent) -> None:
+        if getattr(event, 'is_synthetic', False):
+            return
+        
         if event.dest_path:
             path = event.dest_path
         else:
             path = event.src_path
 
-        for rpath, game_item in self.window.library.game_items.items():
+        game_item = None
+        for rpath, item in self.window.library.game_items.items():
             if path.startswith(rpath + os.sep):
+                game_item = item
                 break
-        if not game_item:
-            game_item = None
             
         if game_item:
             if game_item.game.is_valid:
@@ -91,6 +89,7 @@ class RencherFileMonitor(FileSystemEventHandler):
             rel_path = os.path.relpath(path, games_dir)
             top_dir = rel_path.split(os.sep, 1)[0]
             key = os.path.join(games_dir, top_dir)
+            logging.debug(f'"{games_dir}"; "{rel_path}"; "{top_dir}"; "{key}"')
             action = 'added'
         
         self.pending_changes[key]['last'] = time.time()
@@ -101,12 +100,11 @@ class RencherFileMonitor(FileSystemEventHandler):
         now = time.time()
         to_emit = []
         for rpath, info in list(self.pending_changes.items()):
-            if now - info['last'] >= 0.5:
+            if now - info['last'] >= 0.1:
                 to_emit.append((rpath, info['action']))
                 del self.pending_changes[rpath]
 
         for rpath, action in to_emit:
-            logging.debug(f'"{rpath}": {action}')
             if action == 'changed':
                 self.window.library.change_game(rpath)
             elif action == 'removed':

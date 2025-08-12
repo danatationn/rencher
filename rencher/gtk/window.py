@@ -10,7 +10,8 @@ from thefuzz.fuzz import partial_token_sort_ratio
 from rencher import tmp_path
 from rencher.gtk import open_file_manager
 from rencher.gtk.import_dialog import RencherImport
-from rencher.gtk.library import GameItem, RencherLibrary
+from rencher.gtk.library import RencherLibrary
+from rencher.gtk.game_item import GameItem
 from rencher.gtk.options_dialog import RencherOptions
 from rencher.gtk.settings_dialog import RencherSettings
 from rencher.renpy.game import Game
@@ -83,6 +84,8 @@ class RencherWindow(Adw.ApplicationWindow):
                 self.library_list_box.remove(row)
     
     def on_game_changed(self, _, game_item: GameItem):
+        if not self.current_game:
+            return
         if self.current_game.rpath == game_item.rpath:
             self.current_game.refresh()
 
@@ -124,10 +127,13 @@ class RencherWindow(Adw.ApplicationWindow):
 
     @Gtk.Template.Callback()
     def on_game_selected(self, _widget: Gtk.ListBox, row: Gtk.ListBoxRow) -> None:
+        if row:
+            self.library_view_stack.set_visible_child_name('selected')
+        else:
+            self.library_view_stack.set_visible_child_name('game-select')
+        
         game = getattr(row, 'game', None)
         if game:
-            self.library_view_stack.set_visible_child_name('selected')
-
             if self.current_game is None:
                 self.current_game = GameItem(game=game)
                 self.current_game.bind_property('name', self.selected_status_page, 'title')
