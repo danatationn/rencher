@@ -3,7 +3,7 @@ import os
 from functools import lru_cache
 
 
-@lru_cache
+# @lru_cache
 def get_py_files(apath: str) -> list[str]:
     return glob.glob(os.path.join(apath, '*.py'))
 
@@ -90,9 +90,3 @@ def validate_game_files(files: list[str]) -> bool:
         return False
     
     return True
-
-
-if __name__ == '__main__':
-    for rpath in glob.glob('/home/dan/.local/share/rencher/games/*'):
-        files = glob.glob(os.path.join(rpath, '**'), recursive=True)
-        print(f'{os.path.basename(rpath)}: {validate_game_files(rpath, files)}')

@@ -49,9 +49,8 @@ class RencherImport(Adw.PreferencesDialog):
         self.window = window
         list_store = Gio.ListStore.new(GameItem)
 
-        for game in window.games:
-            if not game.is_mod:
-                game_item = GameItem(game=game)
+        for _, game_item in window.library.game_items.items():
+            if not game_item.game.is_mod:
                 list_store.append(game_item)
 
         self.import_game_combo.set_model(list_store)

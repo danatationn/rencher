@@ -7,7 +7,7 @@ import subprocess
 import time
 from configparser import NoOptionError
 
-from rencher import GameInvalidError
+from rencher import GameInvalidError, GameNoExecutableError
 from rencher.renpy.config import GameConfig
 from rencher.renpy.paths import get_absolute_path, get_py_files, validate_game_files
 
@@ -64,7 +64,7 @@ class Game:
         elif len(py_files) == 1:
             return py_files[0]
         else:
-            raise NoOptionError('codename', 'info')
+            raise GameNoExecutableError
         
     def get_codename(self) -> str:
         exec_name = os.path.basename(self.get_executable())

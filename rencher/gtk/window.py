@@ -1,4 +1,3 @@
-import logging
 import os.path
 import subprocess
 import sys
@@ -9,9 +8,10 @@ from thefuzz.fuzz import partial_token_sort_ratio
 
 from rencher import tmp_path
 from rencher.gtk import open_file_manager
+from rencher.gtk.codename_dialog import RencherCodename
+from rencher.gtk.game_item import GameItem
 from rencher.gtk.import_dialog import RencherImport
 from rencher.gtk.library import RencherLibrary
-from rencher.gtk.game_item import GameItem
 from rencher.gtk.options_dialog import RencherOptions
 from rencher.gtk.settings_dialog import RencherSettings
 from rencher.renpy.game import Game
@@ -22,10 +22,9 @@ class RencherWindow(Adw.ApplicationWindow):
     __gtype_name__ = 'RencherWindow'
 
     """ variables """
-    games: list[Game] = []
-    game_process: subprocess.Popen = None
+    game_process: subprocess.Popen | None = None
     process_time: float = None
-    process_row: Gtk.ListBoxRow = None  # type: ignore
+    process_row: Gtk.ListBoxRow | None = None
     is_terminating: bool = False
     filter_text: str = ''
     combo_index: int = 0
@@ -34,10 +33,11 @@ class RencherWindow(Adw.ApplicationWindow):
     current_game: GameItem = None
 
     """ classes """
-    settings_dialog: RencherSettings = None
-    import_dialog: RencherImport = None
-    options_dialog: RencherOptions = None
-    library = RencherLibrary()
+    settings_dialog: RencherSettings
+    import_dialog: RencherImport
+    options_dialog: RencherOptions
+    codename_dialog: RencherCodename
+    library: RencherLibrary
 
     """ templates """
     toast_overlay: Adw.ToastOverlay = Gtk.Template.Child()
@@ -60,9 +60,11 @@ class RencherWindow(Adw.ApplicationWindow):
         if not getattr(sys, 'frozen', False):
             self.get_style_context().add_class('devel')
 
+        self.library = RencherLibrary(self)
         self.import_dialog = RencherImport(self)
         self.options_dialog = RencherOptions(self)
         self.settings_dialog = RencherSettings(self)
+        self.codename_dialog = RencherCodename(self)
         self.library_list_box.set_sort_func(self.sort_func)
         self.library_list_box.set_filter_func(self.filter_func)
         
@@ -203,10 +205,11 @@ class RencherWindow(Adw.ApplicationWindow):
     def filter_func(self, widget: Gtk.ListBoxRow) -> bool:
         if not self.filter_text:
             return True
-
-        fuzz = partial_token_sort_ratio(widget.game.name, self.filter_text)
-        if fuzz > 90:
-            return True
+        
+        if hasattr(widget, 'game'):
+            fuzz = partial_token_sort_ratio(widget.game.name, self.filter_text)
+            if fuzz > 90:
+                return True
         return False
 
     def sort_func(self, one: Adw.ActionRow, two: Adw.ActionRow) -> int:

@@ -1,16 +1,20 @@
 import glob
 import logging
 import os.path
+from typing import TYPE_CHECKING
 
 from gi.repository import GObject
 
-from rencher import GameInvalidError
+from rencher import GameInvalidError, GameNoExecutableError
 from rencher.gtk.game_item import GameItem
 from rencher.renpy.config import RencherConfig
 
+if TYPE_CHECKING:
+    from rencher.gtk.window import RencherWindow
 
 class RencherLibrary(GObject.Object):
     game_items = {}
+    window: 'RencherWindow'
     
     __gsignals__ = {
         'game-added': (GObject.SignalFlags.RUN_FIRST, None, (GameItem,)),
@@ -18,8 +22,9 @@ class RencherLibrary(GObject.Object):
         'game-changed': (GObject.SignalFlags.RUN_FIRST, None, (GameItem,)),
     }
     
-    def __init__(self):
+    def __init__(self, window):
         super().__init__()
+        self.window = window
         
     def load_games(self) -> None:
         data_dir = RencherConfig().get_data_dir()
@@ -31,6 +36,8 @@ class RencherLibrary(GObject.Object):
             game_item = GameItem(rpath=rpath)
         except GameInvalidError:
             pass
+        except GameNoExecutableError:
+            self.window.codename_dialog.popup(rpath)
         else:
             self.game_items[game_item.rpath] = game_item
             self.emit('game-added', game_item)

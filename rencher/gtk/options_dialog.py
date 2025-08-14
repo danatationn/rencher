@@ -1,15 +1,18 @@
-import glob
-import logging
 import os
 import shutil
 import threading
 from configparser import ConfigParser
+from typing import TYPE_CHECKING
 
 from gi.repository import Adw, GLib, Gtk
 
-from rencher import config_path, local_path, tmp_path
+from rencher import config_path, tmp_path
 from rencher.gtk import open_file_manager
 from rencher.renpy.game import Game
+from rencher.renpy.paths import get_py_files
+
+if TYPE_CHECKING:
+    from rencher.gtk.window import RencherWindow
 
 filename = os.path.join(tmp_path, 'rencher/gtk/ui/options.ui')
 @Gtk.Template(filename=str(filename))
@@ -61,18 +64,18 @@ class RencherOptions(Adw.PreferencesDialog):
         self.options_location.set_subtitle(str(game.rpath))
         self.options_save_slot.set_text(game.config['options']['save_slot'])
 
-        py_files = glob.glob(os.path.join(game.apath, '*.py'))
+        py_files = get_py_files(game.apath)
 
+        codename_index = None
         for i, path in enumerate(py_files):
-            name = os.path.basename(path)
-            codename = os.path.splitext(name)[0]
-            if codename == game.config['info']['codename']:
-                logging.debug(f'{i}: {codename}')
-                self.options_codename.set_selected(i)
-                logging.debug(self.options_codename.get_selected())
+            codename = os.path.splitext(os.path.basename(path))[0]
             string_list.append(codename)
+            if codename == game.config['info']['codename']:
+                codename_index = i
 
         self.options_codename.set_model(string_list)
+        if codename_index:
+            self.options_codename.set_selected(codename_index)
 
         for overwrite_switch, switch, key in self.switches_list:
             if game.config['options'][key] != '':
@@ -117,7 +120,6 @@ class RencherOptions(Adw.PreferencesDialog):
                     self.window.library_list_box.select_row(row)
                     break
 
-        # update_library_sidebar(self.window)
         GLib.idle_add(select)
 
     @Gtk.Template.Callback()
@@ -158,7 +160,6 @@ class RencherOptions(Adw.PreferencesDialog):
             self.game.config['options']['skip_splash_scr'] = ''
             self.game.config['options']['skip_main_menu'] = ''
             self.game.config['options']['forced_save_dir'] = ''
-            # self.game.config['info']['added_on'] = str(int(time.time()))
             # self.game.config.write_config()
             toast = Adw.Toast(
                 title=f'"{self.game.name}" stats have been reset',
@@ -185,10 +186,7 @@ class RencherOptions(Adw.PreferencesDialog):
             # some safety measures
             def delete_thread():
                 self.window.pause_monitoring = True
-                toast = Adw.Toast(
-                    title=f'"{self.game.name}" succesfully deleted',
-                    timeout=5,
-                )
+                toast = Adw.Toast(title=f'"{self.game.name}" succesfully deleted', timeout=5)
 
                 try:
                     shutil.rmtree(self.game.rpath)
