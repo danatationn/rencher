@@ -223,6 +223,7 @@ class RencherImport(Adw.PreferencesDialog):
         if not self.cancel_flag.is_set():
             logging.info(f'Importing the game at "{rpath}/"')
         start = time.perf_counter()
+        self.window.application.pause_rpath_monitoring(rpath)
 
         if is_mod:
             game_files = glob.glob(f'{modded_game.rpath}/**', recursive=True)
@@ -284,18 +285,20 @@ class RencherImport(Adw.PreferencesDialog):
             game = Game(rpath=rpath)
             game.config.set('info', 'nickname', name)
             game.config.set('info', 'added_on', str(time.time()))
-            game_scripts = glob.glob(os.path.join(game.apath, '*.py')) 
+            game_scripts = glob.glob(os.path.join(game.apath, '*.py'))
             if len(game_scripts) == 2 and is_mod:
                 try:
                     game_scripts.remove(modded_game.codename)
                     game.config.set('info', 'codename', game_scripts[0])
                 except ValueError:
                     pass
-            game.config.write()        
+            game.config.write()
 
             logging.info(f'Importing done in {time.perf_counter() - start:.2f}s')
+            self.window.application.resume_rpath_monitoring(rpath)
         else:
             GLib.idle_add(self.import_progress_bar.set_fraction, 1)
             shutil.rmtree(rpath)
             logging.info(f'Importing #cancelled. Total thread runtime: {time.perf_counter() - start:.2f}s')
+            self.window.application.resume_rpath_monitoring(rpath)
             raise ImportCancelError()

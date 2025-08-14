@@ -2,6 +2,7 @@ import os.path
 import subprocess
 import sys
 import time
+from typing import TYPE_CHECKING
 
 from gi.repository import Adw, GLib, Gtk
 from thefuzz.fuzz import partial_token_sort_ratio
@@ -15,6 +16,9 @@ from rencher.gtk.library import RencherLibrary
 from rencher.gtk.options_dialog import RencherOptions
 from rencher.gtk.settings_dialog import RencherSettings
 from rencher.renpy.game import Game
+
+if TYPE_CHECKING:
+    from rencher.gtk.application import RencherApplication
 
 filename = os.path.join(tmp_path, 'rencher/gtk/ui/window.ui')
 @Gtk.Template(filename=str(filename))
@@ -33,6 +37,7 @@ class RencherWindow(Adw.ApplicationWindow):
     current_game: GameItem = None
 
     """ classes """
+    application: 'RencherApplication'
     settings_dialog: RencherSettings
     import_dialog: RencherImport
     options_dialog: RencherOptions
@@ -60,6 +65,8 @@ class RencherWindow(Adw.ApplicationWindow):
         if not getattr(sys, 'frozen', False):
             self.get_style_context().add_class('devel')
 
+        self.application = self.get_application()  # type: ignore
+        self.filemonitor = self.application.file_monitor
         self.library = RencherLibrary(self)
         self.import_dialog = RencherImport(self)
         self.options_dialog = RencherOptions(self)

@@ -33,7 +33,7 @@ class RencherApplication(Gtk.Application):
 
         self.add_main_option('verbose', ord('v'), GLib.OptionFlags.NONE, GLib.OptionArg.NONE, 'Enable verbose output')
         self.add_main_option('version', ord('V'), GLib.OptionFlags.NONE, GLib.OptionArg.NONE, 'Prints version')
-        self.add_main_option('data-dir', ord('d'), GLib.OptionFlags.NONE, GLib.OptionArg.STRING, 'Forces a data directory')
+        # self.add_main_option('data-dir', ord('d'), GLib.OptionFlags.NONE, GLib.OptionArg.STRING, 'Forces a data directory')
 
         logging.basicConfig(
             level=logging.INFO,
@@ -56,9 +56,9 @@ class RencherApplication(Gtk.Application):
         if options.contains('version'):
             print(rencher.__version__)
             return 0
-        if options.contains('data-dir'):
-            data_dir = options.lookup_value('data-dir').get_string()
-            logging.info(f'Setting data directory at {os.path.abspath(data_dir)}')
+        # if options.contains('data-dir'):
+        #     data_dir = options.lookup_value('data-dir').get_string()
+        #     logging.info(f'Setting data directory at {os.path.abspath(data_dir)}')
             
         self.activate()
         return 0
@@ -73,6 +73,14 @@ class RencherApplication(Gtk.Application):
 
         version_thread = threading.Thread(target=self.check_version)
         version_thread.run()
+
+    def pause_rpath_monitoring(self, rpath: str) -> None:
+        if rpath not in self.file_monitor.pause_rpaths:
+            self.file_monitor.pause_rpaths.append(rpath)
+            
+    def resume_rpath_monitoring(self, rpath: str) -> None:
+        if rpath in self.file_monitor.pause_rpaths:
+            self.file_monitor.pause_rpaths.remove(rpath)
 
     def check_version(self) -> tuple[str] | None:
         if getattr(sys, 'frozen', False):

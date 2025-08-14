@@ -1,28 +1,23 @@
 import logging
 import os
-import sys
 import time
 from collections import defaultdict
 
 from gi.repository import GLib
 from watchdog.events import (
-    DirCreatedEvent,
     DirDeletedEvent,
     DirModifiedEvent,
     DirMovedEvent,
     FileClosedEvent,
-    FileCreatedEvent,
     FileDeletedEvent,
     FileModifiedEvent,
     FileMovedEvent,
-    FileOpenedEvent,
     FileSystemEvent,
     FileSystemEventHandler,
 )
 from watchdog.observers import Observer
 
 from rencher import config_path, local_path
-from rencher.gtk.game_item import GameItem
 from rencher.gtk.window import RencherWindow
 from rencher.renpy.config import RencherConfig
 
@@ -32,9 +27,9 @@ class RencherFileMonitor(FileSystemEventHandler):
         watch over files and act accordingly
     """
     
-    window: RencherWindow = None
+    window: RencherWindow
     config: RencherConfig = RencherConfig()
-    observer: Observer = None
+    observer: Observer = None  # type: ignore
     data_dir: str
     pending_changes = defaultdict(lambda: {'last': 0.0, 'path': '', 'action': ''})
     pause_rpaths: list[str] = []
@@ -63,6 +58,8 @@ class RencherFileMonitor(FileSystemEventHandler):
         logging.debug(f'Watching "{self.data_dir}/" for changes')
     
     def queue_event(self, event: FileSystemEvent) -> None:
+        # these are all the subsequent events from a directory event or whatever.
+        # aka NONE OF THEM MATTER !!!!!!!!
         if getattr(event, 'is_synthetic', False):
             return
         
@@ -89,7 +86,7 @@ class RencherFileMonitor(FileSystemEventHandler):
             rel_path = os.path.relpath(path, games_dir)
             top_dir = rel_path.split(os.sep, 1)[0]
             key = os.path.join(games_dir, top_dir)
-            logging.debug(f'"{games_dir}"; "{rel_path}"; "{top_dir}"; "{key}"')
+            # logging.debug(f'"{games_dir}"; "{rel_path}"; "{top_dir}"; "{key}"')
             action = 'added'
         
         self.pending_changes[key]['last'] = time.time()
@@ -100,6 +97,8 @@ class RencherFileMonitor(FileSystemEventHandler):
         now = time.time()
         to_emit = []
         for rpath, info in list(self.pending_changes.items()):
+            if rpath in self.pause_rpaths or '*' in self.pause_rpaths:
+                continue
             if now - info['last'] >= 0.1:
                 to_emit.append((rpath, info['action']))
                 del self.pending_changes[rpath]

@@ -185,7 +185,7 @@ class RencherOptions(Adw.PreferencesDialog):
         if response == 'ok':
             # some safety measures
             def delete_thread():
-                self.window.pause_monitoring = True
+                self.window.application.pause_rpath_monitoring(self.game.rpath)
                 toast = Adw.Toast(title=f'"{self.game.name}" succesfully deleted', timeout=5)
 
                 try:
@@ -193,7 +193,7 @@ class RencherOptions(Adw.PreferencesDialog):
                 except FileNotFoundError:
                     toast.set_title('The deletion has failed')
                 finally:
-                    self.window.pause_monitoring = False
+                    self.window.application.resume_rpath_monitoring(self.game.rpath)
                     self.close()
                     self.window.toast_overlay.add_toast(toast)
 

@@ -3,6 +3,7 @@ import os.path
 import shutil
 import threading
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 from gi.repository import Adw, GLib, Gtk
 
@@ -10,10 +11,16 @@ import rencher
 from rencher import local_path, tmp_path
 from rencher.renpy.config import RencherConfig
 
+if TYPE_CHECKING:
+    from rencher.gtk.window import RencherWindow
+
 filename = os.path.join(tmp_path, 'rencher/gtk/ui/settings.ui')
 @Gtk.Template(filename=str(filename))
 class RencherSettings(Adw.PreferencesDialog):
     __gtype_name__ = 'RencherSettings'
+
+    window: 'RencherWindow'
+    config: RencherConfig = None
 
     settings_data_dir: Adw.EntryRow = Gtk.Template.Child()
     settings_updates: Adw.SwitchRow = Gtk.Template.Child()
@@ -21,8 +28,6 @@ class RencherSettings(Adw.PreferencesDialog):
     settings_skip_splash_scr: Adw.SwitchRow = Gtk.Template.Child()
     settings_skip_main_menu: Adw.SwitchRow = Gtk.Template.Child()
     settings_forced_save_dir: Adw.SwitchRow = Gtk.Template.Child()
-
-    config: RencherConfig = None
 
     def __init__(self, window, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -104,18 +109,15 @@ class RencherSettings(Adw.PreferencesDialog):
             games_dir = data_dir / 'games'
 
             def nuke_thread():
-                toast = Adw.Toast(
-                    title='All games have been successfully deleted',
-                    timeout=5,
-                )
+                toast = Adw.Toast(title='All games have been successfully deleted', timeout=5)
+                self.window.application.pause_rpath_monitoring('*')
 
-                self.window.pause_monitoring = True
                 try:
                     shutil.rmtree(games_dir)
                 except FileNotFoundError:
                     toast.set_title('The deletion has failed')
                 finally:
-                    self.window.pause_monitoring = False
+                    self.window.application.resume_rpath_monitoring('*')
                     self.close()
                     self.window.toast_overlay.add_toast(toast)
 
