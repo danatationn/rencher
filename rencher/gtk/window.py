@@ -121,6 +121,7 @@ class RencherWindow(Adw.ApplicationWindow):
             self.process_time = time.time()
             self.check_process()  # so the button changes instantly
             self.process_row = selected_button_row
+            self.application.pause_rpath_monitoring(game.rpath)
         else:
             if self.game_process:
                 self.play_button.set_label('Stopping')
@@ -191,11 +192,12 @@ class RencherWindow(Adw.ApplicationWindow):
                 return True  # don't even bother looking down
 
             apath = os.path.abspath(os.path.join(self.game_process.args[0], '..', '..', '..'))  # we hate os.path
-            project = Game(apath=apath)
-            playtime = project.config.get_value('playtime')
+            game = Game(apath=apath)
+            playtime = game.config.get_value('playtime')
             if self.process_time:
                 playtime += time.time() - self.process_time
-            project.cleanup(playtime)
+            game.cleanup(playtime)
+            self.application.resume_rpath_monitoring(game.rpath)
 
             self.game_process = None
             self.process_row = None

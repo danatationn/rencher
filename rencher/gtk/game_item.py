@@ -5,8 +5,8 @@ from rencher.renpy.paths import get_absolute_path
 
 
 def format_date(time: float) -> str:
-    date = GLib.DateTime.new_from_unix_utc(int(time))
-    now = GLib.DateTime.new_now_utc()
+    date = GLib.DateTime.new_from_unix_local(int(time))
+    now = GLib.DateTime.new_now_local()
     today = GLib.DateTime.new_local(
         now.get_year(), now.get_month(), now.get_day_of_month(), 0, 0, 0,
     )

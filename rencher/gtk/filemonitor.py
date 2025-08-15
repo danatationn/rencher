@@ -89,10 +89,8 @@ class RencherFileMonitor(FileSystemEventHandler):
             rel_path = os.path.relpath(path, games_dir)
             top_dir = rel_path.split(os.sep, 1)[0]
             key = os.path.join(games_dir, top_dir)
-            # logging.debug(f'"{games_dir}"; "{rel_path}"; "{top_dir}"; "{key}"')
             action = 'added'
         
-        logging.debug(f'"{path}" - {action}')
         self.pending_changes[key]['last'] = time.time()
         self.pending_changes[key]['path'] = path
         self.pending_changes[key]['action'] = action
@@ -100,13 +98,14 @@ class RencherFileMonitor(FileSystemEventHandler):
     def flush_pending(self) -> bool:
         now = time.time()
         to_emit = []
+        
         for rpath, info in list(self.pending_changes.items()):
             if rpath in self.pause_rpaths or '*' in self.pause_rpaths:
                 continue
             if now - info['last'] >= 0.1:
                 to_emit.append((rpath, info['action']))
                 del self.pending_changes[rpath]
-
+        
         for rpath, action in to_emit:
             if action == 'changed':
                 self.window.library.change_game(rpath)

@@ -78,9 +78,10 @@ class RencherApplication(Gtk.Application):
         if rpath not in self.file_monitor.pause_rpaths:
             self.file_monitor.pause_rpaths.append(rpath)
             
-    def resume_rpath_monitoring(self, rpath: str) -> None:
-        if rpath in self.file_monitor.pause_rpaths:
-            self.file_monitor.pause_rpaths.remove(rpath)
+    def resume_rpath_monitoring(self, path: str) -> None:
+        for rpath in self.file_monitor.pause_rpaths:
+            if os.path.commonpath([path, rpath]):
+                self.file_monitor.pause_rpaths.remove(rpath)
         self.file_monitor.flush_pending()
 
     def check_version(self) -> tuple[str] | None:
