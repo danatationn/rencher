@@ -81,6 +81,7 @@ class RencherApplication(Gtk.Application):
     def resume_rpath_monitoring(self, rpath: str) -> None:
         if rpath in self.file_monitor.pause_rpaths:
             self.file_monitor.pause_rpaths.remove(rpath)
+        self.file_monitor.flush_pending()
 
     def check_version(self) -> tuple[str] | None:
         if getattr(sys, 'frozen', False):

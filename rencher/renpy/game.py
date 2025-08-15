@@ -1,3 +1,4 @@
+import ast
 import glob
 import logging
 import os
@@ -5,7 +6,7 @@ import platform
 import shutil
 import subprocess
 import time
-from configparser import NoOptionError
+import re
 
 from rencher import GameInvalidError, GameNoExecutableError
 from rencher.renpy.config import GameConfig
@@ -102,38 +103,52 @@ class Game:
 
     def get_renpy_version(self) -> str | None:
         """
-            tries to retrieve the game's ren'py version from multiple known locations:
-
-            - renpy/__init__.py (only in ren'py <8)
-            - renpy/vc_version.py (only in ren'py =>8)
+            tries to retrieve the game's ren'py version (WITHOUT USING EXEC)
+            
+            there a lot of ways that versions are tracked based on what version it is
+            1. ren'py 6:
+                * the version is located in `version_tuple` in `renpy/__init__.py`
+                * the commit number is located in `vc_version` in `renpy/vc_version.py`
+            2. ren'py 7:
+                * the version is located in the first `version_tuple` located in`renpy/ __init__.py`
+                    # there are 2 version tuples
+                      the py2 one (the real one) and the py3 one (the one preparing for ren'py 8)
+                * the commit number is located in `vc_version` in `renpy/vc_version.py`
+            3. ren'py 7.6:
+                * same as ren'py 7, however it's stored as a `VersionTuple`
+                    # i have no idea if this occurs with other versions. i just noticed it in ren'py 7.6
+            4. ren'py 8:
+                * the version and commit number are located in `version` in `renpy/vc_version.py`
+            
+        Returns:
+            the version as a string. returns `None` if it couldn't be determined
         """
-        vc_path = os.path.join(self.apath, 'renpy/vc_version.py')
-        init_path = os.path.join(self.apath, 'renpy/__init__.py')
-
-        vc_dict = {}
+        vc_path = os.path.join(self.apath, 'renpy', 'vc_version.py')
+        init_path = os.path.join(self.apath, 'renpy', '__init__.py')
+        commit = 0
+        version = ''
+        
         if os.path.isfile(vc_path):
             with open(vc_path) as f:
-                exec(f.read(), {}, vc_dict)
-                if vc_dict.get('version'):
-                    return vc_dict['version']
-                
+                vc_content = f.read()
+                version_match = re.findall(r'version .*\'(.*)\'', vc_content, re.MULTILINE)
+                if version_match:
+                    version = version_match[0]
+                commit_match = re.findall(r'vc_version.*(\b\d+\b)', vc_content, re.MULTILINE)
+                if commit_match:
+                    commit = commit_match[0]
+        
         if os.path.isfile(init_path):
             with open(init_path) as f:
-                """
-                    we can't exec() here because the file actually has code in it and has imports
-                    instead we'll just do it the basic way (log file 😊) and look for version_tuple
-                """
-                text = f.read().splitlines()
-                for line in text:
-                    if 'version_tuple' in line.strip():
-                        try:
-                            if vc_dict.get('vc_version'):
-                                version_tuple = eval(line.split(' = ')[1], {}, vc_dict)
-                                return '.'.join(str(i) for i in version_tuple)  # code ironically stolen from __init__
-                        except ValueError:
-                            pass
-        else:
-            return None  # Oops!
+                init_content = f.read()
+                version_tuple_match = re.findall(r'version_tuple.*\((\d.*)\)', init_content, re.MULTILINE)
+                if version_tuple_match:
+                    version_tuple = re.findall(r'\b\d+\b', version_tuple_match[0])
+                    version = '.'.join(str(i) for i in version_tuple)
+        
+        if commit:
+            version += '.' + commit
+        return version
 
     def run(self) -> subprocess.Popen:
         """

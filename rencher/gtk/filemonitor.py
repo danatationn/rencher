@@ -68,6 +68,9 @@ class RencherFileMonitor(FileSystemEventHandler):
         else:
             path = event.src_path
 
+        if os.path.dirname(path) == self.data_dir:
+            return
+
         game_item = None
         for rpath, item in self.window.library.game_items.items():
             if path.startswith(rpath + os.sep):
@@ -89,6 +92,7 @@ class RencherFileMonitor(FileSystemEventHandler):
             # logging.debug(f'"{games_dir}"; "{rel_path}"; "{top_dir}"; "{key}"')
             action = 'added'
         
+        logging.debug(f'"{path}" - {action}')
         self.pending_changes[key]['last'] = time.time()
         self.pending_changes[key]['path'] = path
         self.pending_changes[key]['action'] = action

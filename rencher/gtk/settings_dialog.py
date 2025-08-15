@@ -117,9 +117,11 @@ class RencherSettings(Adw.PreferencesDialog):
                 except FileNotFoundError:
                     toast.set_title('The deletion has failed')
                 finally:
-                    self.window.application.resume_rpath_monitoring('*')
-                    self.close()
-                    self.window.toast_overlay.add_toast(toast)
+                    GLib.idle_add(lambda: (
+                        self.window.application.resume_rpath_monitoring('*'),
+                        self.window.toast_overlay.add_toast(toast),
+                        self.close(),
+                    ))
 
             thread = threading.Thread(target=nuke_thread)
             thread.start()

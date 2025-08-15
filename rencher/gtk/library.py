@@ -39,9 +39,12 @@ class RencherLibrary(GObject.Object):
         except GameNoExecutableError:
             self.window.codename_dialog.popup(rpath)
         else:
-            self.game_items[game_item.rpath] = game_item
-            self.emit('game-added', game_item)
-            logging.debug(f'+{game_item.name}')
+            if rpath not in self.game_items:
+                self.game_items[game_item.rpath] = game_item
+                self.emit('game-added', game_item)
+                logging.debug(f'+{game_item.name}')
+            else:
+                self.change_game(rpath)
         
     def remove_game(self, rpath: str) -> None:
         game_item = self.game_items.pop(rpath, None)
