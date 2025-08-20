@@ -71,25 +71,21 @@ class RencherApplication(Gtk.Application):
         self.window.present()
         self.file_monitor = RencherFileMonitor(self.window)
 
-        version_thread = threading.Thread(target=self.check_version)
-        version_thread.run()
+        if not getattr(sys, 'frozen', False) and self.config['settings']['suppress_updates'] != 'true':
+            version_thread = threading.Thread(target=self.check_version)
+            version_thread.run()
 
-    def pause_rpath_monitoring(self, rpath: str) -> None:
+    def pause_monitor(self, rpath: str) -> None:
         if rpath not in self.file_monitor.pause_rpaths:
             self.file_monitor.pause_rpaths.append(rpath)
             
-    def resume_rpath_monitoring(self, path: str) -> None:
+    def resume_monitor(self, path: str) -> None:
         for rpath in self.file_monitor.pause_rpaths:
             if os.path.commonpath([path, rpath]):
                 self.file_monitor.pause_rpaths.remove(rpath)
         self.file_monitor.flush_pending()
 
-    def check_version(self) -> tuple[str] | None:
-        if getattr(sys, 'frozen', False):
-            return
-        if self.config['settings']['suppress_updates'] == 'true':
-            return
-
+    def check_version(self, show_up_to_date_toast: bool = False) -> None:
         try:
             response = requests.get('https://api.github.com/repos/danatationn/rencher/releases/latest')
         except requests.exceptions.ConnectionError:
@@ -107,15 +103,15 @@ class RencherApplication(Gtk.Application):
 
                 logging.info(f'A new update is available! (v{version})')
                 logging.info(download_url)
-                toast = Adw.Toast(
-                    title=f'A new update is available! (v{version})',
-                    timeout=5,
-                    button_label='Download',
-                )
+                toast = Adw.Toast(title=f'A new update is available! (v{version})', timeout=5, button_label='Download')
                 toast.connect('button-clicked', lambda *_: (
                     Gtk.show_uri(self.window, download_url, Gdk.CURRENT_TIME)
                 ))
 
-                self.window.toast_overlay.add_toast(toast)
+                GLib.idle_add(self.window.toast_overlay.add_toast, toast)
             else:
-                logging.info(f'You\'re up to date! (v{rencher.__version__})')
+                message = f'You\'re up to date! (v{rencher.__version__})'
+                if show_up_to_date_toast:
+                    toast = Adw.Toast(title=message, timeout=5)
+                    GLib.idle_add(self.window.toast_overlay.add_toast, toast)
+                logging.info(message)

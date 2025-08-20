@@ -1,5 +1,6 @@
 from gi.repository import GLib, GObject
 
+from rencher import GameItemDateError
 from rencher.renpy.game import Game
 from rencher.renpy.paths import get_absolute_path
 
@@ -13,7 +14,9 @@ def format_date(time: float) -> str:
     yesterday = today.add_days(-1)
     tomorrow = today.add_days(1)
     
-    if date.compare(tomorrow) >= 0:
+    if date.to_unix() == 0:
+        raise GameItemDateError()
+    elif date.compare(tomorrow) >= 0:
         return date.format('In the future')
     elif date.compare(today) >= 0:
         return date.format('Today, %I:%M %p')
@@ -31,7 +34,7 @@ def format_playtime(time: float) -> str:
     if formatted_playtime != '00:00:00':
         return formatted_playtime
     else:
-        raise Exception  # idk which one
+        raise GameItemDateError()
 
 class GameItem(GObject.Object):
     """

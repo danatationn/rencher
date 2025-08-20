@@ -109,18 +109,16 @@ class RencherOptions(Adw.PreferencesDialog):
                 self.game.config['options'][key] = ''
                 self.game.config['overwritten'][key] = self.rencher_config['settings'][key]
 
-        self.game.config.write()
-        self.select_after_refresh()
-
-    def select_after_refresh(self):
         def select():
-            for row in self.window.library_list_box:
+            for row in self.window.library_list_box:  # type: ignore
                 if row.game.rpath == self.game.rpath:
                     self.window.current_game.refresh()
                     self.window.library_list_box.select_row(row)
                     break
-
+                    
+        self.game.config.write()
         GLib.idle_add(select)
+
 
     @Gtk.Template.Callback()
     def on_switch_changed(self, _widget: Gtk.Switch | Adw.SwitchRow, _):
@@ -185,7 +183,7 @@ class RencherOptions(Adw.PreferencesDialog):
         if response == 'ok':
             # some safety measures
             def delete_thread():
-                self.window.application.pause_rpath_monitoring(self.game.rpath)
+                self.window.application.pause_monitor(self.game.rpath)
                 toast = Adw.Toast(title=f'"{self.game.name}" succesfully deleted', timeout=5)
 
                 try:
@@ -194,7 +192,7 @@ class RencherOptions(Adw.PreferencesDialog):
                     toast.set_title('The deletion has failed')
                 finally:
                     GLib.idle_add(lambda: (
-                        self.window.application.resume_rpath_monitoring(self.game.rpath),
+                        self.window.application.resume_monitor(self.game.rpath),
                         self.window.toast_overlay.add_toast(toast),
                         self.close(),
                     ))

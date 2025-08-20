@@ -68,6 +68,10 @@ class RencherFileMonitor(FileSystemEventHandler):
         else:
             path = event.src_path
 
+        if path == config_path:
+            return
+        if path == self.data_dir:
+            return
         if os.path.dirname(path) == self.data_dir:
             return
 
@@ -89,6 +93,13 @@ class RencherFileMonitor(FileSystemEventHandler):
             rel_path = os.path.relpath(path, games_dir)
             top_dir = rel_path.split(os.sep, 1)[0]
             key = os.path.join(games_dir, top_dir)
+            if top_dir == '..':
+                # when refreshing the data directory, it would hallucinate a game with the path "[datadir]/games/.."
+                return
+            if not os.path.isdir(key):
+                # at the end of deleting a game the folder gets added somehow
+                return
+            # logging.debug(f'{games_dir} {rel_path} {top_dir} {key} {path}')
             action = 'added'
         
         self.pending_changes[key]['last'] = time.time()
@@ -129,7 +140,8 @@ class RencherFileMonitor(FileSystemEventHandler):
     def on_closed(self, event: FileClosedEvent | DirDeletedEvent | FileDeletedEvent) -> None:
         # edited
         if event.src_path == config_path:
-            self.monitor_data_dir()
+            if RencherConfig().get_data_dir() != self.data_dir:                
+                self.monitor_data_dir()
         else:
             self.queue_event(event)
 

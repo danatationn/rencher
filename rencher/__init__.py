@@ -28,6 +28,8 @@ class GameInvalidError(Exception):
     pass
 class GameNoExecutableError(Exception):
     pass
+class GameItemDateError(Exception):
+    pass
 class ImportInvalidError(Exception):
     pass
 class ImportCorruptArchiveError(Exception):

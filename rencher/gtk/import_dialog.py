@@ -6,7 +6,6 @@ import shutil
 import threading
 import time
 import zipfile
-from optparse import OptionError
 from pathlib import Path
 from typing import TYPE_CHECKING
 
@@ -166,7 +165,7 @@ class RencherImport(Adw.PreferencesDialog):
         location = self.import_location.get_text()
         location_stem = os.path.splitext(os.path.basename(location))[0]
         is_mod = self.import_mod_toggle.get_active()
-        modded_game: Game = self.import_game_combo.get_selected_item()  # type: ignore
+        modded_game: GameItem = self.import_game_combo.get_selected_item()  # type: ignore
         archive: zipfile | rarfile = None
         
         data_dir = RencherConfig().get_data_dir()
@@ -223,7 +222,7 @@ class RencherImport(Adw.PreferencesDialog):
         if not self.cancel_flag.is_set():
             logging.info(f'Importing the game at "{rpath}/"')
         start = time.perf_counter()
-        self.window.application.pause_rpath_monitoring(rpath)
+        self.window.application.pause_monitor(rpath)
 
         if is_mod:
             game_files = glob.glob(f'{modded_game.rpath}/**', recursive=True)
@@ -285,20 +284,23 @@ class RencherImport(Adw.PreferencesDialog):
             game = Game(rpath=rpath)
             game.config.set('info', 'nickname', name)
             game.config.set('info', 'added_on', str(time.time()))
-            game_scripts = glob.glob(os.path.join(game.apath, '*.py'))
+            game_scripts = get_py_files(game.apath)
             if len(game_scripts) == 2 and is_mod:
                 try:
-                    game_scripts.remove(modded_game.codename)
-                    game.config.set('info', 'codename', game_scripts[0])
+                    # ugh
+                    game_codenames = [os.path.splitext(os.path.basename(codename))[0] for codename in game_scripts]
+                    game_codenames.remove(modded_game.codename)
+                    game.config.set('info', 'codename', game_codenames[0])
                 except ValueError:
+                    logging.warn('Couldn\'t determine codename')
                     pass
             game.config.write()
 
             logging.info(f'Importing done in {time.perf_counter() - start:.2f}s')
-            self.window.application.resume_rpath_monitoring(rpath)
+            self.window.application.resume_monitor(rpath)
         else:
             GLib.idle_add(self.import_progress_bar.set_fraction, 1)
             shutil.rmtree(rpath)
             logging.info(f'Importing #cancelled. Total thread runtime: {time.perf_counter() - start:.2f}s')
-            self.window.application.resume_rpath_monitoring(rpath)
+            self.window.application.resume_monitor(rpath)
             raise ImportCancelError()

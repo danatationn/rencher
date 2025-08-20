@@ -101,7 +101,8 @@ template $RencherOptions: Adw.PreferencesDialog {
 			}
 			Adw.SpinRow options_save_slot {
 				title: _("Save Slot");
-				sensitive: bind options_forced_save_dir.active;
+				//sensitive: bind options_forced_save_dir.active;
+				sensitive: false;
 			}
 		}
 	}

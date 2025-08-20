@@ -181,8 +181,8 @@ class Game:
             save_dir = os.path.join(self.apath, 'game/saves')
 
             save_slot = self.config['options'].getint('save_slot')
-            if save_slot > 1:
-                save_dir = os.path.join(os.path.dirname(save_dir), f'saves{save_slot}')
+            if 1 < save_slot <= 10:
+                save_dir = os.path.join(save_dir, str(save_slot))
                 logging.debug(save_dir)
 
             args.extend(['--savedir', save_dir])
@@ -250,4 +250,9 @@ class Game:
     @property
     def is_valid(self):
         return self.validate()
-    
+    @property
+    def is_launchable(self) -> bool:
+        if self.get_python_path():
+            return True
+        else:
+            return False

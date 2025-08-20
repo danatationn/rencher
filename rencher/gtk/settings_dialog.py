@@ -82,7 +82,8 @@ class RencherSettings(Adw.PreferencesDialog):
 
     @Gtk.Template.Callback()
     def on_check_updates(self, _):
-        logging.debug(rencher.__version__)
+        self.window.application.check_version(show_up_to_date_toast=True)
+        self.close()
 
     @Gtk.Template.Callback()
     def on_reset_data_dir(self, _widget: Adw.ButtonRow):  # type: ignore
@@ -110,7 +111,7 @@ class RencherSettings(Adw.PreferencesDialog):
 
             def nuke_thread():
                 toast = Adw.Toast(title='All games have been successfully deleted', timeout=5)
-                self.window.application.pause_rpath_monitoring('*')
+                self.window.application.pause_monitor('*')
 
                 try:
                     shutil.rmtree(games_dir)
@@ -118,7 +119,7 @@ class RencherSettings(Adw.PreferencesDialog):
                     toast.set_title('The deletion has failed')
                 finally:
                     GLib.idle_add(lambda: (
-                        self.window.application.resume_rpath_monitoring('*'),
+                        self.window.application.resume_monitor('*'),
                         self.window.toast_overlay.add_toast(toast),
                         self.close(),
                     ))

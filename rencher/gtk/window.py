@@ -1,3 +1,4 @@
+import logging
 import os.path
 import subprocess
 import sys
@@ -97,6 +98,12 @@ class RencherWindow(Adw.ApplicationWindow):
             return
         if self.current_game.rpath == game_item.rpath:
             self.current_game.refresh()
+        
+        for row in self.library_list_box:  # type: ignore
+            if getattr(row, 'game', None) == game_item.game:
+                logging.debug(f'Changing row name {row.get_title()} -> {game_item.game.get_name()}')
+                row.set_title(game_item.game.get_name())
+                break
 
     @Gtk.Template.Callback()
     def on_import_clicked(self, _widget: Adw.ButtonRow) -> None:  # type: ignore
@@ -115,13 +122,16 @@ class RencherWindow(Adw.ApplicationWindow):
     def on_play_clicked(self, _widget: Gtk.Button) -> None:
         selected_button_row = self.library_list_box.get_selected_row()
         game = getattr(selected_button_row, 'game', None)
+        if isinstance(game, Game) and not game.is_launchable:
+            # duct tape fix
+            return
 
         if _widget.get_style_context().has_class('suggested-action'):
             self.game_process = game.run()
             self.process_time = time.time()
             self.check_process()  # so the button changes instantly
             self.process_row = selected_button_row
-            self.application.pause_rpath_monitoring(game.rpath)
+            self.application.pause_monitor(game.rpath)
         else:
             if self.game_process:
                 self.play_button.set_label('Stopping')
@@ -143,7 +153,7 @@ class RencherWindow(Adw.ApplicationWindow):
             self.library_view_stack.set_visible_child_name('game-select')
         
         game = getattr(row, 'game', None)
-        if game:
+        if isinstance(game, Game):
             if self.current_game is None:
                 self.current_game = GameItem(game=game)
                 self.current_game.bind_property('name', self.selected_status_page, 'title')
@@ -197,7 +207,7 @@ class RencherWindow(Adw.ApplicationWindow):
             if self.process_time:
                 playtime += time.time() - self.process_time
             game.cleanup(playtime)
-            self.application.resume_rpath_monitoring(game.rpath)
+            self.application.resume_monitor(game.rpath)
 
             self.game_process = None
             self.process_row = None
