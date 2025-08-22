@@ -48,8 +48,7 @@ class RencherFileMonitor(FileSystemEventHandler):
         if not os.path.isdir(local_path):
             self.config.write()  # automatically makes the dir and config
         self.data_dir = self.config.get_data_dir()
-        if not os.path.isdir(self.data_dir):
-            os.mkdir(self.data_dir)
+        os.makedirs(self.data_dir, exist_ok=True)
 
         self.observer = Observer()
         self.observer.schedule(self, config_path)
@@ -64,9 +63,9 @@ class RencherFileMonitor(FileSystemEventHandler):
             return
         
         if event.dest_path:
-            path = event.dest_path
+            path = os.path.normpath(event.dest_path)
         else:
-            path = event.src_path
+            path = os.path.normpath(event.src_path)
 
         if path == config_path:
             return
@@ -99,7 +98,6 @@ class RencherFileMonitor(FileSystemEventHandler):
             if not os.path.isdir(key):
                 # at the end of deleting a game the folder gets added somehow
                 return
-            # logging.debug(f'{games_dir} {rel_path} {top_dir} {key} {path}')
             action = 'added'
         
         self.pending_changes[key]['last'] = time.time()

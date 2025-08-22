@@ -166,7 +166,7 @@ class RencherImport(Adw.PreferencesDialog):
         location_stem = os.path.splitext(os.path.basename(location))[0]
         is_mod = self.import_mod_toggle.get_active()
         modded_game: GameItem = self.import_game_combo.get_selected_item()  # type: ignore
-        archive: zipfile | rarfile = None
+        archive: zipfile | rarfile = None  # type: ignore
         
         data_dir = RencherConfig().get_data_dir()
         game_dir = os.path.join(data_dir, 'games')
@@ -213,7 +213,7 @@ class RencherImport(Adw.PreferencesDialog):
             ]
             for path in possible_paths:
                 if not os.path.exists(path):
-                    os.mkdir(path)
+                    os.makedirs(path, exist_ok=True)
                     rpath = path
                     break
             
@@ -230,6 +230,7 @@ class RencherImport(Adw.PreferencesDialog):
             mod_work = len(files)
         else:
             total_work = len(files)
+            mod_work = 0
         
         for i, path in enumerate(files):
             if self.cancel_flag.is_set():
@@ -239,7 +240,13 @@ class RencherImport(Adw.PreferencesDialog):
             else:
                 relative_path = os.path.relpath(path, location)
                 target_path = os.path.join(rpath, relative_path)
-                shutil.copy(path, target_path)
+
+                if os.path.isdir(path):
+                    os.makedirs(target_path, exist_ok=True)
+                else:
+                    os.makedirs(os.path.dirname(target_path), exist_ok=True)
+                    shutil.copy(path, target_path)
+
             GLib.idle_add(self.import_progress_bar.set_fraction, i / total_work)
             
         if is_mod:
@@ -248,7 +255,7 @@ class RencherImport(Adw.PreferencesDialog):
                 new_rpa_path = os.path.join(rpath, 'game')
                 rpa_files = get_rpa_files(rpath)
                 if not os.path.exists(new_rpa_path):
-                    os.mkdir(new_rpa_path)
+                    os.makedirs(new_rpa_path, exist_ok=True)
                 for path in rpa_files:
                     if self.cancel_flag.is_set():
                         break
@@ -274,8 +281,9 @@ class RencherImport(Adw.PreferencesDialog):
                 if os.path.basename(target_path) == 'rencher.ini':
                     continue
                 if os.path.isdir(path):
-                    os.mkdir(target_path)
+                    os.makedirs(target_path, exist_ok=True)
                 else:
+                    os.makedirs(os.path.dirname(target_path), exist_ok=True)
                     shutil.copy(path, target_path)
                     
                 GLib.idle_add(self.import_progress_bar.set_fraction, mod_work + i / total_work)
