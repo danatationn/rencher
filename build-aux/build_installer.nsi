@@ -10,17 +10,12 @@
 !define MUI_HEADERIMAGE_BITMAP "..\assets\header_img.bmp"
 !define MUI_HEADERIMAGE_BITMAP_RTL "..\assets\header_img_rtl.bmp"
 !define MUI_WELCOMEFINISHPAGE_BITMAP "..\assets\welcome_img.bmp"
-;!define MUI_BGCOLOR 791512
-;!define MUI_BGCOLOR 671E14
-!define MUI_BGCOLOR 8F000E
-!define MUI_TEXTCOLOR EEEEEE
-!define MUI_LICENSEPAGE_BGCOLOR /gray
 !define MUI_FINISHPAGE_RUN
 !define MUI_FINISHPAGE_RUN_FUNCTION RunAppAfterInstall
 !define MUI_FINISHPAGE_RUN_TEXT "Launch ${NAME}"
 
 Name "${NAME}"
-OutFile "RencherInstaller.exe"
+OutFile "..\build\RencherInstaller.exe"
 InstallDir "$PROGRAMFILES\${NAME}"
 
 ShowInstDetails show

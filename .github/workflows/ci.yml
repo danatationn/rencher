@@ -29,20 +29,21 @@ jobs:
           echo "FREEZE_DIR=$FREEZE_DIR" >> $GITHUB_OUTPUT
           docker rm temp-container
 
-      - name: Upload frozen files
+      - name: Upload frozen files artifact
         uses: actions/upload-artifact@v4
         with:
           name: Rencher-Frozen-Linux
-          path: ./output/${{ steps.extract.outputs.FREEZE_DIR }}/**
+          path: ./output/${{ steps.extract.outputs.FREEZE_DIR }}/
 
-      - name: Upload AppImage
+      - name: Upload AppImage artifact
         uses: actions/upload-artifact@v4
         with:
+          name: Rencher-AppImage
           path: ./output/Rencher-x86_64.AppImage
 
   windows-job:
     name: Windows
-    runs-on: windows-latest
+    runs-on: windows-2025
     defaults:
       run:
         shell: msys2 {0}
@@ -57,17 +58,28 @@ jobs:
           install: >-
             mingw-w64-ucrt-x86_64-python 
             mingw-w64-ucrt-x86_64-python-pip 
+            mingw-w64-ucrt-x86_64-makensis
       - name: Install dependencies
         run: python build-aux/install_deps.py
+
       - name: Freeze Rencher
-        run: python build-aux/freeze.py
-#      - name: Create NSIS Installer
-#        run: 
-#      - name: Upload Windows artifact
-#        uses: actions/upload-artifact@v4
-#        with:
-#          name: Rencher-Windows
-#          path: 'Rencher.exe'
-#     wget this https://sourceforge.net/projects/nsis/files/NSIS%203/3.11/nsis-3.11.zip/download
-#     and then do shit with it
-#     or just try to use winget???
+        id: freeze
+        run: |
+          python build-aux/freeze.py
+          FREEZE_DIR=$(python3 -c "import sysconfig; print(f'exe.{sysconfig.get_platform()}-{sysconfig.get_python_version()}')")
+          echo "FREEZE_DIR=$FREEZE_DIR" >> $GITHUB_OUTPUT
+
+      - name: Build NSIS installer
+        run: makensis build-aux/build_installer.nsi
+
+      - name: Upload frozen files artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Rencher-Frozen-Windows
+          path: ./build/${{ steps.freeze.outputs.FREEZE_DIR }}
+
+      - name: Upload NSIS installer artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Rencher-Windows-Installer
+          path: ./build/RencherInstaller.exe
