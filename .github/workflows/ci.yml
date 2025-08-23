@@ -58,7 +58,7 @@ jobs:
           install: >-
             mingw-w64-ucrt-x86_64-python 
             mingw-w64-ucrt-x86_64-python-pip 
-            mingw-w64-ucrt-x86_64-makensis
+            mingw-w64-ucrt-x86_64-nsis
       - name: Install dependencies
         run: python build-aux/install_deps.py
 
