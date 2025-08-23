@@ -1,6 +1,5 @@
 PyGObject~=3.50.0
 thefuzz~=0.22.1
-Rencher~=1.1.0
 rarfile~=4.2
 requests~=2.32.4
 watchdog~=6.0.0

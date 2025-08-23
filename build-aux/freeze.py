@@ -5,6 +5,7 @@
 
 import glob
 import os
+import platform
 import sys
 import tempfile
 
@@ -43,13 +44,17 @@ compile_data()
 
 if sys.platform == 'win32':
     ext = '.dll'
+    distro = ''
     lib_dir = os.path.join(sys.base_prefix, 'bin')
     add_files('gdbus.exe', lib_dir, 'lib')
     add_files('libgthread-2.0-0.dll', lib_dir, 'lib')
+
 else:
     ext = '.so'
+    osr = platform.freedesktop_os_release()
+    distro = osr.get('ID_LIKE', osr['ID'])
     lib_dir = os.path.join(sys.base_prefix, 'lib')
-    
+
 add_files('libgtk-4*'+ext, lib_dir, 'lib')
 add_files('libadwaita-1*'+ext, lib_dir, 'lib')
 add_files('gschemas.compiled', os.path.join(sys.base_prefix, 'share/glib-2.0/schemas'), 'share/glib-2.0/schemas')
@@ -83,13 +88,19 @@ if sys.platform == 'win32':
 
 for typelib in typelibs:
     add_files(typelib+'*.typelib', os.path.join(sys.base_prefix, 'lib/girepository-1.0'), 'lib/girepository-1.0')
-    
-loaders_path = 'lib/gdk-pixbuf-2.0/2.10.0/loaders.cache'
+
+
+if distro == 'debian':
+    loaders_path = 'lib/x86_64-linux-gnu/gdk-pixbuf-2.0/2.10.0/'
+else:
+    loaders_path = 'lib/gdk-pixbuf-2.0/2.10.0/'
+
+loaders_cache_path = os.path.join(loaders_path, 'loaders.cache')
 temp_loaders_path = os.path.join(tempfile.mkdtemp(), 'pixbuf-loaders.cache')
 
 # if it wasn't for nicotine+ i wouldn't have ever fucking figured this out 🥹🥹
 with open(temp_loaders_path, 'w') as temp_loaders_f, \
-    open(os.path.join(sys.base_prefix, loaders_path)) as loaders_f:
+    open(os.path.join(sys.base_prefix, loaders_cache_path)) as loaders_f:
     data = loaders_f.read()
     
     if sys.platform == 'win32':
@@ -97,8 +108,11 @@ with open(temp_loaders_path, 'w') as temp_loaders_f, \
     temp_loaders_f.write(data)
     
 add_files('pixbuf-loaders.cache', os.path.dirname(temp_loaders_path), 'lib')
-add_files(f'*{ext}', os.path.join(sys.base_prefix, 'lib/gdk-pixbuf-2.0/2.10.0/loaders'), 'lib')
-            
+add_files(f'*{ext}', os.path.join(sys.base_prefix, loaders_path, 'loaders'), 'lib')
+
+if 'build' not in sys.argv:
+    sys.argv.append('build')
+
 setup(
     name='Rencher',
     description='Rencher',
@@ -117,7 +131,7 @@ setup(
     },
     executables=[
         Executable(
-            base='console',
+            base=gui,
             script=os.path.join(tmp_path, 'rencher.py'),
             target_name='rencher',
             icon=icon_path,

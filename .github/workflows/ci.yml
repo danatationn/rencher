@@ -3,6 +3,35 @@ on:
   workflow_dispatch: 
 
 jobs:
+  linux-job:
+    name: Linux
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+      - name: Build Docker image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          tags: rencher-builder:latest
+          load: true
+
+      - name: Create container and extract files
+        run: |
+          docker create --name temp-container rencher-builder:latest
+          docker cp temp-container:/app/build ./output/
+          docker rm temp-container
+
+      - name: Upload extracted files
+        uses: actions/upload-artifact@v4
+        with:
+          name: Rencher-Frozen-Linux
+          path: ./output/
+
   windows-job:
     name: Windows
     runs-on: windows-latest
@@ -10,8 +39,10 @@ jobs:
       run:
         shell: msys2 {0}
     steps:
-      - uses: actions/checkout@v3
-      - uses: msys2/setup-msys2@v2
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: MSYS2
+        uses: msys2/setup-msys2@v2
         with:
           msystem: UCRT64
           update: true
@@ -31,3 +62,4 @@ jobs:
 #          path: 'Rencher.exe'
 #     wget this https://sourceforge.net/projects/nsis/files/NSIS%203/3.11/nsis-3.11.zip/download
 #     and then do shit with it
+#     or just try to use winget???

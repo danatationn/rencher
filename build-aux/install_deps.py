@@ -66,6 +66,7 @@ def main() -> None:
             'patchelf',
             'libadwaita-1-dev',
             'ccache',
+            'blueprint-compiler',
             # cx-freeze
         ]
         

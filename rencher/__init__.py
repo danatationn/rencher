@@ -35,7 +35,7 @@ class ImportInvalidError(Exception):
 class ImportCorruptArchiveError(Exception):
     pass
 class ImportCancelError(Exception):
-    pass  # """error"""
+    pass
 
 def handle_global_exception(exc_type, exc_value, exc_traceback):
     if issubclass(exc_type, KeyboardInterrupt):
@@ -64,19 +64,12 @@ def launch() -> None:
         os.environ['GTK_EXE_PREFIX'] = executable_folder
         os.environ['GTK_DATA_PREFIX'] = executable_folder
         os.environ['GTK_PATH'] = executable_folder
-        os.environ['XDG_DATA_DIRS'] = os.path.join(executable_folder, 'share')
+        os.environ['XDG_DATA_DIRS'] += os.pathsep + os.path.join(executable_folder, 'share')
         os.environ['FONTCONFIG_FILE'] = os.path.join(executable_folder, 'share/fonts/fonts.conf')
         os.environ['FONTCONFIG_PATH'] = os.path.join(executable_folder, 'share/fonts')
         os.environ['GDK_PIXBUF_MODULE_FILE'] = os.path.join(executable_folder, 'lib/pixbuf-loaders.cache')
         os.environ['GI_TYPELIB_PATH'] = os.path.join(executable_folder, 'lib/girepository-1.0')
         os.environ['GSETTINGS_SCHEMA_DIR'] = os.path.join(executable_folder, 'share/glib-2.0/schemas')
-        print(os.path.join(executable_folder, 'lib/girepository-1.0'))
-
-    # if sys.platform == 'win32':
-    #     os.environ['PANGOCAIRO_BACKEND'] = 'fontconfig'
-    #     os.environ['GTK_CSD'] = '0'
-    #     os.environ['GDK_DISABLE'] = 'gl,vulkan'
-    #     os.environ['GSK_RENDERER'] = 'cairo'
 
     # ui files get loaded when the import happens
     # we want the ui that we just compiled
