@@ -93,7 +93,7 @@ def main() -> None:
     else:
         print('Success!')
     finally:
-        subprocess.run(['pip', 'uninstall', '-y', tmp_path])
+        subprocess.run(['pip', 'uninstall', '-y', 'rencher'])
         
 if __name__ == '__main__':
     main()
