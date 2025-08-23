@@ -26,11 +26,22 @@ jobs:
           docker cp temp-container:/app/build ./output/
           docker rm temp-container
 
-      - name: Upload extracted files
+      - id: freeze-dir
+        run: |
+          FREEZE_DIR=$(python3 -c "import sysconfig; print(f'exe.{sysconfig.get_platform()}-{sysconfig.get_python_version()}')")
+          echo "FREEZE_DIR=$FREEZE_DIR" >> $GITHUB_OUTPUT
+
+      - name: Upload frozen files
         uses: actions/upload-artifact@v4
         with:
           name: Rencher-Frozen-Linux
-          path: ./output/
+          path: ./output/$({ steps.freeze-dir.outputs.FREEZE_DIR })/
+
+      - name: Upload AppImage
+        uses: actions/upload-artifact@v4
+        with:
+          name: Rencher-AppImage
+          path: ./output/Rencher-x86_64.AppImage
 
   windows-job:
     name: Windows

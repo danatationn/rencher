@@ -69,10 +69,8 @@ def main():
             return
 
     rencher_dir = os.path.abspath(os.path.join(__file__, '../..'))
-    freeze_dir = os.path.join(
-        rencher_dir, 'build',
-        f'exe.{sysconfig.get_platform()}-{sysconfig.get_python_version()}',
-    )
+    build_dir = os.path.join(rencher_dir, 'build')
+    freeze_dir = os.path.join(build_dir, f'exe.{sysconfig.get_platform()}-{sysconfig.get_python_version()}')
     if os.path.isdir(freeze_dir):
         if sys.stdin.isatty():
             choice = input('Freeze Rencher? (Y/n) ')
@@ -110,23 +108,28 @@ StartupNotify=false
 Categories=Game;""")
 
     icon_path = os.path.join(rencher_dir, 'assets/rencher-icon.svg')
-    target_path = os.path.join(freeze_dir, 'rencher-icon.svg')
+    icon_target_path = os.path.join(freeze_dir, 'rencher-icon.svg')
     if not os.path.isfile(icon_path):
         raise FileNotFoundError('The icon was not found! ("rencher-icon.svg")\n'
                                 'Redownload Rencher and try again')
-    shutil.copy(icon_path, target_path)
+    shutil.copy(icon_path, icon_target_path)
 
     exec_mode = os.stat(ait_path).st_mode
     os.chmod(ait_path, exec_mode | 0o111)
-    os.chdir(freeze_dir)
+    appimage_path = os.path.join(build_dir, f'Rencher-{platform.machine()}.AppImage')
     try:
-        subprocess.check_call([ait_path, './'])
+        subprocess.check_call([ait_path, freeze_dir, appimage_path])
     except subprocess.CalledProcessError as err:
         raise RuntimeError('AppImage creation failed.') from err
     else:
         time.sleep(.1)  # the appimagetool success message is asynchronous
-        appimage_path = os.path.join(freeze_dir, 'Rencher-x86_64.AppImage')
         print(f'AppImage creation done! (it should be at {appimage_path})')
+    finally:
+        for path in [apprun_path, desktop_path, icon_target_path, os.path.join(freeze_dir, '.DirIcon')]:
+            try:
+                os.unlink(path)
+            except (FileNotFoundError, PermissionError):
+                pass
 
     if sys.stdin.isatty():
         choice = input('Launch it? (Y/n) ')

@@ -46,7 +46,6 @@ def compile_data() -> None:
     for file in blp_files:
         args.extend([file])
 
-    print(f'{__file__} {os.path.dirname(__file__)} {ui_dir}')
     print('Compiling .blp files...')
     subprocess.run(args)
 

@@ -18,4 +18,5 @@ WORKDIR /app
 COPY . .
 RUN python3 -m venv .venv
 RUN . .venv/bin/activate && pip3 install -r requirements.txt
-RUN . .venv/bin/activate && python3 build-aux/freeze.py
+# RUN . .venv/bin/activate && python3 build-aux/freeze.py
+RUN . .venv/bin/activate && python3 build-aux/appimage.py
