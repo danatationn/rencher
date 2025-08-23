@@ -25,7 +25,7 @@ def main():
     if ait_path:
         ait_path = os.path.abspath(ait_path)
     else:
-        print('"appimagetool" couldn\'t been found in path.')
+        print('"appimagetool" was not found in path.')
         if sys.stdin.isatty():
             print('You can either:\n'
                   '1. Download appimagetool\n'
@@ -71,18 +71,20 @@ def main():
     rencher_dir = os.path.abspath(os.path.join(__file__, '../..'))
     build_dir = os.path.join(rencher_dir, 'build')
     freeze_dir = os.path.join(build_dir, f'exe.{sysconfig.get_platform()}-{sysconfig.get_python_version()}')
-    if os.path.isdir(freeze_dir):
-        if sys.stdin.isatty():
-            choice = input('Freeze Rencher? (Y/n) ')
-        else:
-            choice = 'y'
-        if choice.lower() in ['y', '']:
-            sys.argv.append('build')
-            import freeze  # noqa: F401
-    else:
-        print('Rencher hasn\'t been frozen yet. Freezing...')
-        sys.argv.append('build')
-        import freeze  # noqa: F401
+    # if os.path.isdir(freeze_dir):
+    #     if sys.stdin.isatty():
+    #         choice = input('Freeze Rencher? (Y/n) ')
+    #     else:
+    #         choice = 'y'
+    #     if choice.lower() in ['y', '']:
+    #         sys.argv.append('build')
+    #         import freeze  # noqa: F401
+    # else:
+    #     print('Rencher hasn\'t been frozen yet. Freezing...')
+    #     sys.argv.append('build')
+    #     import freeze  # noqa: F401
+    if not os.path.isdir(freeze_dir):
+        raise FileNotFoundError('Rencher hasn\'t been frozen yet. Run "freeze.py" and launch this again.')
 
     apprun_path = os.path.join(freeze_dir, 'AppRun')
     with open(apprun_path, 'w') as f:
@@ -118,7 +120,7 @@ Categories=Game;""")
     os.chmod(ait_path, exec_mode | 0o111)
     appimage_path = os.path.join(build_dir, f'Rencher-{platform.machine()}.AppImage')
     try:
-        subprocess.check_call([ait_path, freeze_dir, appimage_path])
+        subprocess.check_call([ait_path, freeze_dir, appimage_path, '--appimage-extract-and-run'])
     except subprocess.CalledProcessError as err:
         raise RuntimeError('AppImage creation failed.') from err
     else:
