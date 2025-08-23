@@ -92,6 +92,8 @@ def main() -> None:
         raise OSError('PyPI package installation failed.') from err
     else:
         print('Success!')
+    finally:
+        subprocess.run(['pip', 'uninstall', '-y', tmp_path])
         
 if __name__ == '__main__':
     main()
