@@ -9,7 +9,6 @@ import os.path
 import platform
 import subprocess
 import sys
-import time
 import traceback
 
 from rencher.gtk import compile_data
@@ -69,7 +68,10 @@ def launch() -> None:
         os.environ['GTK_EXE_PREFIX'] = executable_folder
         os.environ['GTK_DATA_PREFIX'] = executable_folder
         os.environ['GTK_PATH'] = executable_folder
-        os.environ['XDG_DATA_DIRS'] += os.pathsep + os.path.join(executable_folder, 'share')
+        if os.environ.get('XDG_DATA_DIRS', None) is None:
+            os.environ['XDG_DATA_DIRS'] = os.pathsep + os.path.join(executable_folder, 'share')
+        else:
+            os.environ['XDG_DATA_DIRS'] += os.pathsep + os.path.join(executable_folder, 'share')
         os.environ['FONTCONFIG_FILE'] = os.path.join(executable_folder, 'share/fonts/fonts.conf')
         os.environ['FONTCONFIG_PATH'] = os.path.join(executable_folder, 'share/fonts')
         os.environ['GDK_PIXBUF_MODULE_FILE'] = os.path.join(executable_folder, 'lib/pixbuf-loaders.cache')

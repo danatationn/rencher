@@ -32,13 +32,13 @@ jobs:
       - name: Upload frozen files artifact
         uses: actions/upload-artifact@v4
         with:
-          name: Rencher-Frozen-Linux
+          name: Rencher-Linux-Portable
           path: ./output/${{ steps.extract.outputs.FREEZE_DIR }}/
 
       - name: Upload AppImage artifact
         uses: actions/upload-artifact@v4
         with:
-          name: Rencher-AppImage
+          name: Rencher-Linux-AppImage
           path: ./output/Rencher-x86_64.AppImage
 
   windows-job:
@@ -75,7 +75,7 @@ jobs:
       - name: Upload frozen files artifact
         uses: actions/upload-artifact@v4
         with:
-          name: Rencher-Frozen-Windows
+          name: Rencher-Windows-Portable
           path: ./build/${{ steps.freeze.outputs.FREEZE_DIR }}
 
       - name: Upload NSIS installer artifact

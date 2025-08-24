@@ -92,7 +92,7 @@ class RencherFileMonitor(FileSystemEventHandler):
             rel_path = os.path.relpath(path, games_dir)
             top_dir = rel_path.split(os.sep, 1)[0]
             key = os.path.join(games_dir, top_dir)
-            if top_dir == '..':
+            if top_dir in ['..', '.']:
                 # when refreshing the data directory, it would hallucinate a game with the path "[datadir]/games/.."
                 return
             if not os.path.isdir(key):
