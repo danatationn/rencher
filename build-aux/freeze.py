@@ -102,9 +102,12 @@ temp_loaders_path = os.path.join(tempfile.mkdtemp(), 'pixbuf-loaders.cache')
 with open(temp_loaders_path, 'w') as temp_loaders_f, \
     open(os.path.join(sys.base_prefix, loaders_cache_path)) as loaders_f:
     data = loaders_f.read()
-    
+
     if sys.platform == 'win32':
         data = data.replace('lib\\\\gdk-pixbuf-2.0\\\\2.10.0\\\\loaders', 'lib')
+    else:
+        # works fine w/ appimages but not regular frozen apps
+        data = data.replace(os.path.join(sys.base_prefix, loaders_path, 'loaders'), 'lib')
     temp_loaders_f.write(data)
     
 add_files('pixbuf-loaders.cache', os.path.dirname(temp_loaders_path), 'lib')

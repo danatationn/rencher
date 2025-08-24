@@ -4,9 +4,12 @@ __url__ = 'https://github.com/danatationn/Rencher'
 __issue_url__ = 'https://github.com/danatationn/Rencher/issues'
 __copyright__ = '© 2025 danatationn'
 
+import glob
 import os.path
 import platform
+import subprocess
 import sys
+import time
 import traceback
 
 from rencher.gtk import compile_data
@@ -51,16 +54,18 @@ def handle_global_exception(exc_type, exc_value, exc_traceback):
 
 def launch() -> None:
     sys.excepthook = handle_global_exception
-    
     compile_data()
 
-    """
-        sourced from nicotine+ ^^
-        https://github.com/nicotine-plus/nicotine-plus/blob/master/pynicotine/gtkgui/__init__.py
-    """
     if getattr(sys, 'frozen', False):
         executable_folder = os.path.dirname(sys.executable)
-        
+
+        if platform.system() == 'Linux' and 'APPIMAGE' not in os.environ:
+            # appimages are smart and don't complain when the cache has relatives paths !
+            loader_files = glob.glob(os.path.join(executable_folder, 'lib', 'libpixbufloader*.so'))
+            cache_text = subprocess.run(['gdk-pixbuf-query-loaders', *loader_files], capture_output=True).stdout
+            with open(os.path.join(executable_folder, 'lib', 'pixbuf-loaders.cache'), 'wb') as f:
+                f.write(cache_text)
+
         os.environ['GTK_EXE_PREFIX'] = executable_folder
         os.environ['GTK_DATA_PREFIX'] = executable_folder
         os.environ['GTK_PATH'] = executable_folder
