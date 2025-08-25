@@ -1,3 +1,4 @@
+#!/bin/env python3
 def main():
     import rencher
     rencher.launch()

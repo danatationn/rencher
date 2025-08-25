@@ -33,14 +33,22 @@ class RencherApplication(Gtk.Application):
 
         self.add_main_option('verbose', ord('v'), GLib.OptionFlags.NONE, GLib.OptionArg.NONE, 'Enable verbose output')
         self.add_main_option('version', ord('V'), GLib.OptionFlags.NONE, GLib.OptionArg.NONE, 'Prints version')
-        # self.add_main_option('data-dir', ord('d'), GLib.OptionFlags.NONE, GLib.OptionArg.STRING, 'Forces a data directory')
 
-        logging.basicConfig(
-            level=logging.INFO,
-            # format='[%(levelname)s\t%(asctime)s.%(msecs)-3d %(module)-16s] %(message)s',
-            format='[%(levelname)s\t%(asctime)s.%(msecs)-3d %(module)s] %(message)s',
-            datefmt='%H:%M:%S', 
-        )
+        logger = logging.getLogger()
+        logger.setLevel(logging.DEBUG)
+        formatter = logging.Formatter('[%(levelname)s\t%(asctime)s.%(msecs)-3d %(module)s] %(message)s',
+                                   datefmt='%H:%M:%S')
+
+        file_handler = logging.FileHandler(os.path.join(rencher.local_path, 'log.txt'), mode='w')
+        file_handler.setLevel(logging.DEBUG)
+        file_handler.setFormatter(formatter)
+        logger.addHandler(file_handler)
+
+        console_handler = logging.StreamHandler()
+        console_handler.setLevel(logging.INFO)
+        console_handler.setFormatter(formatter)
+        console_handler.name = 'console_handler'
+        logger.addHandler(console_handler)
 
         watchdog_logger = logging.getLogger('watchdog')
         watchdog_logger.propagate = False
@@ -52,7 +60,7 @@ class RencherApplication(Gtk.Application):
         options = command_line.get_options_dict()
         
         if options.contains('verbose'):
-            logging.getLogger().setLevel(logging.DEBUG)
+            logging.getHandlerByName('console_handler').setLevel(logging.DEBUG)
         if options.contains('version'):
             print(rencher.__version__)
             return 0
