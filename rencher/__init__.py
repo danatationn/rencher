@@ -64,6 +64,8 @@ def launch() -> None:
             cache_text = subprocess.run(['gdk-pixbuf-query-loaders', *loader_files], capture_output=True).stdout
             with open(os.path.join(executable_folder, 'lib', 'pixbuf-loaders.cache'), 'wb') as f:
                 f.write(cache_text)
+        if platform.system() == 'Windows':
+            os.environ['GSK_RENDERER'] = 'cairo'
 
         os.environ['GTK_EXE_PREFIX'] = executable_folder
         os.environ['GTK_DATA_PREFIX'] = executable_folder
