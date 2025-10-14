@@ -13,6 +13,8 @@ import traceback
 
 from rencher.gtk import compile_data
 
+from tendo import singleton
+
 local_path: str = ''
 config_path: str = ''
 tmp_path: str = os.path.abspath(os.path.join(__file__, '..', '..'))
@@ -52,6 +54,8 @@ def handle_global_exception(exc_type, exc_value, exc_traceback):
     sys.exit(1)
 
 def launch() -> None:
+    _ = singleton.SingleInstance()
+
     sys.excepthook = handle_global_exception
     compile_data()
 

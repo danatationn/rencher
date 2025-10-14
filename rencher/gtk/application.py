@@ -79,7 +79,7 @@ class RencherApplication(Gtk.Application):
         self.window.present()
         self.file_monitor = RencherFileMonitor(self.window)
 
-        if not getattr(sys, 'frozen', False) and self.config['settings']['suppress_updates'] != 'true':
+        if self.config['settings']['suppress_updates'] != 'true':
             version_thread = threading.Thread(target=self.check_version)
             version_thread.run()
 

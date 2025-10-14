@@ -12,6 +12,7 @@ dependencies = [
     "thefuzz>=0.22.1",
     "watchdog>=6.0.0",
     "pygobject-stubs>=2.13.0",
+    "tendo>=0.3.0",
 ]
 
 

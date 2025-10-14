@@ -13,7 +13,7 @@ if TYPE_CHECKING:
     from rencher.gtk.window import RencherWindow
 
 class RencherLibrary(GObject.Object):
-    game_items = {}
+    game_items: dict[str, GameItem] = {}
     window: 'RencherWindow'
     
     __gsignals__ = {
@@ -28,6 +28,8 @@ class RencherLibrary(GObject.Object):
         
     def load_games(self) -> None:
         data_dir = RencherConfig().get_data_dir()
+        for rpath in dict(self.game_items):
+            self.remove_game(rpath)
         for rpath in glob.iglob(os.path.join(data_dir, 'games', '*')):
             self.add_game(rpath)
         
@@ -48,9 +50,8 @@ class RencherLibrary(GObject.Object):
         
     def remove_game(self, rpath: str) -> None:
         game_item = self.game_items.pop(rpath, None)
-        if isinstance(game_item, GameItem):  # if i don't do this my type checker will tell me the code is unreachable
-            self.emit('game-removed', game_item)
-            logging.debug(f'-{game_item.name}')
+        self.emit('game-removed', game_item)
+        logging.debug(f'-{game_item.name}')
             
     def change_game(self, rpath: str) -> None:
         if rpath in self.game_items:

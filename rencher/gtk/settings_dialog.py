@@ -54,7 +54,9 @@ class RencherSettings(Adw.PreferencesDialog):
                 switch.set_active(True)
 
     def do_closed(self):
-        if self.settings_data_dir.get_text() != str(local_path):
+        old_data_dir = self.config['settings']['data_dir']
+
+        if self.config['settings']['data_dir'] != str(local_path):
             self.config['settings']['data_dir'] = self.settings_data_dir.get_text()
         else:
             self.config['settings']['data_dir'] = ''
@@ -66,6 +68,10 @@ class RencherSettings(Adw.PreferencesDialog):
                 self.config['settings'][key] = 'false'
 
         self.config.write()
+        logging.debug('wrote to config')
+
+        if self.config['settings']['data_dir'] != old_data_dir:
+            self.window.library.load_games()
 
     @Gtk.Template.Callback()
     def on_picker_clicked(self, _widget: Gtk.Button):
@@ -82,7 +88,8 @@ class RencherSettings(Adw.PreferencesDialog):
 
     @Gtk.Template.Callback()
     def on_check_updates(self, _):
-        self.window.application.check_version(show_up_to_date_toast=True)
+        thread = threading.Thread(target=lambda: self.window.application.check_version(show_up_to_date_toast=True))
+        thread.start()
         self.close()
 
     @Gtk.Template.Callback()
