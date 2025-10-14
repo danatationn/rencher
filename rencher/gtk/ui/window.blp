@@ -83,56 +83,73 @@ template $RencherWindow : Adw.ApplicationWindow {
 						}
 					}
 				};
-	
+
 			    content: Adw.ViewStack library_view_stack {
+					Adw.ViewStackPage empty_view {
+						name: 'empty';
+
+					    child: Adw.StatusPage {
+							icon-name: "xbox-controller-symbolic";
+							title: _("No Games Installed");
+							description: _("Add a visual novel by clicking the Import button");
+							child: Gtk.Button {
+								halign: center;
+								label: _("Import");
+								clicked => $on_import_clicked();
+
+								styles ["pill", "suggested-action"]
+							};
+						};
+			        }
+
 					Adw.ViewStackPage game_select_view {
 						name: 'game-select';
-	
+
 						child: Adw.StatusPage {
 							title: _("Welcome to Rencher!");
 							description: _("Select a game from the sidebar to get started");
 							icon-name: "library-symbolic";
 						};
 					}
-	
+
 			        Adw.ViewStackPage selected_view {
 						name: 'selected';
-	
+
 				        child: Adw.StatusPage selected_status_page {
 							title: "Title";
 							valign: start;
 							halign: center;
-							
+
 							child: Box {
 								spacing: 16;
 								orientation: vertical;
 								width-request: 500;
-	
+
 								Box {
 									orientation: horizontal;
 									halign: center;
 									spacing: 8;
-									
+
 									Button play_button {
 										styles ["pill", "suggested-action"]
-										
+
 										label: _("Play");
-		
+
 										clicked => $on_play_clicked();
 									}
 									Button {
 										styles ["circular"]
-										
+
 										icon-name: "wrench-wide-symbolic";
-										
+
 										clicked => $on_options_clicked();
 									}
 								}
-	
+
 								ListBox {
 									selection-mode: none;
 									styles ["boxed-list"]
-	
+
 									Adw.ActionRow last_played_row {
 										title: _("Last Played");
 										styles ["property"]
@@ -150,25 +167,25 @@ template $RencherWindow : Adw.ApplicationWindow {
 									//	styles ["property"]
 									//}
 								}
-	
+
 								ListBox {
 									selection-mode: none;
 									styles ["boxed-list"]
-	
+
 									//Adw.ExpanderRow log_row {
 									//	title: _("Log");
 									//}
 									Adw.ActionRow rpath_row {
 										title: _("Folder Location");
-	
+
 										[suffix]
 										Button {
 											icon-name: "external-link-symbolic";
 											styles ["flat"]
-	
+
 											clicked => $on_dir_clicked();
 										}
-	
+
 										styles ["property"]
 									}
 									Adw.ActionRow version_row {
@@ -180,34 +197,17 @@ template $RencherWindow : Adw.ApplicationWindow {
 										styles ["property"]
 									}
 								}
-	
+
 								//ListBox {
 								//	selection-mode: none;
 								//	styles ["boxed-list"]
-	
+
 								//	Adw.ExpanderRow {
 								//		title: _("Screenshots");
 								//	}
 								//}
 							};
 				        };
-			        }
-	
-					Adw.ViewStackPage empty_view {
-						name: 'empty';
-	
-					    child: Adw.StatusPage {
-							icon-name: "xbox-controller-symbolic";
-							title: _("No Games Installed");
-							description: _("Add a visual novel by clicking the Import button");
-							child: Gtk.Button {
-								halign: center;
-								label: _("Import");
-								clicked => $on_import_clicked();
-	
-								styles ["pill", "suggested-action"]
-							};
-						};
 			        }
 				};
 			};

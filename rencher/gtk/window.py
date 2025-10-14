@@ -76,23 +76,34 @@ class RencherWindow(Adw.ApplicationWindow):
         self.library_list_box.set_sort_func(self.sort_func)
         self.library_list_box.set_filter_func(self.filter_func)
         
+        self.split_view.set_show_sidebar(False)
+
         self.library.connect('game-added', self.on_game_added)
         self.library.connect('game-removed', self.on_game_removed)
         self.library.connect('game-changed', self.on_game_changed)
         self.library.load_games()
-        
+
         GLib.timeout_add(250, self.check_process)
 
     def on_game_added(self, _, game_item: GameItem):
         button = Adw.ButtonRow(title=game_item.name)  # type: ignore
         button.game = game_item.game
         self.library_list_box.append(button)
-    
+        if self.library_list_box.get_selected_row():
+            self.library_view_stack.set_visible_child_name('selected')
+        else:
+            self.library_view_stack.set_visible_child_name('game-select')
+        self.split_view.set_show_sidebar(True)
+
     def on_game_removed(self, _, game_item: GameItem):
-        for row in self.library_list_box:  # type: ignore
+        for row in list(self.library_list_box):  # type: ignore
             if getattr(row, 'game', None) == game_item.game:
                 self.library_list_box.remove(row)
-    
+
+        if len(list(self.library_list_box)) == 0:
+            self.library_view_stack.set_visible_child_name('empty')
+            self.split_view.set_show_sidebar(False)
+
     def on_game_changed(self, _, game_item: GameItem):
         if not self.current_game:
             return

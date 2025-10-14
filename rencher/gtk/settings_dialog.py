@@ -56,10 +56,10 @@ class RencherSettings(Adw.PreferencesDialog):
     def do_closed(self):
         old_data_dir = self.config['settings']['data_dir']
 
-        if self.config['settings']['data_dir'] != str(local_path):
-            self.config['settings']['data_dir'] = self.settings_data_dir.get_text()
-        else:
+        if self.settings_data_dir.get_text() == str(local_path):
             self.config['settings']['data_dir'] = ''
+        else:
+            self.config['settings']['data_dir'] = self.settings_data_dir.get_text()
 
         for switch, key in self.switches_list:
             if switch.get_active():
@@ -68,7 +68,6 @@ class RencherSettings(Adw.PreferencesDialog):
                 self.config['settings'][key] = 'false'
 
         self.config.write()
-        logging.debug('wrote to config')
 
         if self.config['settings']['data_dir'] != old_data_dir:
             self.window.library.load_games()
