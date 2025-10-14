@@ -1,4 +1,4 @@
-__version__ = '1.1.1'  # REMEMBER TO CHANGE THIS
+__version__ = '1.1.2'  # REMEMBER TO CHANGE THIS
 __description__ = 'A Ren\'Py game manager, made with DDLC mods in mind'
 __url__ = 'https://github.com/danatationn/Rencher'
 __issue_url__ = 'https://github.com/danatationn/Rencher/issues'
@@ -11,9 +11,9 @@ import subprocess
 import sys
 import traceback
 
-from rencher.gtk import compile_data
-
 from tendo import singleton
+
+from rencher.gtk import compile_data
 
 local_path: str = ''
 config_path: str = ''
