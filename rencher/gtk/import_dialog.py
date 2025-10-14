@@ -305,6 +305,16 @@ class RencherImport(Adw.PreferencesDialog):
             game.config.write()
 
             logging.info(f'Importing done in {time.perf_counter() - start:.2f}s')
+            if RencherConfig()['settings']['delete_on_import'] == 'true':
+                try:
+                    os.unlink(location)
+                except PermissionError:
+                    logging.error('Couldn\'t delete archive! File left untouched')
+                except Exception as e:
+                    logging.error(f'Couldn\'t delete archive! {e}')
+                else:
+                    logging.info(f'Archive "{location_stem}" deleted!')
+
             self.window.application.resume_monitor(rpath)
         else:
             GLib.idle_add(self.import_progress_bar.set_fraction, 1)
