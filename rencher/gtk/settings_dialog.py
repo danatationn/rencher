@@ -154,7 +154,7 @@ class RencherSettings(Adw.PreferencesDialog):
             'All my friends :)',
         ])
         dialog.set_release_notes("""<ul>
-            <li> Added this button </li>
+            <li> Added this button :) </li>
             <li> Fixed a bug with path finding </li>
             <li> Made save files not copy when importing mods </li>
         </ul>""")

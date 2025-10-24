@@ -323,6 +323,6 @@ class RencherImport(Adw.PreferencesDialog):
         else:
             GLib.idle_add(self.import_progress_bar.set_fraction, 1)
             shutil.rmtree(rpath)
-            logging.info(f'Importing #cancelled. Total thread runtime: {time.perf_counter() - start:.2f}s')
+            logging.info(f'Importing cancelled. Total thread runtime: {time.perf_counter() - start:.2f}s')
             self.window.application.resume_monitor(rpath)
             raise ImportCancelError()

@@ -15,6 +15,8 @@ def get_py_files(apath: Path | str) -> list[str]:
 def get_rpa_files(rpath: Path | str) -> list[str]:
     if isinstance(rpath, str):
         rpath = Path(rpath)
+    elif not isinstance(rpath, Path):
+        return []
 
     rp_files = rpath.glob('**/*.rp*')
 
