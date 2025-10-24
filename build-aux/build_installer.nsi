@@ -5,7 +5,7 @@
 !define NAME "Rencher"
 !define APPFILE "rencher.exe"
 !define MUI_ICON "..\assets\rencher-inst.ico"
-!define MUI_UNICON "..\assets\rencher-uninst.ico"
+!define MUI_UNICON "..\assets\rencher-deinst.ico"
 !define MUI_HEADERIMAGE
 !define MUI_HEADERIMAGE_BITMAP "..\assets\header_img.bmp"
 !define MUI_HEADERIMAGE_BITMAP_RTL "..\assets\header_img_rtl.bmp"
