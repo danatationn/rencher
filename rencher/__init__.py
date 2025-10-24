@@ -1,4 +1,4 @@
-__version__ = '1.1.2'  # REMEMBER TO CHANGE THIS
+__version__ = '1.1.3'  # REMEMBER TO CHANGE THIS
 __description__ = 'A Ren\'Py game manager, made with DDLC mods in mind'
 __url__ = 'https://github.com/danatationn/Rencher'
 __issue_url__ = 'https://github.com/danatationn/Rencher/issues'

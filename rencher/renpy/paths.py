@@ -1,26 +1,36 @@
 import glob
 import os
 from functools import lru_cache
+from pathlib import Path
 
 
 # @lru_cache
-def get_py_files(apath: str) -> list[str]:
+def get_py_files(apath: Path | str) -> list[str]:
+    if isinstance(apath, str):
+        apath = Path(apath)
+
     return glob.glob(os.path.join(apath, '*.py'))
 
 @lru_cache
-def get_rpa_files(rpath: str) -> list[str]:
-    rp_files = glob.glob(os.path.join(rpath, '**/*.rp*'), recursive=True)
+def get_rpa_files(rpath: Path | str) -> list[str]:
+    if isinstance(rpath, str):
+        rpath = Path(rpath)
+
+    rp_files = rpath.glob('**/*.rp*')
 
     game_files = [
         rp_file for rp_file in rp_files
-        if '00' not in os.path.splitext(rp_file)[0]  # generic engine file
-        if '.rpym' not in os.path.splitext(rp_file)[1]  # .rpym files can be compiled (.rypmc)
-        if os.path.splitext(rp_file)[1] != '.rpyb'  # cache file
+        if '00' not in rp_file.name  # generic engine file
+        if '.rpym' not in rp_file.suffix  # .rpym files can be compiled (.rypmc)
+        if rp_file.suffix != '.rpyb'  # cache file
     ]
 
-    return game_files
+    return [str(file) for file in game_files]
  
-def get_rpa_path(rpath: str) -> str | None:
+def get_rpa_path(rpath: Path | str) -> str | None:
+    if isinstance(rpath, str):
+        rpath = Path(rpath)
+
     game_files = get_rpa_files(rpath)
     
     if not game_files:
@@ -28,12 +38,16 @@ def get_rpa_path(rpath: str) -> str | None:
     
     # some mods apparently store ren'py files in lib/
     # those are further nested inside the game so just try and get the top folder
-    rpa_path = min(game_files, key=lambda path: len(path.split(os.sep)))
-    return os.path.dirname(rpa_path)
+    rpa_path = Path(min(game_files, key=lambda path: len(path.split(os.sep))))
+    return str(rpa_path.parent)
  
-def get_absolute_path(rpath: str) -> str | None:
+def get_absolute_path(rpath: Path | str) -> str | None:
+    if isinstance(rpath, str):
+        rpath = Path(rpath)
+
     try:
-        return os.path.dirname(get_rpa_path(rpath))
+        rpa_path = Path(get_rpa_path(rpath))
+        return str(rpa_path.parent)
     except IndexError:
         return None
     except TypeError:
@@ -90,3 +104,10 @@ def validate_game_files(files: list[str]) -> bool:
         return False
     
     return True
+
+
+if __name__ == '__main__':
+    print(get_py_files('/home/dan/.local/share/rencher/games/ConvergenceCHI-PC-1.00_CH1-Renpy7Mod'))
+    print(get_rpa_files('/home/dan/.local/share/rencher/games/ConvergenceCHI-PC-1.00_CH1-Renpy7Mod'))
+    print(get_rpa_path('/home/dan/.local/share/rencher/games/ConvergenceCHI-PC-1.00_CH1-Renpy7Mod'))
+    print(get_absolute_path('/home/dan/.local/share/rencher/games/ConvergenceCHI-PC-1.00_CH1-Renpy7Mod'))

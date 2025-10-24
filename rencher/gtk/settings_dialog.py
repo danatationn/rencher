@@ -136,7 +136,7 @@ class RencherSettings(Adw.PreferencesDialog):
     @Gtk.Template.Callback()
     def on_about_clicked(self, _widget: Gtk.Button):
         dialog = Adw.AboutDialog(
-            application_icon='rencher',
+            application_icon='rencher-icon',
             application_name='Rencher',
             developer_name='danatationn',
             version=rencher.__version__,
@@ -153,5 +153,10 @@ class RencherSettings(Adw.PreferencesDialog):
             'vl1 (for the logo)',
             'All my friends :)',
         ])
+        dialog.set_release_notes("""<ul>
+            <li> Added this button </li>
+            <li> Fixed a bug with path finding </li>
+            <li> Made save files not copy when importing mods </li>
+        </ul>""")
 
         dialog.present(self)

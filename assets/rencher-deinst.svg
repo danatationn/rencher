@@ -14,6 +14,8 @@
 <g style="mix-blend-mode:overlay">
 <line x1="98.001" y1="393.046" x2="87.001" y2="152.046" stroke="white" stroke-width="2" stroke-dasharray="10 10"/>
 </g>
+<path d="M356.223 75.3654C354.35 74.7411 352.477 74.1168 342.044 73.4831C331.61 72.8493 312.673 72.225 295.322 73.8804C277.97 75.5357 262.779 79.4897 251.728 83.6076C240.676 87.7255 234.225 91.8875 229.237 96.7369C224.249 101.586 220.919 106.997 218.892 113.01C216.864 119.023 216.24 125.474 216.126 133.376C216.013 141.277 216.429 150.434 220.597 160.873C224.766 171.313 232.674 182.759 241.742 190.528C250.81 198.297 260.799 202.043 270.419 204.077C280.039 206.11 288.987 206.319 297.655 205.281C306.323 204.244 314.439 201.955 321.845 197.966C329.252 193.977 335.703 188.359 340.379 182.239C345.055 176.118 347.76 169.667 349.362 161.245C350.964 152.824 351.38 142.627 350.034 133.732C348.687 124.837 345.566 117.553 341.669 110.576C337.771 103.598 333.193 97.1468 328.338 91.4303C323.482 85.7138 318.487 80.9275 313.417 77.005C303.794 69.5604 294.045 66.127 286.178 64.7585C282.473 64.4306 279.352 64.8468 277.015 65.5815C274.679 66.3162 273.222 67.3567 271.721 68.4287" stroke="#FD7E7E" stroke-width="21" stroke-linecap="round"/>
+<path d="M328.476 99.3288C327.852 100.161 327.228 100.994 312.235 113.909C297.242 126.823 267.9 151.796 238.299 178.155" stroke="#FD7E7E" stroke-width="21" stroke-linecap="round"/>
 <defs>
 <filter id="filter0_i_27_3" x="80" y="77.9287" width="318.308" height="403.158" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
 <feFlood flood-opacity="0" result="BackgroundImageFix"/>
@@ -37,7 +39,7 @@
 </filter>
 <linearGradient id="paint0_linear_27_3" x1="345" y1="428" x2="161.5" y2="188" gradientUnits="userSpaceOnUse">
 <stop stop-color="#FF97FB"/>
-<stop offset="1" stop-color="#FD4E6D"/>
+<stop offset="1" stop-color="#FD8B4E"/>
 </linearGradient>
 <radialGradient id="paint1_radial_27_3" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(378 364) rotate(-135.541) scale(411.908 339.218)">
 <stop offset="0.515" stop-color="#D6D6D6" stop-opacity="0.85"/>

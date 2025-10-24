@@ -280,6 +280,10 @@ class RencherImport(Adw.PreferencesDialog):
                     continue
                 if os.path.basename(target_path) == 'rencher.ini':
                     continue
+                if os.path.basename(target_path) == 'persistent':
+                    continue
+                if os.path.splitext(target_path)[1] == '.save':
+                    continue
                 if os.path.isdir(path):
                     os.makedirs(target_path, exist_ok=True)
                 else:
