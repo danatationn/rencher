@@ -24,9 +24,13 @@ template $RencherWindow : Adw.ApplicationWindow {
 		    }
 
 			[end]
-		    Button {
-				icon-name: "cogged-wheel-symbolic";
-				clicked => $on_settings_clicked();
+		    //Button {
+			//	icon-name: "cogged-wheel-symbolic";
+			//	clicked => $on_settings_clicked();
+		    //}
+		    MenuButton {
+		        icon-name: "menu-large-symbolic";
+		        menu-model: hamburger_menu;
 		    }
 	    }
 
@@ -223,4 +227,10 @@ template $RencherWindow : Adw.ApplicationWindow {
 			}
 		};
     };
+}
+
+menu hamburger_menu {
+	item (_("Preferences"), "app.show-preferences")
+	item (_("Keyboard Shortcuts"), "app.show-shortcuts")
+	item (_("About Rencher"), "app.show-about")
 }

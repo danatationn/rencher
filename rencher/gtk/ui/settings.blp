@@ -56,16 +56,5 @@ template $RencherSettings : Adw.PreferencesDialog {
 				title: _("Contained Game Saves");
 			}
 		}
-		
-		Adw.PreferencesGroup {
-			Button {
-				styles ["pill"]
-			
-				halign: center;
-				label: _("About Rencher");
-				
-				clicked => $on_about_clicked();
-			}
-		}
 	}
 }

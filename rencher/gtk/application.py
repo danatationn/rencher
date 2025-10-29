@@ -1,12 +1,12 @@
 import logging
 import os
-import sys
 import threading
 
 import gi
 import requests
 
 import rencher
+from rencher import tmp_path
 from rencher.renpy.config import RencherConfig
 
 gi.require_version('Gtk', '4.0')
@@ -24,11 +24,12 @@ class RencherApplication(Gtk.Application):
     window: RencherWindow = None
     file_monitor: RencherFileMonitor = None
 
+
     def __init__(self, *args, **kwargs):
         super().__init__(
             *args, **kwargs,
             application_id='com.github.danatationn.rencher',
-            flags=Gio.ApplicationFlags.HANDLES_COMMAND_LINE,
+            flags=Gio.ApplicationFlags.HANDLES_COMMAND_LINE | Gio.ApplicationFlags.NON_UNIQUE,
         )
 
         self.add_main_option('verbose', ord('v'), GLib.OptionFlags.NONE, GLib.OptionArg.NONE, 'Enable verbose output')
@@ -54,7 +55,23 @@ class RencherApplication(Gtk.Application):
         watchdog_logger.propagate = False
         urllib3_logger = logging.getLogger('urllib3')
         urllib3_logger.setLevel(logging.WARNING)
-        
+
+        actions = [
+            ['show-import', self.on_show_import, ['<Primary>plus']],
+            ['show-preferences', self.on_show_preferences, ['<Primary>comma']],
+            ['show-shortcuts', self.on_show_shortcuts, ['<Primary>question']],
+            ['show-about', self.on_show_about, []],
+            ['quit', self.on_quit, ['<Primary>q', '<Primary>w']],
+        ]
+
+        for name, callback, accels in actions:
+            simple_action = Gio.SimpleAction.new(name, None)
+            simple_action.connect('activate', callback)
+            self.add_action(simple_action)
+            if accels:
+                self.set_accels_for_action(f'app.{name}', accels)
+            else:
+                print(name)
 
     def do_command_line(self, command_line):
         options = command_line.get_options_dict()
@@ -81,7 +98,50 @@ class RencherApplication(Gtk.Application):
 
         if self.config['settings']['suppress_updates'] != 'true':
             version_thread = threading.Thread(target=self.check_version)
-            version_thread.run()
+            version_thread.start()
+
+    def on_show_import(self, *_):
+        self.window.on_import_clicked()
+
+    def on_show_preferences(self, *_):
+        self.window.settings_dialog.on_show()
+        self.window.settings_dialog.present(self.window)
+
+    def on_show_shortcuts(self, *_):
+        ui_file = os.path.join(tmp_path, 'rencher/gtk/ui/shortcuts.ui')
+        builder = Gtk.Builder.new_from_file(ui_file)
+        dialog = builder.get_object('RencherShortcuts')
+        dialog.present(self.window)
+
+    def on_quit(self, *_):
+        self.quit()
+
+    def on_show_about(self, *_):
+        dialog = Adw.AboutDialog(
+            application_icon='rencher-icon',
+            application_name='Rencher',
+            developer_name='danatationn',
+            version=rencher.__version__,
+            comments=rencher.__description__,
+            website=rencher.__url__,
+            issue_url=rencher.__issue_url__,
+            support_url=rencher.__issue_url__,
+            copyright=rencher.__copyright__,
+            license_type=Gtk.License.GPL_3_0_ONLY,
+            developers=['danatationn'],
+            designers=['danatationn', 'vl1'],
+        )
+        dialog.add_acknowledgement_section('Credits', [
+            'vl1 (for the logo)',
+            'All my friends :)',
+        ])
+        dialog.set_release_notes("""<ul>
+            <li> Added this button :) </li>
+            <li> Fixed a bug with path finding </li>
+            <li> Made save files not copy when importing mods </li>
+        </ul>""")
+
+        dialog.present(self.window)
 
     def pause_monitor(self, rpath: str) -> None:
         if rpath not in self.file_monitor.pause_rpaths:

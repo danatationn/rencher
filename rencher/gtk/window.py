@@ -122,17 +122,12 @@ class RencherWindow(Adw.ApplicationWindow):
                 row.set_title(game_item.game.get_name())
 
     @Gtk.Template.Callback()
-    def on_import_clicked(self, _widget: Adw.ButtonRow) -> None:  # type: ignore
+    def on_import_clicked(self, *_) -> None:  # type: ignore
         if not self.import_dialog.thread.is_alive():
             self.import_dialog.force_close()
             self.import_dialog = RencherImport(self)
 
         self.import_dialog.present(self)
-
-    @Gtk.Template.Callback()
-    def on_settings_clicked(self, _widget: Gtk.Button) -> None:
-        self.settings_dialog.present(self)
-        self.settings_dialog.on_show()
 
     @Gtk.Template.Callback()
     def on_play_clicked(self, _widget: Gtk.Button) -> None:

@@ -13,5 +13,6 @@
     <file preprocess="xml-stripblanks">file-cabinet-symbolic.svg</file>
     <file preprocess="xml-stripblanks">library-symbolic.svg</file>
     <file preprocess="xml-stripblanks">document-edit-symbolic.svg</file>
+    <file preprocess="xml-stripblanks">menu-large-symbolic.svg</file>
   </gresource>
 </gresources>

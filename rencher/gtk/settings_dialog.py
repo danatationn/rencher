@@ -170,31 +170,3 @@ class RencherSettings(Adw.PreferencesDialog):
         thread = threading.Thread(target=nuke_thread)
         thread.start()
         self.close()
-
-    @Gtk.Template.Callback()
-    def on_about_clicked(self, _widget: Gtk.Button):
-        dialog = Adw.AboutDialog(
-            application_icon='rencher-icon',
-            application_name='Rencher',
-            developer_name='danatationn',
-            version=rencher.__version__,
-            comments=rencher.__description__,
-            website=rencher.__url__,
-            issue_url=rencher.__issue_url__,
-            support_url=rencher.__issue_url__,
-            copyright=rencher.__copyright__,
-            license_type=Gtk.License.GPL_3_0_ONLY,
-            developers=['danatationn'],
-            designers=['danatationn', 'vl1'],
-        )
-        dialog.add_acknowledgement_section('Credits', [
-            'vl1 (for the logo)',
-            'All my friends :)',
-        ])
-        dialog.set_release_notes("""<ul>
-            <li> Added this button :) </li>
-            <li> Fixed a bug with path finding </li>
-            <li> Made save files not copy when importing mods </li>
-        </ul>""")
-
-        dialog.present(self)
