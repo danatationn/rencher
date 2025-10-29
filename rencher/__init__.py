@@ -7,10 +7,13 @@ __copyright__ = '© 2025 danatationn'
 import glob
 import os.path
 import platform
+import shutil
 import subprocess
 import sys
 import traceback
+from types import TracebackType
 
+import tendo
 from tendo import singleton
 
 from rencher.gtk import compile_data
@@ -41,22 +44,41 @@ class ImportCorruptArchiveError(Exception):
 class ImportCancelError(Exception):
     pass
 
-def handle_global_exception(exc_type, exc_value, exc_traceback):
+def handle_global_exception(exc_type: type[BaseException], exc_value: BaseException, exc_traceback: TracebackType):
     if issubclass(exc_type, KeyboardInterrupt):
         sys.__excepthook__(exc_type, exc_value, exc_traceback)
-        return 
+        return
+
     # if issubclass(exc_type, InvalidGameError):
     #     return
-    
+    if issubclass(exc_type, tendo.singleton.SingleInstanceException):
+        show_err_dialog("There's already an instance of Rencher running!\n"
+                        "Close that one first!")
+        return
+
     err_message = ''.join(traceback.format_exception(exc_type, exc_value, exc_traceback))
     print(err_message, file=sys.stderr)
-    
+    show_err_dialog('Oops! Rencher has crashed!\n'
+                    'Please send this error to the developer, along with a description on what you were doing.\n\n'
+                    + err_message)
+
     sys.exit(1)
 
+def show_err_dialog(text: str) -> None:
+    if platform.system() != 'Linux':
+        return
+
+    zenity_path = shutil.which('zenity')
+    kdialog_path = shutil.which('kdialog')
+    if zenity_path:
+        subprocess.run([zenity_path, '--title=Rencher', '--error', '--no-markup', '--no-wrap', '--text', text])
+    elif kdialog_path:
+        subprocess.run([kdialog_path, '--title=Rencher', '--error', text])
+
 def launch() -> None:
+    sys.excepthook = handle_global_exception
     _ = singleton.SingleInstance()
 
-    sys.excepthook = handle_global_exception
     compile_data()
 
     if getattr(sys, 'frozen', False):
