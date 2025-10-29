@@ -308,6 +308,11 @@ class RencherImport(Adw.PreferencesDialog):
                     pass
             game.config.write()
 
+            self.window.library.add_game(rpath)
+            game_item = self.window.library.get_game(rpath)
+            row = self.window.rows[game_item]
+            self.window.library_list_box.select_row(row)
+
             logging.info(f'Importing done in {time.perf_counter() - start:.2f}s')
             if RencherConfig()['settings']['delete_on_import'] == 'true':
                 try:

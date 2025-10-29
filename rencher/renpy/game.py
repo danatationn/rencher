@@ -1,12 +1,11 @@
-import ast
 import glob
 import logging
 import os
 import platform
+import re
 import shutil
 import subprocess
 import time
-import re
 
 from rencher import GameInvalidError, GameNoExecutableError
 from rencher.renpy.config import GameConfig
@@ -150,6 +149,7 @@ class Game:
             version += '.' + commit
         return version
 
+    @property
     def run(self) -> subprocess.Popen:
         """
             launches the game with the specified options
@@ -180,10 +180,10 @@ class Game:
         if self.config['overwritten']['forced_save_dir'] == 'true':
             save_dir = os.path.join(self.apath, 'game/saves')
 
-            save_slot = self.config['options'].getint('save_slot')
-            if 1 < save_slot <= 10:
-                save_dir = os.path.join(save_dir, str(save_slot))
-                logging.debug(save_dir)
+            # save_slot = self.config['options'].getint('save_slot')
+            # if 1 < save_slot <= 10:
+            #     save_dir = os.path.join(save_dir, str(save_slot))
+            #     logging.debug(save_dir)
 
             args.extend(['--savedir', save_dir])
 

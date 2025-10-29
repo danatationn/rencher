@@ -36,6 +36,7 @@ class RencherWindow(Adw.ApplicationWindow):
     ascending_order: bool = False
     pause_monitoring: str = None
     current_game: GameItem = None
+    rows: dict[GameItem, Adw.ActionRow] = {}
 
     """ classes """
     application: 'RencherApplication'
@@ -47,6 +48,7 @@ class RencherWindow(Adw.ApplicationWindow):
 
     """ templates """
     toast_overlay: Adw.ToastOverlay = Gtk.Template.Child()
+    window_progress_bar: Gtk.ProgressBar = Gtk.Template.Child()
     split_view: Adw.OverlaySplitView = Gtk.Template.Child()
     library_list_box: Gtk.ListBox = Gtk.Template.Child()
     selected_status_page: Adw.ViewStackPage = Gtk.Template.Child()
@@ -86,9 +88,10 @@ class RencherWindow(Adw.ApplicationWindow):
         GLib.timeout_add(250, self.check_process)
 
     def on_game_added(self, _, game_item: GameItem):
-        button = Adw.ButtonRow(title=game_item.name)  # type: ignore
-        button.game = game_item.game
-        self.library_list_box.append(button)
+        row = Adw.ButtonRow(title=game_item.name)  # type: ignore
+        row.game = game_item.game
+        self.library_list_box.append(row)
+        self.rows[game_item] = row
         if self.library_list_box.get_selected_row():
             self.library_view_stack.set_visible_child_name('selected')
         else:
@@ -96,11 +99,13 @@ class RencherWindow(Adw.ApplicationWindow):
         self.split_view.set_show_sidebar(True)
 
     def on_game_removed(self, _, game_item: GameItem):
-        for row in list(self.library_list_box):  # type: ignore
+        if game_item in self.rows:
+            row = self.rows[game_item]
             if getattr(row, 'game', None) == game_item.game:
                 self.library_list_box.remove(row)
+                del self.rows[game_item]
 
-        if len(list(self.library_list_box)) == 0:
+        if len(self.rows) == 0:
             self.library_view_stack.set_visible_child_name('empty')
             self.split_view.set_show_sidebar(False)
 
@@ -109,12 +114,12 @@ class RencherWindow(Adw.ApplicationWindow):
             return
         if self.current_game.rpath == game_item.rpath:
             self.current_game.refresh()
-        
-        for row in self.library_list_box:  # type: ignore
+
+        if game_item in self.rows:
+            row = self.rows[game_item]
             if getattr(row, 'game', None) == game_item.game:
                 logging.debug(f'Changing row name {row.get_title()} -> {game_item.game.get_name()}')
                 row.set_title(game_item.game.get_name())
-                break
 
     @Gtk.Template.Callback()
     def on_import_clicked(self, _widget: Adw.ButtonRow) -> None:  # type: ignore
@@ -134,11 +139,13 @@ class RencherWindow(Adw.ApplicationWindow):
         selected_button_row = self.library_list_box.get_selected_row()
         game = getattr(selected_button_row, 'game', None)
         if isinstance(game, Game) and not game.is_launchable:
-            # duct tape fix
+            alert = Adw.AlertDialog(heading='Error', body='This game has no valid executables!')
+            alert.add_response('ok', 'OK')
+            alert.choose(self)
             return
 
         if _widget.get_style_context().has_class('suggested-action'):
-            self.game_process = game.run()
+            self.game_process = game.run
             self.process_time = time.time()
             self.check_process()  # so the button changes instantly
             self.process_row = selected_button_row

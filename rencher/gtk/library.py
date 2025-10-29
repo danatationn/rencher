@@ -51,9 +51,15 @@ class RencherLibrary(GObject.Object):
     def remove_game(self, rpath: str) -> None:
         game_item = self.game_items.pop(rpath, None)
         self.emit('game-removed', game_item)
-        logging.debug(f'-{game_item.name}')
+        if game_item:
+            logging.debug(f'-{game_item.name}')
             
     def change_game(self, rpath: str) -> None:
         if rpath in self.game_items:
             self.emit('game-changed', self.game_items[rpath])
             logging.debug(f'~{self.game_items[rpath].name}')
+
+    def get_game(self, rpath: str) -> GameItem | None:
+        if rpath in self.game_items:
+            return self.game_items[rpath]
+        return None

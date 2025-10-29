@@ -1,3 +1,5 @@
+import glob
+import logging
 import os
 import shutil
 import threading
@@ -14,8 +16,8 @@ from rencher.renpy.paths import get_py_files
 if TYPE_CHECKING:
     from rencher.gtk.window import RencherWindow
 
-filename = os.path.join(tmp_path, 'rencher/gtk/ui/options.ui')
-@Gtk.Template(filename=str(filename))
+ui_path = os.path.join(tmp_path, 'rencher/gtk/ui/options.ui')
+@Gtk.Template(filename=str(ui_path))
 class RencherOptions(Adw.PreferencesDialog):
     __gtype_name__ = 'RencherOptions'
 
@@ -180,22 +182,59 @@ class RencherOptions(Adw.PreferencesDialog):
         dialog.connect('response', self.on_delete_game_response)
 
     def on_delete_game_response(self, _, response: str):
-        if response == 'ok':
-            # some safety measures
-            def delete_thread():
-                self.window.application.pause_monitor(self.game.rpath)
-                toast = Adw.Toast(title=f'"{self.game.name}" succesfully deleted', timeout=5)
+        if response != 'ok':
+            return
 
-                try:
-                    shutil.rmtree(self.game.rpath)
-                except FileNotFoundError:
-                    toast.set_title('The deletion has failed')
-                finally:
-                    GLib.idle_add(lambda: (
-                        self.window.application.resume_monitor(self.game.rpath),
-                        self.window.toast_overlay.add_toast(toast),
-                        self.close(),
-                    ))
+        def delete_thread():
+            self.window.application.pause_monitor(self.game.rpath)
+            self.window.window_progress_bar.set_visible(True)
+            toast = Adw.Toast(title=f'"{self.game.name}" has been deleted', timeout=5)
+            total_work = 0
+            completed = 0
 
-            thread = threading.Thread(target=delete_thread)
-            thread.start()
+            for _, dirs, files in os.walk(self.game.rpath):
+                for _ in dirs:
+                    total_work += 1
+                for _ in files:
+                    total_work += 1
+
+            for root, dirs, files in os.walk(self.game.rpath, topdown=False):
+                for filename in files:
+                    file = os.path.join(root, filename)
+                    try:
+                        os.unlink(file)
+                    except PermissionError:
+                        pass
+                    except FileNotFoundError:
+                        pass
+                    completed += 1
+                    GLib.idle_add(lambda c=completed: self.window.window_progress_bar.set_fraction(c / total_work))
+
+                for dirname in dirs:
+                    dir = os.path.join(root, dirname)
+                    try:
+                        os.rmdir(dir)
+                    except PermissionError:
+                        pass
+                    except FileNotFoundError:
+                        pass
+                    completed += 1
+                    GLib.idle_add(lambda c=completed: self.window.window_progress_bar.set_fraction(c / total_work))
+
+            try:
+                os.rmdir(self.game.rpath)
+            except PermissionError:
+                pass
+            except FileNotFoundError:
+                pass
+
+            GLib.idle_add(lambda: (
+                self.window.library.remove_game(self.game.rpath),
+                self.window.application.resume_monitor(self.game.rpath),
+                self.window.window_progress_bar.set_visible(False),
+                self.window.toast_overlay.add_toast(toast),
+            ))
+
+        thread = threading.Thread(target=delete_thread)
+        thread.start()
+        self.close()

@@ -91,7 +91,7 @@ class GameItem(GObject.Object):
                     setattr(self, prop, value)
                 else:
                     setattr(self, prop, 'N/A')
-            except Exception as e:
+            except Exception:
                 setattr(self, prop, 'N/A')
         
     @property

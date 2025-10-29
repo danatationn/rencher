@@ -110,28 +110,66 @@ class RencherSettings(Adw.PreferencesDialog):
         dialog.choose(self)
 
     def nuke_games(self, _, response: str):
-        if response == 'ok':
-            # oh boy
-            data_dir = Path(self.settings_data_dir.get_text())
-            games_dir = data_dir / 'games'
+        if response != 'ok':
+            return
+        data_dir = Path(self.settings_data_dir.get_text())
+        games_dir = data_dir / 'games'
 
-            def nuke_thread():
-                toast = Adw.Toast(title='All games have been successfully deleted', timeout=5)
-                self.window.application.pause_monitor('*')
+        def nuke_thread():
+            self.window.application.pause_monitor('*')
+            self.window.window_progress_bar.set_visible(True)
+            toast = Adw.Toast(title='All games have been successfully deleted', timeout=5)
+            total_work = 0
+            completed = 0
+            rpaths: list[str] = []
 
-                try:
-                    shutil.rmtree(games_dir)
-                except FileNotFoundError:
-                    toast.set_title('The deletion has failed')
-                finally:
-                    GLib.idle_add(lambda: (
-                        self.window.application.resume_monitor('*'),
-                        self.window.toast_overlay.add_toast(toast),
-                        self.close(),
-                    ))
+            for _, dirs, files in os.walk(games_dir):
+                for _ in dirs:
+                    total_work += 1
+                for _ in files:
+                    total_work += 1
 
-            thread = threading.Thread(target=nuke_thread)
-            thread.start()
+            for _, dirs, _ in os.walk(games_dir):
+                for dir in dirs:
+                    path = os.path.join(games_dir, dir)
+                    rpaths.append(path)
+                break
+
+            for root, dirs, files in os.walk(games_dir, topdown=False):
+                for filename in files:
+                    file = os.path.join(root, filename)
+                    try:
+                        os.unlink(file)
+                    except PermissionError:
+                        pass
+                    except FileNotFoundError:
+                        pass
+                    completed += 1
+                    GLib.idle_add(lambda c=completed: self.window.window_progress_bar.set_fraction(c / total_work))
+
+                for dirname in dirs:
+                    dir = os.path.join(root, dirname)
+                    try:
+                        os.rmdir(dir)
+                    except PermissionError:
+                        pass
+                    except FileNotFoundError:
+                        pass
+                    completed += 1
+                    GLib.idle_add(lambda c=completed: self.window.window_progress_bar.set_fraction(c / total_work))
+
+                if root in rpaths:
+                    GLib.idle_add(lambda r=root: self.window.library.remove_game(r))
+
+            GLib.idle_add(lambda: (
+                self.window.application.resume_monitor('*'),
+                self.window.window_progress_bar.set_visible(False),
+                self.window.toast_overlay.add_toast(toast),
+            ))
+
+        thread = threading.Thread(target=nuke_thread)
+        thread.start()
+        self.close()
 
     @Gtk.Template.Callback()
     def on_about_clicked(self, _widget: Gtk.Button):

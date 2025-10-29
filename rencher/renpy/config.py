@@ -1,10 +1,12 @@
 import os.path
 from configparser import ConfigParser
+from pathlib import Path
 
 from rencher import config_path, local_path
 
 
 class GameConfig(ConfigParser):
+    game_config_path: Path
     structure = {
         'info': {
             'nickname': '',
@@ -28,9 +30,9 @@ class GameConfig(ConfigParser):
         },
     }
 
-    def __init__(self, game_config_path: str):
+    def __init__(self, game_config_path: Path | str):
         super().__init__()
-        self.game_config_path = game_config_path
+        self.game_config_path = Path(game_config_path)
         self.read(game_config_path)
 
     def read(self, filenames=None, encoding=None):
@@ -75,12 +77,13 @@ class GameConfig(ConfigParser):
             for key, values in self[section].items():
                 new_config[section][key] = values
 
-        game_config_dir = os.path.dirname(self.game_config_path)
-        os.makedirs(game_config_dir, exist_ok=True)
+        game_config_dir = self.game_config_path.parent
+        game_config_dir.mkdir(parents=True, exist_ok=True)
         open(self.game_config_path, 'a').close()
         if not fp:
             fp = open(self.game_config_path, 'w')
         new_config.write(fp, space_around_delimiters)
+        fp.close()
 
     def get_value(self, key: str, overwritten: bool = None) -> str | float | bool | None:
         if key in self['info']:
@@ -141,8 +144,8 @@ class RencherConfig(ConfigParser):
             self.write()
 
     def write(self, fp=None, space_around_delimiters=True):
-        config_dir = os.path.dirname(config_path)
-        os.makedirs(config_dir, exist_ok=True)
+        config_dir = Path(config_path).parent
+        config_dir.mkdir(parents=True, exist_ok=True)
 
         open(config_path, 'a').close()
         if not fp:
