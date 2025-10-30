@@ -1,7 +1,6 @@
 import glob
 import logging
 import os
-import shutil
 import threading
 from configparser import ConfigParser
 from typing import TYPE_CHECKING
@@ -9,7 +8,7 @@ from typing import TYPE_CHECKING
 from gi.repository import Adw, GLib, Gtk
 
 from rencher import config_path, tmp_path
-from rencher.gtk import open_file_manager
+from rencher.gtk.utils import open_file_manager
 from rencher.renpy.game import Game
 from rencher.renpy.paths import get_py_files
 

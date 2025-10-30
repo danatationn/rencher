@@ -6,7 +6,7 @@ template $RencherSettings : Adw.PreferencesDialog {
 	
 	Adw.PreferencesPage {
 		Adw.PreferencesGroup {
-			title: _("App Settings");
+			title: _("Data Preferences");
 
 			Adw.EntryRow settings_data_dir {
 				title: _("Data Directory");
@@ -20,25 +20,38 @@ template $RencherSettings : Adw.PreferencesDialog {
 					clicked => $on_picker_clicked();
 				}
 			}
-			Adw.SwitchRow settings_updates {
-				title: _("Supress Update Notifications");
-			}
-			Adw.SwitchRow settings_delete_import {
-				title: _("Delete Files On Import");
-			}
-			Adw.ButtonRow {
-				title: _("Check for Updates");
-				activated => $on_check_updates();
-			}
 			Adw.ButtonRow {
 				title: _("Reset Data Directory");
 				activated => $on_reset_data_dir();
 			}
 			Adw.ButtonRow {
 				styles ["destructive-action"]
-			
+
 				title: _("Delete All Games");
-				activated => $on_delete_games();				
+				activated => $on_delete_games();
+			}
+		}
+		Adw.PreferencesGroup {
+			title: _("Online Features");
+			Adw.SwitchRow settings_download_binaries {
+				visible: false; // #soon
+				title: _("Download Missing Ren'py Binaries");
+			}
+			Adw.SwitchRow settings_updates {
+				title: _("Supress Update Notifications");
+			}
+			Adw.ButtonRow {
+				title: _("Check for Updates");
+				activated => $on_check_updates();
+			}
+		}
+		Adw.PreferencesGroup {
+			title: _("Import Preferences");
+			Adw.SwitchRow settings_windowficate {
+				title: _("Restrict Filenames");
+			}
+			Adw.SwitchRow settings_delete_import {
+				title: _("Delete Files On Import");
 			}
 		}
 		

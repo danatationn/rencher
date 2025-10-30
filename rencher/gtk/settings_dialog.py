@@ -1,13 +1,11 @@
-import logging
 import os.path
-import shutil
+import platform
 import threading
 from pathlib import Path
 from typing import TYPE_CHECKING
 
 from gi.repository import Adw, GLib, Gtk
 
-import rencher
 from rencher import local_path, tmp_path
 from rencher.renpy.config import RencherConfig
 
@@ -28,6 +26,7 @@ class RencherSettings(Adw.PreferencesDialog):
     settings_skip_splash_scr: Adw.SwitchRow = Gtk.Template.Child()
     settings_skip_main_menu: Adw.SwitchRow = Gtk.Template.Child()
     settings_forced_save_dir: Adw.SwitchRow = Gtk.Template.Child()
+    settings_windowficate: Adw.SwitchRow = Gtk.Template.Child()
 
     def __init__(self, window, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -39,7 +38,11 @@ class RencherSettings(Adw.PreferencesDialog):
             [self.settings_skip_splash_scr, 'skip_splash_scr'],
             [self.settings_skip_main_menu, 'skip_main_menu'],
             [self.settings_forced_save_dir, 'forced_save_dir'],
+            [self.settings_windowficate, 'windowficate_filenames'],
         ]
+
+        if platform.system() == 'Windows':
+            self.settings_windowficate.set_visible(False)  # force it on
 
     def on_show(self):
         self.config = RencherConfig()

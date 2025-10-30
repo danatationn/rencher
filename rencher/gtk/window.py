@@ -9,13 +9,13 @@ from gi.repository import Adw, GLib, Gtk
 from thefuzz.fuzz import partial_token_sort_ratio
 
 from rencher import tmp_path
-from rencher.gtk import open_file_manager
 from rencher.gtk.codename_dialog import RencherCodename
 from rencher.gtk.game_item import GameItem
 from rencher.gtk.import_dialog import RencherImport
 from rencher.gtk.library import RencherLibrary
 from rencher.gtk.options_dialog import RencherOptions
 from rencher.gtk.settings_dialog import RencherSettings
+from rencher.gtk.utils import open_file_manager
 from rencher.renpy.game import Game
 
 if TYPE_CHECKING:

@@ -70,8 +70,6 @@ class RencherApplication(Gtk.Application):
             self.add_action(simple_action)
             if accels:
                 self.set_accels_for_action(f'app.{name}', accels)
-            else:
-                print(name)
 
     def do_command_line(self, command_line):
         options = command_line.get_options_dict()

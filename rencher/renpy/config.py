@@ -129,6 +129,7 @@ class RencherConfig(ConfigParser):
                 'skip_splash_scr': 'false',
                 'skip_main_menu': 'false',
                 'forced_save_dir': 'false',
+                'windowficate_filenames': 'true',
             },
         }
 

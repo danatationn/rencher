@@ -16,7 +16,7 @@ from types import TracebackType
 import tendo
 from tendo import singleton
 
-from rencher.gtk import compile_data
+from rencher.gtk.utils import compile_data
 
 local_path: str = ''
 config_path: str = ''

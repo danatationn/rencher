@@ -14,6 +14,7 @@ from gi.repository import Adw, Gio, GLib, Gtk
 
 from rencher import ImportCancelError, ImportCorruptArchiveError, ImportInvalidError, tmp_path
 from rencher.gtk.game_item import GameItem
+from rencher.gtk.utils import windowficate_path
 from rencher.renpy.config import RencherConfig
 from rencher.renpy.game import Game
 from rencher.renpy.paths import get_absolute_path, get_py_files, get_rpa_files, get_rpa_path, validate_game_files
@@ -200,10 +201,11 @@ class RencherImport(Adw.PreferencesDialog):
         count = 2
         start = time.perf_counter()
         rpath = None
+        config = RencherConfig()
         while rpath is None or not os.path.exists(rpath):
             if time.perf_counter() - start > 1:
                 # this will never happen unless you're a freak
-                raise TimeoutError('shit took too long. sorry !')
+                raise TimeoutError()
             
             possible_paths = [
                 os.path.join(game_dir, name),
@@ -212,9 +214,13 @@ class RencherImport(Adw.PreferencesDialog):
                 os.path.join(game_dir, f'{location_stem} ({count})'),
             ]
             for path in possible_paths:
-                if not os.path.exists(path):
-                    os.makedirs(path, exist_ok=True)
-                    rpath = path
+                if config.get('settings', 'windowficate_filenames', fallback=None) == 'true':
+                    new_path = windowficate_path(path)
+                else:
+                    new_path = path
+                if not os.path.exists(new_path):
+                    os.makedirs(new_path, exist_ok=True)
+                    rpath = new_path
                     break
             
             count += 1
