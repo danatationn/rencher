@@ -17,6 +17,7 @@ template $RencherWindow : Adw.ApplicationWindow {
 				clicked => $on_import_clicked();
 				tooltip-text: _("Import");
 		    }
+		    [start]
 		    ToggleButton library_search_button {
 		        icon-name: "loupe-large-symbolic";
 		        sensitive: bind split_view.show-sidebar;
@@ -24,19 +25,22 @@ template $RencherWindow : Adw.ApplicationWindow {
 		    }
 
 			[end]
-		    //Button {
-			//	icon-name: "cogged-wheel-symbolic";
-			//	clicked => $on_settings_clicked();
-		    //}
 		    MenuButton {
 		        icon-name: "menu-large-symbolic";
 		        menu-model: hamburger_menu;
 		    }
+		    [end]
+			MenuButton pie_progress_button {
+				styles ["flat"]
+				icon-name: "test-pass-symbolic";
+			}
 	    }
 
 		content: Overlay window_overlay {
 			Adw.ToastOverlay toast_overlay {
 				child: Adw.OverlaySplitView split_view {
+					show-sidebar: false;
+
 					sidebar: Box {
 						Box {
 							styles ["view"]

@@ -1,0 +1,35 @@
+using Gtk 4.0;
+//using Adw 1;
+
+template $RencherTasksRow: ListBoxRow {
+	Box {
+		orientation: horizontal;
+
+		margin-top: 6;
+		margin-start: 6;
+		margin-end: 6;
+		margin-bottom: 6;
+
+		Box {
+			orientation: vertical;
+			Label label {
+				ellipsize: middle;
+				margin-bottom: 6;
+			}
+			ProgressBar progress_bar {
+				visible: true;
+				margin-start: 2;
+				margin-bottom: 6;
+			}
+			Label details {
+				styles ["dim-label"]
+				xalign: 0;
+			}
+		}
+		Button button {
+			vexpand: false;
+			styles ["flat", "circular"]
+			icon-name: "cross-large-circle-outline-symbolic";
+		}
+	}
+}

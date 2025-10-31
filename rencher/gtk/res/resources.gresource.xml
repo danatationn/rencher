@@ -14,5 +14,9 @@
     <file preprocess="xml-stripblanks">library-symbolic.svg</file>
     <file preprocess="xml-stripblanks">document-edit-symbolic.svg</file>
     <file preprocess="xml-stripblanks">menu-large-symbolic.svg</file>
+    <file preprocess="xml-stripblanks">test-pass-symbolic.svg</file>
+    <file preprocess="xml-stripblanks">box-dotted-symbolic.svg</file>
+    <file preprocess="xml-stripblanks">list-large-symbolic.svg</file>
+    <file preprocess="xml-stripblanks">cross-large-circle-outline-symbolic.svg</file>
   </gresource>
 </gresources>

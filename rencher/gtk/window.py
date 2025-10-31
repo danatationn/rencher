@@ -14,6 +14,7 @@ from rencher.gtk.game_item import GameItem
 from rencher.gtk.import_dialog import RencherImport
 from rencher.gtk.library import RencherLibrary
 from rencher.gtk.options_dialog import RencherOptions
+from rencher.gtk.tasks import PiePaintable, TasksClass, Task, RencherTasksPopover
 from rencher.gtk.settings_dialog import RencherSettings
 from rencher.gtk.utils import open_file_manager
 from rencher.renpy.game import Game
@@ -45,6 +46,8 @@ class RencherWindow(Adw.ApplicationWindow):
     options_dialog: RencherOptions
     codename_dialog: RencherCodename
     library: RencherLibrary
+    tasks_popover: RencherTasksPopover
+    tasks: TasksClass
 
     """ templates """
     toast_overlay: Adw.ToastOverlay = Gtk.Template.Child()
@@ -54,6 +57,7 @@ class RencherWindow(Adw.ApplicationWindow):
     selected_status_page: Adw.ViewStackPage = Gtk.Template.Child()
     library_view_stack: Adw.ViewStack = Gtk.Template.Child()
     play_button: Gtk.Button = Gtk.Template.Child()
+    pie_progress_button: Gtk.MenuButton = Gtk.Template.Child()
 
     last_played_row: Adw.ActionRow = Gtk.Template.Child()
     playtime_row: Adw.ActionRow = Gtk.Template.Child()
@@ -77,13 +81,20 @@ class RencherWindow(Adw.ApplicationWindow):
         self.codename_dialog = RencherCodename(self)
         self.library_list_box.set_sort_func(self.sort_func)
         self.library_list_box.set_filter_func(self.filter_func)
-        
-        self.split_view.set_show_sidebar(False)
 
         self.library.connect('game-added', self.on_game_added)
-        self.library.connect('game-removed', self.on_game_removed)
         self.library.connect('game-changed', self.on_game_changed)
+        self.library.connect('game-removed', self.on_game_removed)
         self.library.load_games()
+
+        self.pie = PiePaintable()
+        self.pie_image = Gtk.Image.new_from_paintable(self.pie)
+        self.tasks_popover = RencherTasksPopover(self)
+        self.pie_progress_button.set_popover(self.tasks_popover)
+        self.tasks = TasksClass(self)
+        self.tasks.connect('task-added', self.on_task_added)
+        self.tasks.connect('task-changed', self.on_task_changed)
+        self.tasks.connect('task-removed', self.on_task_removed)
 
         GLib.timeout_add(250, self.check_process)
 
@@ -121,11 +132,53 @@ class RencherWindow(Adw.ApplicationWindow):
                 logging.debug(f'Changing row name {row.get_title()} -> {game_item.game.get_name()}')
                 row.set_title(game_item.game.get_name())
 
+    def on_task_added(self, tasks: TasksClass, created_on: float):
+        task = tasks.get_task(created_on)
+        if not task:
+            logging.debug('task added but couldn\'t be found')
+            return
+
+        self.pie_progress_button.set_visible(True)
+        self.update_pie_paintable()
+        self.tasks_popover.add_row(created_on, task)
+
+    def on_task_changed(self, tasks: TasksClass, created_on: float):
+        task = tasks.get_task(created_on)
+        if not task:
+            logging.debug('task changed but couldn\'t be found')
+            return
+
+        self.update_pie_paintable()
+        self.tasks_popover.change_row(created_on, task)
+
+    def on_task_removed(self, tasks: TasksClass, created_on: float):
+        task = tasks.get_task(created_on)
+        if not task:
+            logging.debug('task couldn\'t be found')
+            return
+
+        self.update_pie_paintable()
+        self.tasks_popover.remove_row(created_on, task)
+
+    def update_pie_paintable(self):
+        progress = 0
+        max_progress = 0
+        for task in self.tasks.tasks:
+            progress += self.tasks.tasks[task]['progress']
+            max_progress += self.tasks.tasks[task]['max_progress']
+        if max_progress != 0:
+            self.pie_progress_button.set_child(self.pie_image)
+            self.pie.set_fraction(progress / max_progress)
+        elif progress >= max_progress:
+            self.pie_progress_button.set_icon_name('test-pass')
+        else:
+            self.pie_progress_button.set_icon_name('test-pass')
+
     @Gtk.Template.Callback()
     def on_import_clicked(self, *_) -> None:  # type: ignore
-        if not self.import_dialog.thread.is_alive():
-            self.import_dialog.force_close()
-            self.import_dialog = RencherImport(self)
+        # if not self.import_dialog.thread.is_alive():
+        self.import_dialog.force_close()
+        self.import_dialog = RencherImport(self)
 
         self.import_dialog.present(self)
 

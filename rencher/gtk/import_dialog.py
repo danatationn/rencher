@@ -14,6 +14,7 @@ from gi.repository import Adw, Gio, GLib, Gtk
 
 from rencher import ImportCancelError, ImportCorruptArchiveError, ImportInvalidError, tmp_path
 from rencher.gtk.game_item import GameItem
+from rencher.gtk.tasks import Task
 from rencher.gtk.utils import windowficate_path
 from rencher.renpy.config import RencherConfig
 from rencher.renpy.game import Game
@@ -63,7 +64,7 @@ class RencherImport(Adw.PreferencesDialog):
         string_list.append('Folder')
         self.import_type.set_model(string_list)
 
-        GLib.timeout_add(250, self.check_process)
+        # GLib.timeout_add(250, self.check_process)
 
     @Gtk.Template.Callback()
     def on_type_changed(self, *_):
@@ -139,27 +140,24 @@ class RencherImport(Adw.PreferencesDialog):
                 toast = Adw.Toast(title='Importing cancelled', timeout=5)
                 self.window.toast_overlay.add_toast(toast)
             finally:
-                GLib.idle_add(lambda: (
-                    self.import_progress_bar.set_visible(False),
-                    self.close(),
-                ))
+                GLib.idle_add(self.import_progress_bar.set_visible, False)
 
-        if not self.import_button.get_style_context().has_class('destructive-action'):
-            self.thread = threading.Thread(target=import_thread)
-            self.thread.start()
-        else:
-            self.cancel_flag.set()
-            self.thread.join()
-            self.close()
+        # if not self.import_button.get_style_context().has_class('destructive-action'):
+        self.close()
+        self.thread = threading.Thread(target=import_thread)
+        self.thread.start()
+        # else:
+        #     self.cancel_flag.set()
+        #     self.thread.join()
 
-    def check_process(self):
-        if self.thread.is_alive():
-            self.import_button.get_style_context().add_class('destructive-action')
-            self.import_button.set_title('Cancel')
-        else:
-            self.import_button.get_style_context().remove_class('destructive-action')
-            self.import_button.set_title('Import')
-        return True
+    # def check_process(self):
+    #     if self.thread.is_alive():
+    #         self.import_button.get_style_context().add_class('destructive-action')
+    #         self.import_button.set_title('Cancel')
+    #     else:
+    #         self.import_button.get_style_context().remove_class('destructive-action')
+    #         self.import_button.set_title('Import')
+    #     return True
 
     def import_game(self):
         name = self.import_title.get_text()
@@ -168,14 +166,14 @@ class RencherImport(Adw.PreferencesDialog):
         is_mod = self.import_mod_toggle.get_active()
         modded_game: GameItem = self.import_game_combo.get_selected_item()  # type: ignore
         archive: zipfile | rarfile = None  # type: ignore
-        
+
         data_dir = RencherConfig().get_data_dir()
         game_dir = os.path.join(data_dir, 'games')
         self.import_progress_bar.set_visible(True)
 
         if not os.path.exists(location):
-            return 
-        
+            return
+
         suffix = os.path.splitext(location)[1]
         if suffix in ['.zip', '.rar']:
             logging.debug(f'Archive detected ("{location})"')
@@ -188,16 +186,16 @@ class RencherImport(Adw.PreferencesDialog):
                 raise ImportCorruptArchiveError('The archive supplied is invalid!') from err
             else:
                 files = archive.namelist()
-    
+
         elif os.path.isdir(location):
             logging.debug(f'Folder detected ("{location}/")')
             files = glob.glob(f'{location}/**/*', recursive=True)
         else:
             return
-        
+
         if not is_mod and not validate_game_files(files):
             raise ImportInvalidError()
-    
+
         count = 2
         start = time.perf_counter()
         rpath = None
@@ -206,7 +204,7 @@ class RencherImport(Adw.PreferencesDialog):
             if time.perf_counter() - start > 1:
                 # this will never happen unless you're a freak
                 raise TimeoutError()
-            
+
             possible_paths = [
                 os.path.join(game_dir, name),
                 os.path.join(game_dir, location_stem),
@@ -222,22 +220,23 @@ class RencherImport(Adw.PreferencesDialog):
                     os.makedirs(new_path, exist_ok=True)
                     rpath = new_path
                     break
-            
+
             count += 1
-           
+
         if not self.cancel_flag.is_set():
             logging.info(f'Importing the game at "{rpath}/"')
         start = time.perf_counter()
         self.window.application.pause_monitor(rpath)
+        task_date = time.time()
 
         if is_mod:
             game_files = glob.glob(f'{modded_game.rpath}/**', recursive=True)
             total_work = len(files) + len(game_files)
-            mod_work = len(files)
         else:
             total_work = len(files)
-            mod_work = 0
-        
+
+        self.window.tasks.new_task(task_date, rpath, Task.IMPORT, self.cancel_flag, total_work)
+
         for i, path in enumerate(files):
             if self.cancel_flag.is_set():
                 break
@@ -253,7 +252,7 @@ class RencherImport(Adw.PreferencesDialog):
                     os.makedirs(os.path.dirname(target_path), exist_ok=True)
                     shutil.copy(path, target_path)
 
-            GLib.idle_add(self.import_progress_bar.set_fraction, i / total_work)
+            GLib.idle_add(self.window.tasks.update_task, task_date, i + 1)
             
         if is_mod:
             rpa_path = get_rpa_path(rpath)
@@ -296,7 +295,7 @@ class RencherImport(Adw.PreferencesDialog):
                     os.makedirs(os.path.dirname(target_path), exist_ok=True)
                     shutil.copy(path, target_path)
                     
-                GLib.idle_add(self.import_progress_bar.set_fraction, mod_work + i / total_work)
+                GLib.idle_add(self.window.tasks.update_task, task_date, i)
             
         if not self.cancel_flag.is_set():
             game = Game(rpath=rpath)
@@ -336,4 +335,4 @@ class RencherImport(Adw.PreferencesDialog):
             shutil.rmtree(rpath)
             logging.info(f'Importing cancelled. Total thread runtime: {time.perf_counter() - start:.2f}s')
             self.window.application.resume_monitor(rpath)
-            raise ImportCancelError()
+            # raise ImportCancelError()

@@ -58,6 +58,7 @@ class RencherApplication(Gtk.Application):
 
         actions = [
             ['show-import', self.on_show_import, ['<Primary>plus']],
+            # ['show-tasks', self.on_show_tasks, ['<Primary>b']],
             ['show-preferences', self.on_show_preferences, ['<Primary>comma']],
             ['show-shortcuts', self.on_show_shortcuts, ['<Primary>question']],
             ['show-about', self.on_show_about, []],
@@ -105,6 +106,9 @@ class RencherApplication(Gtk.Application):
         self.window.settings_dialog.on_show()
         self.window.settings_dialog.present(self.window)
 
+    # def on_show_tasks(self, *_):
+    #     self.window.pie_progress_button.activate()
+
     def on_show_shortcuts(self, *_):
         ui_file = os.path.join(tmp_path, 'rencher/gtk/ui/shortcuts.ui')
         builder = Gtk.Builder.new_from_file(ui_file)
@@ -129,10 +133,6 @@ class RencherApplication(Gtk.Application):
             developers=['danatationn'],
             designers=['danatationn', 'vl1'],
         )
-        dialog.add_acknowledgement_section('Credits', [
-            'vl1 (for the logo)',
-            'All my friends :)',
-        ])
         dialog.set_release_notes("""<ul>
             <li> Added this button :) </li>
             <li> Fixed a bug with path finding </li>
