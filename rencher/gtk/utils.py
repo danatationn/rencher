@@ -41,10 +41,15 @@ def compile_data() -> None:
     ui_dir = os.path.join(os.path.dirname(__file__), 'ui')
     
     blp_files = glob.glob(os.path.join(ui_dir, '*.blp'))
+    duct_tape_fix = [file for file in blp_files if 'shortcuts.blp' != os.path.basename(file)]
     args = ['python', blpc_path, 'batch-compile', ui_dir, ui_dir]
 
-    for file in blp_files:
-        args.extend([file])
+    if platform.system() == 'Windows':
+        for file in duct_tape_fix:
+            args.extend([file])
+    else:
+        for file in blp_files:
+            args.extend([file])
 
     print('Compiling .blp files...')
     subprocess.run(args)
