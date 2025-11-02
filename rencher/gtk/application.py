@@ -111,9 +111,18 @@ class RencherApplication(Gtk.Application):
 
     def on_show_shortcuts(self, *_):
         ui_file = os.path.join(tmp_path, 'rencher/gtk/ui/shortcuts.ui')
-        builder = Gtk.Builder.new_from_file(ui_file)
-        dialog = builder.get_object('RencherShortcuts')
-        dialog.present(self.window)
+        if os.path.isfile(ui_file):
+            builder = Gtk.Builder.new_from_file(ui_file)
+            dialog = builder.get_object('RencherShortcuts')
+            if isinstance(dialog, Adw.ShortcutsDialog):
+                dialog.present(self.window)
+        else:
+            ui_file = os.path.join(tmp_path, 'rencher/gtk/ui/shortcuts_deprecated.ui')
+            builder = Gtk.Builder.new_from_file(ui_file)
+            dialog = builder.get_object('RencherShortcuts')
+            if isinstance(dialog, Gtk.ShortcutsWindow):
+                dialog.set_transient_for(self.window)
+                dialog.show()
 
     def on_quit(self, *_):
         self.quit()

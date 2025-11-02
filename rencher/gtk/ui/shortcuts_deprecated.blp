@@ -1,0 +1,32 @@
+using Gtk 4.0;
+
+ShortcutsWindow RencherShortcuts {
+	modal: true;
+
+	ShortcutsSection {
+		ShortcutsGroup {
+			title: _("Application Shortcuts");
+
+			ShortcutsShortcut {
+				title: _("Import Games");
+				action-name: "app.show-import";
+				accelerator: "<Primary>plus";
+			}
+			ShortcutsShortcut {
+				title: _("Open Preferences");
+				action-name: "app.show-preferences";
+				accelerator: "<Primary>comma";
+			}
+			ShortcutsShortcut {
+				title: _("Open Shortcuts");
+				action-name: "app.show-shortcuts";
+				accelerator: "<Primary>question";
+			}
+			ShortcutsShortcut {
+				title: _("Quit Rencher");
+				action-name: "app.quit";
+				accelerator: "<Primary>q <Primary>w";
+			}
+		}
+	}
+}
