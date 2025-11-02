@@ -56,33 +56,33 @@ class GameItem(GObject.Object):
     def __init__(self, rpath: str = None, game: Game = None):
         super().__init__()
 
-        apath = get_absolute_path(rpath)
-        if game and rpath and game.apath != apath:
-            raise Exception('wtf')
-        
+        if not rpath and not game:
+            return
         if game and not rpath:
             rpath = game.rpath
         if rpath and not game:
             game = Game(rpath=rpath)
 
         self.game = game
+        self.refresh(self.game)
 
-    def refresh(self):
-        self.game.config.read()
+    def refresh(self, game: Game):
+        game.config.read()
         
         property_map = {
-            'name': self.game.get_name(),
-            'rpath': self.game.rpath,
-            'apath': self.game.apath,
-            'last_played': self.game.config.get_value('last_played'),
-            'added_on': self.game.config.get_value('added_on'),
-            'playtime': self.game.config.get_value('playtime'),
-            'version': self.game.get_renpy_version(),
-            'codename': self.game.get_codename(),
+            'name': (game.get_name, []),
+            'rpath': (lambda: game.rpath, []),
+            'apath': (lambda: game.apath, []),
+            'last_played': (game.config.get_value, ['last_played']),
+            'added_on': (game.config.get_value, ['added_on']),
+            'playtime': (game.config.get_value, ['playtime']),
+            'version': (game.get_renpy_version, []),
+            'codename': (game.get_codename, []),
         }
         
-        for prop, value in property_map.items():
+        for prop, (func, args) in property_map.items():
             try:
+                value = func(*args)
                 if prop in ['last_played', 'added_on']:
                     setattr(self, prop, format_date(value))
                 elif prop == 'playtime':
@@ -100,4 +100,4 @@ class GameItem(GObject.Object):
     @game.setter
     def game(self, value: Game):
         self._game = value
-        self.refresh()
+        self.refresh(value)

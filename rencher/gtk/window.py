@@ -15,7 +15,7 @@ from rencher.gtk.import_dialog import RencherImport
 from rencher.gtk.library import RencherLibrary
 from rencher.gtk.options_dialog import RencherOptions
 from rencher.gtk.settings_dialog import RencherSettings
-from rencher.gtk.tasks import PiePaintable, RencherTasksPopover
+from rencher.gtk.tasks import PiePaintable, TasksPopover
 from rencher.gtk.utils import open_file_manager
 from rencher.renpy.game import Game
 
@@ -36,7 +36,7 @@ class RencherWindow(Adw.ApplicationWindow):
     combo_index: int = 0
     ascending_order: bool = False
     pause_monitoring: str = None
-    current_game: GameItem = None
+    current_gameitem: GameItem = None
     rows: dict[GameItem, Adw.ActionRow] = {}
 
     """ classes """
@@ -46,7 +46,7 @@ class RencherWindow(Adw.ApplicationWindow):
     options_dialog: RencherOptions
     codename_dialog: RencherCodename
     library: RencherLibrary
-    tasks_popover: RencherTasksPopover
+    tasks_popover: TasksPopover
 
     """ templates """
     toast_overlay: Adw.ToastOverlay = Gtk.Template.Child()
@@ -56,6 +56,7 @@ class RencherWindow(Adw.ApplicationWindow):
     selected_status_page: Adw.ViewStackPage = Gtk.Template.Child()
     library_view_stack: Adw.ViewStack = Gtk.Template.Child()
     play_button: Gtk.Button = Gtk.Template.Child()
+    options_button: Gtk.Button = Gtk.Template.Child()
     pie_progress_button: Gtk.MenuButton = Gtk.Template.Child()
 
     last_played_row: Adw.ActionRow = Gtk.Template.Child()
@@ -86,14 +87,19 @@ class RencherWindow(Adw.ApplicationWindow):
         self.library_list_box.set_sort_func(self.sort_func)
         self.library_list_box.set_filter_func(self.filter_func)
 
+        self.current_gameitem = GameItem()
+        self.current_gameitem.bind_property('name', self.selected_status_page, 'title')
+        self.current_gameitem.bind_property('last_played', self.last_played_row, 'subtitle')
+        self.current_gameitem.bind_property('playtime', self.playtime_row, 'subtitle')
+        self.current_gameitem.bind_property('added_on', self.added_on_row, 'subtitle')
+        self.current_gameitem.bind_property('version', self.version_row, 'subtitle')
+        self.current_gameitem.bind_property('rpath', self.rpath_row, 'subtitle')
+        self.current_gameitem.bind_property('codename', self.codename_row, 'subtitle')
 
         self.pie = PiePaintable()
         self.pie_image = Gtk.Image.new_from_paintable(self.pie)
-        self.tasks_popover = RencherTasksPopover(self)
+        self.tasks_popover = TasksPopover(self)
         self.pie_progress_button.set_popover(self.tasks_popover)
-        # self.tasks_popover.connect('task-added', self.on_task_added)
-        # self.tasks_popover.connect('task-changed', self.on_task_changed)
-        # self.tasks_popover.connect('task-removed', self.on_task_removed)
 
         GLib.timeout_add(250, self.check_process)
 
@@ -120,10 +126,10 @@ class RencherWindow(Adw.ApplicationWindow):
             self.split_view.set_show_sidebar(False)
 
     def on_game_changed(self, _, game_item: GameItem):
-        if not self.current_game:
+        if not self.current_gameitem:
             return
-        if self.current_game.rpath == game_item.rpath:
-            self.current_game.refresh()
+        if self.current_gameitem.rpath == game_item.rpath:
+            self.current_gameitem.refresh(game_item.game)
 
         if game_item in self.rows:
             row = self.rows[game_item]
@@ -133,25 +139,17 @@ class RencherWindow(Adw.ApplicationWindow):
                 row.set_title(game_item.game.get_name())
 
     def update_pie_paintable(self):
-        progress = 0
-        max_progress = 0
-        for task in self.tasks_popover.tasks:
-            task_progress = self.tasks_popover.tasks[task]['progress']
-            task_max_progress = self.tasks_popover.tasks[task]['max_progress']
-            if task_progress != task_max_progress:
-                progress += task_progress
-                max_progress += task_max_progress
-        if max_progress != 0 and progress != max_progress:
+        fraction = self.tasks_popover.get_total_fraction()
+
+        if fraction < 1.0 and fraction != 0.0:
             self.pie_progress_button.set_child(self.pie_image)
-            self.pie.set_fraction(progress / max_progress)
-        elif progress >= max_progress:
-            self.pie_progress_button.set_icon_name('test-pass')
+            self.pie.set_fraction(fraction)
         else:
             self.pie_progress_button.set_icon_name('test-pass')
 
-
     @Gtk.Template.Callback()
     def on_import_clicked(self, *_) -> None:  # type: ignore
+        self.import_dialog.do_show()
         self.import_dialog.present(self)
 
     @Gtk.Template.Callback()
@@ -181,7 +179,7 @@ class RencherWindow(Adw.ApplicationWindow):
         selected_button_row = self.library_list_box.get_selected_rows()[0]
         project = getattr(selected_button_row, 'game', None)
         if project.apath:
-            open_file_manager(str(project.apath))
+            open_file_manager(project.apath)
 
     @Gtk.Template.Callback()
     def on_game_selected(self, _widget: Gtk.ListBox, row: Gtk.ListBoxRow) -> None:
@@ -192,19 +190,7 @@ class RencherWindow(Adw.ApplicationWindow):
         
         game = getattr(row, 'game', None)
         if isinstance(game, Game):
-            if self.current_game is None:
-                self.current_game = GameItem(game=game)
-                self.current_game.bind_property('name', self.selected_status_page, 'title')
-                self.current_game.bind_property('last_played', self.last_played_row, 'subtitle')
-                self.current_game.bind_property('playtime', self.playtime_row, 'subtitle')
-                self.current_game.bind_property('added_on', self.added_on_row, 'subtitle')
-                self.current_game.bind_property('version', self.version_row, 'subtitle')
-                self.current_game.bind_property('rpath', self.rpath_row, 'subtitle')
-                self.current_game.bind_property('codename', self.codename_row, 'subtitle')
-                self.current_game.refresh()
-            else:
-                self.current_game.game = game
-                self.current_game.refresh()
+            self.current_gameitem.refresh(game)
 
     @Gtk.Template.Callback()
     def on_search_changed(self, _widget: Gtk.SearchEntry):
@@ -234,6 +220,7 @@ class RencherWindow(Adw.ApplicationWindow):
             self.play_button.set_label('Play')
             self.play_button.get_style_context().remove_class('destructive-action')
             self.play_button.get_style_context().add_class('suggested-action')
+            self.options_button.set_sensitive(True)
             self.is_terminating = False
 
             if self.game_process is None:
@@ -257,6 +244,7 @@ class RencherWindow(Adw.ApplicationWindow):
                 self.play_button.set_label('Stop')
             self.play_button.get_style_context().remove_class('suggested-action')
             self.play_button.get_style_context().add_class('destructive-action')
+            self.options_button.set_sensitive(False)
         return True
 
     def filter_func(self, widget: Gtk.ListBoxRow) -> bool:

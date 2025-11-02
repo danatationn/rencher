@@ -1,13 +1,13 @@
-import glob
-import logging
 import os
 import threading
+import time
 from configparser import ConfigParser
 from typing import TYPE_CHECKING
 
 from gi.repository import Adw, GLib, Gtk
 
 from rencher import config_path, tmp_path
+from rencher.gtk.tasks import TaskTypeEnum
 from rencher.gtk.utils import open_file_manager
 from rencher.renpy.game import Game
 from rencher.renpy.paths import get_py_files
@@ -113,7 +113,7 @@ class RencherOptions(Adw.PreferencesDialog):
         def select():
             for row in self.window.library_list_box:  # type: ignore
                 if row.game.rpath == self.game.rpath:
-                    self.window.current_game.refresh()
+                    self.window.current_gameitem.refresh()
                     self.window.library_list_box.select_row(row)
                     break
                     
@@ -186,8 +186,8 @@ class RencherOptions(Adw.PreferencesDialog):
 
         def delete_thread():
             self.window.application.pause_monitor(self.game.rpath)
-            self.window.window_progress_bar.set_visible(True)
             toast = Adw.Toast(title=f'"{self.game.name}" has been deleted', timeout=5)
+            task_date = time.time()
             total_work = 0
             completed = 0
 
@@ -196,6 +196,8 @@ class RencherOptions(Adw.PreferencesDialog):
                     total_work += 1
                 for _ in files:
                     total_work += 1
+
+            self.window.tasks_popover.new_task(task_date, self.game.name, TaskTypeEnum.DELETE, None, total_work)
 
             for root, dirs, files in os.walk(self.game.rpath, topdown=False):
                 for filename in files:
@@ -207,7 +209,7 @@ class RencherOptions(Adw.PreferencesDialog):
                     except FileNotFoundError:
                         pass
                     completed += 1
-                    GLib.idle_add(lambda c=completed: self.window.window_progress_bar.set_fraction(c / total_work))
+                    GLib.idle_add(self.window.tasks_popover.update_task, task_date, completed)
 
                 for dirname in dirs:
                     dir = os.path.join(root, dirname)
@@ -218,7 +220,7 @@ class RencherOptions(Adw.PreferencesDialog):
                     except FileNotFoundError:
                         pass
                     completed += 1
-                    GLib.idle_add(lambda c=completed: self.window.window_progress_bar.set_fraction(c / total_work))
+                    GLib.idle_add(self.window.tasks_popover.update_task, task_date, completed)
 
             try:
                 os.rmdir(self.game.rpath)
@@ -230,7 +232,6 @@ class RencherOptions(Adw.PreferencesDialog):
             GLib.idle_add(lambda: (
                 self.window.library.remove_game(self.game.rpath),
                 self.window.application.resume_monitor(self.game.rpath),
-                self.window.window_progress_bar.set_visible(False),
                 self.window.toast_overlay.add_toast(toast),
             ))
 

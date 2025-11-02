@@ -14,7 +14,7 @@ from gi.repository import Adw, Gio, GLib, Gtk
 
 from rencher import tmp_path
 from rencher.gtk.game_item import GameItem
-from rencher.gtk.tasks import Task
+from rencher.gtk.tasks import TaskTypeEnum
 from rencher.gtk.utils import windowficate_path
 from rencher.renpy.config import RencherConfig
 from rencher.renpy.game import Game
@@ -49,9 +49,17 @@ class RencherImport(Adw.PreferencesDialog):
         super().__init__(*args, **kwargs)
 
         self.window = window
+        self.do_show()
+
+        string_list = Gtk.StringList()
+        string_list.append('Archive (.zip, .rar)')
+        string_list.append('Folder')
+        self.type_combo.set_model(string_list)
+
+    def do_show(self):
         list_store = Gio.ListStore.new(GameItem)
 
-        for _, game_item in window.library.game_items.items():
+        for _, game_item in self.window.library.game_items.items():
             if not game_item.game.is_mod:
                 list_store.append(game_item)
 
@@ -60,16 +68,11 @@ class RencherImport(Adw.PreferencesDialog):
             Gtk.PropertyExpression.new(GameItem, None, 'name'),
         )
 
-        string_list = Gtk.StringList()
-        string_list.append('Archive (.zip, .rar)')
-        string_list.append('Folder')
-        self.type_combo.set_model(string_list)
-
-    def do_closed(self):
         if self.has_imported:
             self.title_entry.set_text('')
             self.location_entry.set_text('')
             self.mod_switch.set_active(False)
+            self.has_imported = False
 
     @Gtk.Template.Callback()
     def on_type_changed(self, *_):
@@ -193,10 +196,10 @@ class RencherImport(Adw.PreferencesDialog):
                 return
 
             possible_paths = [
-                os.path.join(game_dir, name),
                 os.path.join(game_dir, location_stem),
-                os.path.join(game_dir, f'{name} ({count})'),
+                os.path.join(game_dir, name),
                 os.path.join(game_dir, f'{location_stem} ({count})'),
+                os.path.join(game_dir, f'{name} ({count})'),
             ]
             for path in possible_paths:
                 if config.get('settings', 'windowficate_filenames', fallback=None) == 'true':
@@ -214,7 +217,6 @@ class RencherImport(Adw.PreferencesDialog):
             logging.info(f'Importing the game at "{rpath}/"')
         start = time.perf_counter()
         self.window.application.pause_monitor(rpath)
-        task_date = time.time()
 
         if is_mod:
             game_files = glob.glob(f'{modded_game.rpath}/**', recursive=True)
@@ -222,7 +224,8 @@ class RencherImport(Adw.PreferencesDialog):
         else:
             total_work = len(files)
 
-        self.window.tasks_popover.new_task(task_date, rpath, Task.IMPORT, self.cancel_flag, total_work)
+        task_date = time.time()
+        self.window.tasks_popover.new_task(task_date, name, TaskTypeEnum.IMPORT, self.cancel_flag, total_work)
 
         for i, path in enumerate(files):
             if self.cancel_flag.is_set():
@@ -239,7 +242,7 @@ class RencherImport(Adw.PreferencesDialog):
                     os.makedirs(os.path.dirname(target_path), exist_ok=True)
                     shutil.copy(path, target_path)
 
-            GLib.idle_add(self.window.tasks_popover.update_task, task_date, i + 1)
+            GLib.idle_add(self.window.tasks_popover.update_task, task_date, i)
             
         if is_mod:
             rpa_path = get_rpa_path(rpath)
@@ -282,7 +285,7 @@ class RencherImport(Adw.PreferencesDialog):
                     os.makedirs(os.path.dirname(target_path), exist_ok=True)
                     shutil.copy(path, target_path)
                     
-                GLib.idle_add(self.window.tasks_popover.update_task, task_date, i)
+                GLib.idle_add(self.window.tasks_popover.update_task, task_date, len(files) + i)
             
         if not self.cancel_flag.is_set():
             game = Game(rpath=rpath)
@@ -301,9 +304,11 @@ class RencherImport(Adw.PreferencesDialog):
             game.config.write()
 
             self.window.library.add_game(rpath)
-            game_item = self.window.library.get_game(rpath)
-            row = self.window.rows[game_item]
-            self.window.library_list_box.select_row(row)
+            selected_row = self.window.library_list_box.get_selected_row()
+            if not selected_row:
+                game_item = self.window.library.get_game(rpath)
+                row = self.window.rows[game_item]
+                self.window.library_list_box.select_row(row)
 
             logging.info(f'Importing done in {time.perf_counter() - start:.2f}s')
             if RencherConfig()['settings']['delete_on_import'] == 'true':
@@ -321,7 +326,4 @@ class RencherImport(Adw.PreferencesDialog):
             shutil.rmtree(rpath)
             logging.info(f'Importing cancelled. Total thread runtime: {time.perf_counter() - start:.2f}s')
             self.window.application.resume_monitor(rpath)
-            self.window.toast_overlay.add_toast(Adw.Toast(
-                title='Importing cancelled',
-                timeout=5,
-            ))
+        GLib.idle_add(self.window.tasks_popover.update_task, task_date, total_work)

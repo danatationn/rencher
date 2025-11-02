@@ -13,8 +13,15 @@ template $RencherSettings : Adw.PreferencesDialog {
 				
 				[suffix]
 				Button {
+					icon-name: "external-link-symbolic";
 					styles ["flat"]
-					
+					valign: center;
+
+					clicked => $on_dir_clicked();
+				}
+				Button {
+					styles ["flat"]
+					valign: center;
 					icon-name: "folder-open-symbolic";
 					
 					clicked => $on_picker_clicked();

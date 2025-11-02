@@ -1,7 +1,7 @@
 using Gtk 4.0;
 //using Adw 1;
 
-template $RencherTasksRow: ListBoxRow {
+template $TasksRow: ListBoxRow {
 	Box {
 		orientation: horizontal;
 
@@ -12,8 +12,12 @@ template $RencherTasksRow: ListBoxRow {
 
 		Box {
 			orientation: vertical;
+			//margin-end: 6;
+
 			Label label {
 				ellipsize: middle;
+				hexpand: true;
+				xalign: 0;
 				margin-bottom: 6;
 			}
 			ProgressBar progress_bar {
@@ -27,9 +31,13 @@ template $RencherTasksRow: ListBoxRow {
 			}
 		}
 		Button button {
-			vexpand: false;
-			styles ["flat", "circular"]
-			icon-name: "cross-large-circle-outline-symbolic";
+			margin-start: 6;
+
+			valign: center;
+			styles ["circular"]
+			icon-name: "stop-large-symbolic";
+
+			//clicked => $on_button_activate();
 		}
 	}
 }

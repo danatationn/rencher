@@ -146,10 +146,11 @@ template $RencherWindow : Adw.ApplicationWindow {
 
 											clicked => $on_play_clicked();
 										}
-										Button {
+										Button options_button {
 											styles ["circular"]
+											valign: center;
 
-											icon-name: "wrench-wide-symbolic";
+											icon-name: "cogged-wheel-symbolic";
 
 											clicked => $on_options_clicked();
 										}
@@ -191,6 +192,7 @@ template $RencherWindow : Adw.ApplicationWindow {
 											Button {
 												icon-name: "external-link-symbolic";
 												styles ["flat"]
+												valign: center;
 
 												clicked => $on_dir_clicked();
 											}

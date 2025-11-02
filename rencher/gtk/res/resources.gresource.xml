@@ -5,7 +5,6 @@
     <file preprocess="xml-stripblanks">xbox-controller-symbolic.svg</file>
     <file preprocess="xml-stripblanks">cogged-wheel-symbolic.svg</file>
     <file preprocess="xml-stripblanks">view-sort-ascending-symbolic.svg</file>
-    <file preprocess="xml-stripblanks">wrench-wide-symbolic.svg</file>
     <file preprocess="xml-stripblanks">list-add-symbolic.svg</file>
     <file preprocess="xml-stripblanks">loupe-large-symbolic.svg</file>
     <file preprocess="xml-stripblanks">folder-open-symbolic.svg</file>
@@ -15,8 +14,8 @@
     <file preprocess="xml-stripblanks">document-edit-symbolic.svg</file>
     <file preprocess="xml-stripblanks">menu-large-symbolic.svg</file>
     <file preprocess="xml-stripblanks">test-pass-symbolic.svg</file>
-    <file preprocess="xml-stripblanks">box-dotted-symbolic.svg</file>
     <file preprocess="xml-stripblanks">list-large-symbolic.svg</file>
-    <file preprocess="xml-stripblanks">cross-large-circle-outline-symbolic.svg</file>
+    <file preprocess="xml-stripblanks">stop-large-symbolic.svg</file>
+    <file preprocess="xml-stripblanks">cross-large-symbolic.svg</file>
   </gresource>
 </gresources>

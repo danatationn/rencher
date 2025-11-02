@@ -47,32 +47,33 @@ stores app settings
 <br>
 this is what it has in store:
 
-| Key      | Option           | Default value | Expected type | Comments                                                                                                                              |
-|----------|------------------|---------------|---------------|---------------------------------------------------------------------------------------------------------------------------------------|
-| settings | data_dir         | ""            | str           | Defaults depend on the OS. Linux uses `$HOME/.local/share/rencher/` and Windows uses `%localappdata%\Rencher\`                        |
-| settings | suppress_updates | false         | bool          | By default, Rencher checks the latest version on startup and displays a toast if you're out of date. You can, obviously, disable this |
-| settings | delete_on_import | false         | bool          | Deletes archives/folders when successfully importing a game. Was on by default but it kept pissing me off during testing              |
-| settings | skip_splash_scr  | false         | bool          |                                                                                                                                       |
-| settings | skip_main_menu   | false         | bool          |                                                                                                                                       |
-| settings | forced_save_dir  | false         | bool          |                                                                                                                                       |
+| Key      | Option                 | Default value | Expected type | Comments                                                                                                                                           |
+|----------|------------------------|---------------|---------------|----------------------------------------------------------------------------------------------------------------------------------------------------|
+| settings | data_dir               | ""            | str           | Defaults depend on the OS. Linux uses `$HOME/.local/share/rencher/` and Windows uses `%localappdata%\Rencher\`                                     |
+| settings | suppress_updates       | false         | bool          | By default, Rencher checks the latest version on startup and displays a toast if you're out of date. You can, obviously, disable this              |
+| settings | delete_on_import       | false         | bool          | Deletes archives/folders when successfully importing a game. Was on by default but it kept pissing me off during testing                           |
+| settings | skip_splash_scr        | false         | bool          |                                                                                                                                                    |
+| settings | skip_main_menu         | false         | bool          |                                                                                                                                                    |
+| settings | forced_save_dir        | false         | bool          |                                                                                                                                                    |
+| settings | windowficate_filenames | true          | bool          | Restricts folder names to Windows approved characters when importing games. Cannot be turned off on Windows (unless you turn it off in the config) |
 
 ### game configs
 they track stuff! heavily inspired by the Doki Doki Mod Manager config files
 <br>
 this is what they track:
 
-| Key         | Option                    | Default value                           | Expected type | Comments                                                                                                                      |
-|-------------|---------------------------|-----------------------------------------|---------------|-------------------------------------------------------------------------------------------------------------------------------|
-| info        | nickname                  | The name of the game                    | str           |                                                                                                                               |
-| info        | last_played               | 0.0                                     | float         |                                                                                                                               |
-| info        | playtime                  | 0.0                                     | float         |                                                                                                                               |
-| info        | added_on                  | Current epoch time                      | float         |                                                                                                                               |
-| info        | codename                  | Name of the preferred Python executable | str           | Left blank if it can't be determined                                                                                          |
-| options     | skip_splash_scr           | ""                                      | bool+         |                                                                                                                               |
-| options     | skip_main_menu            | ""                                      | bool+         |                                                                                                                               |
-| options     | forced_save_dir           | ""                                      | bool+         |                                                                                                                               |
-| options     | save_slot                 | 1                                       | int           | Appends numbers to the "forced save directory" as makeshift save slots. Requires `forced_save_dir` to be on                   |
-| overwritten | [everything from options] | N/A                                     | ermmmmmmmmm   | Gets made at runtime. Isn't actually in the config file. Combines the default options from the Rencher config and game config |
+| Key         | Option                    | Default value                           | Expected type    | Comments                                                                                                                      |
+|-------------|---------------------------|-----------------------------------------|------------------|-------------------------------------------------------------------------------------------------------------------------------|
+| info        | nickname                  | The name of the game                    | str              |                                                                                                                               |
+| info        | last_played               | 0.0                                     | float            |                                                                                                                               |
+| info        | playtime                  | 0.0                                     | float            |                                                                                                                               |
+| info        | added_on                  | Current epoch time                      | float            |                                                                                                                               |
+| info        | codename                  | Name of the preferred Python executable | str              | Left blank if it can't be determined                                                                                          |
+| options     | skip_splash_scr           | ""                                      | bool+            |                                                                                                                               |
+| options     | skip_main_menu            | ""                                      | bool+            |                                                                                                                               |
+| options     | forced_save_dir           | ""                                      | bool+            |                                                                                                                               |
+| options     | save_slot                 | 1                                       | int              | Appends numbers to the "forced save directory" as makeshift save slots. Requires `forced_save_dir` to be on                   |
+| overwritten | [everything from options] | N/A                                     | all of the above | Gets made at runtime. Isn't actually in the config file. Combines the default options from the Rencher config and game config |
 
 
 ## paths
