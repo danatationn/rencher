@@ -134,9 +134,13 @@ class RencherApplication(Gtk.Application):
             designers=['danatationn', 'vl1'],
         )
         dialog.set_release_notes("""<ul>
-            <li> Added this button :) </li>
-            <li> Fixed a bug with path finding </li>
-            <li> Made save files not copy when importing mods </li>
+            <li> Added tasks </li>
+            <li> Added crash dialogs on Linux </li>
+            <li> Added basic shortcuts </li>
+            <li> Swapped settings button for hamburger menu </li>
+            <li> Brought back filename restrictions for Windows </li>
+            <li> Fixed import dialog "memory leak" </li>
+            <li> More crash prevention </li>
         </ul>""")
 
         dialog.present(self.window)
