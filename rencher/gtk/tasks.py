@@ -1,4 +1,3 @@
-import logging
 import os
 import threading
 from enum import Enum
@@ -13,45 +12,85 @@ from rencher import tmp_path
 if TYPE_CHECKING:
     from rencher.gtk.window import RencherWindow
 
+
+class Task(Enum):
+    IMPORT = 0
+    DELETE = 1
+    ...
+
+
 filename = os.path.join(tmp_path, 'rencher/gtk/ui/tasks_popover.ui')
 @Gtk.Template(filename=filename)
-class RencherTasksPopover(GObject.Object, Gtk.Popover):
+class RencherTasksPopover(Gtk.Popover):
     __gtype_name__ = 'RencherTasksPopover'
 
+    tasks: dict[float, dict] = {}
+    __gsignals__ = {
+        'task-added': (GObject.SignalFlags.RUN_FIRST, None, (float,)),
+        'task-changed': (GObject.SignalFlags.RUN_FIRST, None, (float,)),
+        'task-removed': (GObject.SignalFlags.RUN_FIRST, None, (float,)),
+    }
+
     window: 'RencherWindow'
+    rows: dict[float, 'RencherTasksRow'] = {}
     stack: Gtk.Stack = Gtk.Template.Child()
     scrolled_window: Gtk.ScrolledWindow = Gtk.Template.Child()
     empty_status_page: Adw.StatusPage = Gtk.Template.Child()
     list_box: Gtk.ListBox = Gtk.Template.Child()
-    rows: dict[float, 'RencherTasksRow'] = {}
 
     def __init__(self, window: 'RencherWindow', *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.window = window
 
-    def add_row(self, created_on: float, task: dict) -> None:
+    def get_task(self, created_on: float) -> dict | None:
+        if created_on in self.tasks:
+            return self.tasks[created_on]
+        else:
+            return None
+
+    def get_active_tasks(self) -> int:
+        return len(self.tasks)
+
+    def new_task(self, created_on: float, name: str, task_type: 'Task',
+                 cancel_flag: threading.Event | None, max_progress: int) -> None:
+        task = {
+            'name': name,
+            'type': task_type,
+            'cancel_flag': cancel_flag,
+            'progress': 0,
+            'max_progress': max_progress,
+        }
+        self.tasks[created_on] = task
         self.stack.set_visible_child(self.scrolled_window)
         row = RencherTasksRow(task)
-        row.button.connect('clicked', self.remove_row, created_on, task)
+        row.button.connect('clicked', self.remove_task, created_on)
         self.rows[created_on] = row
         self.list_box.append(row)
+        GLib.idle_add(self.window.update_pie_paintable)
+        # self.emit('task-added', created_on)
 
-    def change_row(self, created_on: float, task: dict) -> None:
-        if created_on in self.rows:
+    def update_task(self, created_on: float, progress: int) -> None:
+        task = self.get_task(created_on)
+        if task:
+            self.tasks[created_on]['progress'] = progress
             row = self.rows[created_on]
             row.update(task)
+        GLib.idle_add(self.window.update_pie_paintable)
+        # self.emit('task-changed', created_on)
 
-    def remove_row(self, _, created_on: float, task: dict) -> None:
-        if created_on in self.rows:
-            flag: threading.Event = task['cancel_flag']
-            flag.set()
+    def remove_task(self, _, created_on: float) -> None:
+        task = self.get_task(created_on)
+        if task:
+            del self.tasks[created_on]
+            flag = task['cancel_flag']
+            if isinstance(flag, threading.Event):
+                flag.set()
             self.list_box.remove(self.rows[created_on])
             del self.rows[created_on]
-            ...
-        else:
-            logging.debug(created_on)
         if len(self.rows) == 0:
             self.stack.set_visible_child(self.empty_status_page)
+        GLib.idle_add(self.window.update_pie_paintable)
+        # self.emit('task-removed', created_on)
 
 
 filename = os.path.join(tmp_path, 'rencher/gtk/ui/tasks_row.ui')
@@ -81,56 +120,6 @@ class RencherTasksRow(Gtk.ListBoxRow):
 
         self.progress_bar.set_fraction(fraction)
         self.details.set_label(f'{task['progress']}/{task['max_progress']}')
-
-class Task(Enum):
-    IMPORT = 0
-    DELETE = 1
-    ...
-
-
-class TasksClass(GObject.GObject):
-    window: 'RencherWindow'
-    tasks: dict[float, dict] = {}
-
-    __gsignals__ = {
-        'task-added': (GObject.SignalFlags.RUN_FIRST, None, (float,)),
-        'task-changed': (GObject.SignalFlags.RUN_FIRST, None, (float,)),
-        'task-removed': (GObject.SignalFlags.RUN_FIRST, None, (float,)),
-    }
-
-    def __init__(self, window: 'RencherWindow') -> None:
-        super().__init__()
-        self.window = window
-
-    def get_task(self, created_on: float) -> dict | None:
-        if created_on in self.tasks:
-            return self.tasks[created_on]
-        else:
-            return None
-
-    def get_active_tasks(self) -> int:
-        return len(self.tasks)
-
-    def new_task(self, created_on: float, name: str, task_type: Task,
-                 cancel_flag: threading.Event | None, max_progress: int) -> None:
-        self.tasks[created_on] = {
-            'name': name,
-            'type': task_type,
-            'cancel_flag': cancel_flag,
-            'progress': 0,
-            'max_progress': max_progress,
-        }
-        self.emit('task-added', created_on)
-
-    def update_task(self, created_on: float, progress: int) -> None:
-        if created_on in self.tasks:
-            self.tasks[created_on]['progress'] = progress
-        self.emit('task-changed', created_on)
-
-    def remove_task(self, created_on: float) -> None:
-        if created_on in self.tasks:
-            del self.tasks[created_on]
-        self.emit('task-removed', created_on)
 
 
 class PiePaintable(GObject.Object, Gdk.Paintable):
@@ -169,51 +158,3 @@ class PiePaintable(GObject.Object, Gdk.Paintable):
         end_angle = start_angle + 2 * pi * self.progress
         cr.arc(cx, cy, radius, start_angle, end_angle)
         cr.stroke()
-
-
-if __name__ == "__main__":
-    import sys
-
-    from gi.repository import Gio
-
-    class MainWindow(Adw.ApplicationWindow):
-        tbview = Adw.ToolbarView()
-        hb = Adw.HeaderBar()
-        sp = Adw.StatusPage(title='Pie Test')
-        pie = PiePaintable()
-        progress = 0.0
-
-        def __init__(self, app):
-            super().__init__(application=app)
-            self.set_default_size(200, 260)
-
-            image = Gtk.Image.new_from_paintable(self.pie)
-            button = Gtk.Button()
-            button.set_child(image)
-            self.tbview.add_top_bar(self.hb)
-            self.tbview.add_bottom_bar(self.sp)
-            self.sp.set_child(button)
-            self.set_content(self.tbview)
-
-            GLib.timeout_add(2, self.on_tick)
-
-        def on_tick(self):
-            self.progress += 0.001
-            if self.progress > 1.0:
-                self.progress = 0.0
-            self.pie.set_fraction(self.progress)
-            self.sp.set_description(f'Progress: {self.progress:0.2f}')
-            return True
-
-    class MyApp(Adw.Application):
-        def __init__(self):
-            super().__init__(application_id="com.example.pieprogress",
-                             flags=Gio.ApplicationFlags.FLAGS_NONE)
-            self.connect("activate", self.on_activate)
-
-        def on_activate(self, _):
-            win = MainWindow(self)
-            win.present()
-    Adw.init()
-    app = MyApp()
-    app.run(sys.argv)

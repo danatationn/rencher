@@ -10,62 +10,51 @@ template $RencherImport: Adw.PreferencesDialog {
 		[top]
 		Adw.HeaderBar {}
 		
-		content: Overlay {
-			child: Adw.PreferencesPage {
-				Adw.PreferencesGroup {
-					Adw.EntryRow import_title {
-						title: _("Title");
-					}
-					Adw.ComboRow import_type {
-						title: _("Type");
-						
-						notify::selected-item => $on_type_changed();
-					}
-					Adw.EntryRow import_location {
-						title: _("Archive Location");
-						
-						changed => $on_location_changed();
-						
-						[suffix]
-						Button import_location_picker {
-							icon-name: "file-cabinet-symbolic";
-							styles ["flat"]
-							
-							clicked => $on_picker_clicked();
-						}
+		content: Adw.PreferencesPage {
+			Adw.PreferencesGroup {
+				Adw.EntryRow title_entry {
+					title: _("Title");
+				}
+				Adw.ComboRow type_combo {
+					title: _("Type");
+
+					notify::selected-item => $on_type_changed();
+				}
+				Adw.EntryRow location_entry {
+					title: _("Archive Location");
+
+					changed => $on_location_changed();
+
+					[suffix]
+					Button location_picker {
+						icon-name: "file-cabinet-symbolic";
+						styles ["flat"]
+
+						clicked => $on_picker_clicked();
 					}
 				}
-				
-				Adw.PreferencesGroup {
-					Adw.SwitchRow import_mod_toggle {
-						title: _("Import as Mod");
-	                    
-                    }
-                    Adw.ComboRow import_game_combo {
-                        title: _("Target Game");
-                        enable-search: true;
-                        sensitive: bind import_mod_toggle.active;
-					}
+			}
+
+			Adw.PreferencesGroup {
+				Adw.SwitchRow mod_switch {
+					title: _("Import as Mod");
+
+                }
+                Adw.ComboRow game_combo {
+                    title: _("Target Game");
+                    enable-search: true;
+                    sensitive: bind mod_switch.active;
 				}
-				
-				Adw.PreferencesGroup {
-					Adw.ButtonRow import_button {
-						title: _("Import");
-						sensitive: false;
-					
-						activated => $on_import_clicked();
-					}
+			}
+
+			Adw.PreferencesGroup {
+				Adw.ButtonRow import_button {
+					title: _("Import");
+					sensitive: false;
+
+					activated => $on_import_clicked();
 				}
-			};
-			
-			[overlay]
-			ProgressBar import_progress_bar {
-                styles ["osd"]
-                visible: false;
-                can-focus: false;
-                
-                valign: start;
-            }	
+			}
 		};
 	};
 }
