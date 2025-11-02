@@ -8,7 +8,7 @@ template $RencherSettings : Adw.PreferencesDialog {
 		Adw.PreferencesGroup {
 			title: _("Data Preferences");
 
-			Adw.EntryRow settings_data_dir {
+			Adw.EntryRow data_dir_entry {
 				title: _("Data Directory");
 				
 				[suffix]
@@ -40,11 +40,11 @@ template $RencherSettings : Adw.PreferencesDialog {
 		}
 		Adw.PreferencesGroup {
 			title: _("Online Features");
-			Adw.SwitchRow settings_download_binaries {
+			Adw.SwitchRow download_binaries_switch {
 				visible: false; // #soon
 				title: _("Download Missing Ren'Py Binaries");
 			}
-			Adw.SwitchRow settings_updates {
+			Adw.SwitchRow updates_switch {
 				title: _("Supress Update Notifications");
 			}
 			Adw.ButtonRow {
@@ -54,10 +54,10 @@ template $RencherSettings : Adw.PreferencesDialog {
 		}
 		Adw.PreferencesGroup {
 			title: _("Import Preferences");
-			Adw.SwitchRow settings_windowficate {
+			Adw.SwitchRow windowficate_switch {
 				title: _("Restrict Filenames");
 			}
-			Adw.SwitchRow settings_delete_import {
+			Adw.SwitchRow delete_import_switch {
 				title: _("Delete Files On Import");
 			}
 		}
@@ -66,13 +66,13 @@ template $RencherSettings : Adw.PreferencesDialog {
 			title: _("Config Defaults");
 			description: _("These might break some games. Here be dragons!");
 			
-			Adw.SwitchRow settings_skip_splash_scr {
+			Adw.SwitchRow skip_splash_scr_switch {
 				title: _("Skip Splash Screen");
 			}
-			Adw.SwitchRow settings_skip_main_menu {
+			Adw.SwitchRow skip_main_menu_switch {
 				title: _("Skip Main Menu");
 			}
-			Adw.SwitchRow settings_forced_save_dir {
+			Adw.SwitchRow forced_save_dir_switch {
 				title: _("Contained Game Saves");
 			}
 		}

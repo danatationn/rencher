@@ -20,16 +20,16 @@ ui_path = os.path.join(tmp_path, 'rencher/gtk/ui/options.ui')
 class RencherOptions(Adw.PreferencesDialog):
     __gtype_name__ = 'RencherOptions'
 
-    options_nickname: Adw.EntryRow = Gtk.Template.Child()
-    options_location: Adw.ActionRow = Gtk.Template.Child()
-    options_codename: Adw.ComboRow = Gtk.Template.Child()
-    options_skip_splash_scr: Adw.SwitchRow = Gtk.Template.Child()
-    options_skip_main_menu: Adw.SwitchRow = Gtk.Template.Child()
-    options_forced_save_dir: Adw.SwitchRow = Gtk.Template.Child()
-    overwrite_skip_splash_scr: Gtk.Switch = Gtk.Template.Child()
-    overwrite_skip_main_menu: Gtk.Switch = Gtk.Template.Child()
-    overwrite_forced_save_dir: Gtk.Switch = Gtk.Template.Child()
-    options_save_slot: Adw.SpinRow = Gtk.Template.Child()
+    nickname_entry: Adw.EntryRow = Gtk.Template.Child()
+    location_row: Adw.ActionRow = Gtk.Template.Child()
+    codename_combo: Adw.ComboRow = Gtk.Template.Child()
+    skip_splash_scr_switch: Adw.SwitchRow = Gtk.Template.Child()
+    skip_main_menu_switch: Adw.SwitchRow = Gtk.Template.Child()
+    forced_save_dir_switch: Adw.SwitchRow = Gtk.Template.Child()
+    overwrite_skip_splash_scr_switch: Gtk.Switch = Gtk.Template.Child()
+    overwrite_skip_main_menu_switch: Gtk.Switch = Gtk.Template.Child()
+    overwrite_forced_save_dir_switch: Gtk.Switch = Gtk.Template.Child()
+    # options_save_slot: Adw.SpinRow = Gtk.Template.Child()
 
     game: Game = None
     rencher_config: ConfigParser = None
@@ -39,31 +39,31 @@ class RencherOptions(Adw.PreferencesDialog):
 
         self.window = window
         self.switches_list = [
-            [self.overwrite_skip_splash_scr, self.options_skip_splash_scr, 'skip_splash_scr'],
-            [self.overwrite_skip_main_menu, self.options_skip_main_menu, 'skip_main_menu'],
-            [self.overwrite_forced_save_dir, self.options_forced_save_dir, 'forced_save_dir'],
+            [self.overwrite_skip_splash_scr_switch, self.skip_splash_scr_switch, 'skip_splash_scr'],
+            [self.overwrite_skip_main_menu_switch, self.skip_main_menu_switch, 'skip_main_menu'],
+            [self.overwrite_forced_save_dir_switch, self.forced_save_dir_switch, 'forced_save_dir'],
         ]
 
-        self.options_save_slot.set_adjustment(Gtk.Adjustment(
-            lower=1,
-            upper=10,
-            value=1,
-            step_increment=1,
-            page_increment=10,
-        ))
+        # self.options_save_slot.set_adjustment(Gtk.Adjustment(
+        #     lower=1,
+        #     upper=10,
+        #     value=1,
+        #     step_increment=1,
+        #     page_increment=10,
+        # ))
 
     def change_game(self, game: Game):
         self.game = game
         string_list = Gtk.StringList()
-        self.options_codename.set_model(string_list)
+        self.codename_combo.set_model(string_list)
 
         with open(config_path) as f:
             self.rencher_config = ConfigParser()
             self.rencher_config.read_file(f)
 
-        self.options_nickname.set_text(game.name)
-        self.options_location.set_subtitle(str(game.rpath))
-        self.options_save_slot.set_text(game.config['options']['save_slot'])
+        self.nickname_entry.set_text(game.name)
+        self.location_row.set_subtitle(str(game.rpath))
+        # self.options_save_slot.set_text(game.config['options']['save_slot'])
 
         py_files = get_py_files(game.apath)
 
@@ -74,9 +74,9 @@ class RencherOptions(Adw.PreferencesDialog):
             if codename == game.config['info']['codename']:
                 codename_index = i
 
-        self.options_codename.set_model(string_list)
+        self.codename_combo.set_model(string_list)
         if codename_index:
-            self.options_codename.set_selected(codename_index)
+            self.codename_combo.set_selected(codename_index)
 
         for overwrite_switch, switch, key in self.switches_list:
             if game.config['options'][key] != '':
@@ -92,11 +92,11 @@ class RencherOptions(Adw.PreferencesDialog):
         if not os.path.isdir(self.game.rpath):
             return  # it got deleted
 
-        if self.game.name != self.options_nickname.get_text():
-            self.game.config['info']['nickname'] = self.options_nickname.get_text()
-        if self.game.codename != self.options_codename.get_selected_item().get_string():
-            self.game.config['info']['codename'] = self.options_codename.get_selected_item().get_string()
-        self.game.config['options']['save_slot'] = self.options_save_slot.get_text()
+        if self.game.name != self.nickname_entry.get_text():
+            self.game.config['info']['nickname'] = self.nickname_entry.get_text()
+        if self.game.codename != self.codename_combo.get_selected_item().get_string():
+            self.game.config['info']['codename'] = self.codename_combo.get_selected_item().get_string()
+        # self.game.config['options']['save_slot'] = self.options_save_slot.get_text()
 
         for overwrite_switch, switch, key in self.switches_list:
             if overwrite_switch.get_active():
@@ -113,13 +113,12 @@ class RencherOptions(Adw.PreferencesDialog):
         def select():
             for row in self.window.library_list_box:  # type: ignore
                 if row.game.rpath == self.game.rpath:
-                    self.window.current_gameitem.refresh()
+                    self.window.current_gameitem.refresh(self.game)
                     self.window.library_list_box.select_row(row)
                     break
                     
         self.game.config.write()
         GLib.idle_add(select)
-
 
     @Gtk.Template.Callback()
     def on_switch_changed(self, _widget: Gtk.Switch | Adw.SwitchRow, _):

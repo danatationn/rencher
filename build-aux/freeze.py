@@ -15,7 +15,7 @@ cwd = os.path.dirname(os.path.abspath(__file__))
 tmp_path = os.path.abspath(os.path.dirname(cwd))
 sys.path.append(tmp_path)
 import rencher  # noqa: E402
-from rencher.gtk import compile_data  # noqa: E402
+from rencher.gtk.utils import compile_data  # noqa: E402
 
 include_files = []
 

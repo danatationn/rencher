@@ -23,37 +23,37 @@ class RencherSettings(Adw.PreferencesDialog):
     window: 'RencherWindow'
     config: RencherConfig = None
 
-    settings_data_dir: Adw.EntryRow = Gtk.Template.Child()
-    settings_updates: Adw.SwitchRow = Gtk.Template.Child()
-    settings_delete_import: Adw.SwitchRow = Gtk.Template.Child()
-    settings_skip_splash_scr: Adw.SwitchRow = Gtk.Template.Child()
-    settings_skip_main_menu: Adw.SwitchRow = Gtk.Template.Child()
-    settings_forced_save_dir: Adw.SwitchRow = Gtk.Template.Child()
-    settings_windowficate: Adw.SwitchRow = Gtk.Template.Child()
+    data_dir_entry: Adw.EntryRow = Gtk.Template.Child()
+    updates_switch: Adw.SwitchRow = Gtk.Template.Child()
+    delete_import_switch: Adw.SwitchRow = Gtk.Template.Child()
+    skip_splash_scr_switch: Adw.SwitchRow = Gtk.Template.Child()
+    skip_main_menu_switch: Adw.SwitchRow = Gtk.Template.Child()
+    forced_save_dir_switch: Adw.SwitchRow = Gtk.Template.Child()
+    windowficate_switch: Adw.SwitchRow = Gtk.Template.Child()
 
     def __init__(self, window, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
         self.window = window
         self.switches_list = [
-            [self.settings_delete_import, 'delete_on_import'],
-            [self.settings_updates, 'suppress_updates'],
-            [self.settings_skip_splash_scr, 'skip_splash_scr'],
-            [self.settings_skip_main_menu, 'skip_main_menu'],
-            [self.settings_forced_save_dir, 'forced_save_dir'],
-            [self.settings_windowficate, 'windowficate_filenames'],
+            [self.delete_import_switch, 'delete_on_import'],
+            [self.updates_switch, 'suppress_updates'],
+            [self.skip_splash_scr_switch, 'skip_splash_scr'],
+            [self.skip_main_menu_switch, 'skip_main_menu'],
+            [self.forced_save_dir_switch, 'forced_save_dir'],
+            [self.windowficate_switch, 'windowficate_filenames'],
         ]
 
         if platform.system() == 'Windows':
-            self.settings_windowficate.set_visible(False)  # force it on
+            self.windowficate_switch.set_visible(False)  # force it on
 
     def on_show(self):
         self.config = RencherConfig()
 
         if self.config['settings']['data_dir'] == '':
-            self.settings_data_dir.set_text(str(local_path))
+            self.data_dir_entry.set_text(str(local_path))
         else:
-            self.settings_data_dir.set_text(self.config['settings']['data_dir'])
+            self.data_dir_entry.set_text(self.config['settings']['data_dir'])
 
         for switch, key in self.switches_list:
             if self.config['settings'][key] == 'true':
@@ -62,10 +62,10 @@ class RencherSettings(Adw.PreferencesDialog):
     def do_closed(self):
         old_data_dir = self.config['settings']['data_dir']
 
-        if self.settings_data_dir.get_text() == str(local_path):
+        if self.data_dir_entry.get_text() == str(local_path):
             self.config['settings']['data_dir'] = ''
         else:
-            self.config['settings']['data_dir'] = self.settings_data_dir.get_text()
+            self.config['settings']['data_dir'] = self.data_dir_entry.get_text()
 
         for switch, key in self.switches_list:
             if switch.get_active():
@@ -85,7 +85,7 @@ class RencherSettings(Adw.PreferencesDialog):
 
     @Gtk.Template.Callback()
     def on_dir_clicked(self, _):
-        data_dir = self.settings_data_dir.get_text()
+        data_dir = self.data_dir_entry.get_text()
         open_file_manager(data_dir)
 
     def on_folder_selected(self, dialog: Gtk.FileDialog, result):
@@ -94,7 +94,7 @@ class RencherSettings(Adw.PreferencesDialog):
         except GLib.GError:
             pass  # dialog was dismissed by user
         else:
-            self.settings_data_dir.set_text(folder.get_path())
+            self.data_dir_entry.set_text(folder.get_path())
 
     @Gtk.Template.Callback()
     def on_check_updates(self, _):
@@ -104,7 +104,7 @@ class RencherSettings(Adw.PreferencesDialog):
 
     @Gtk.Template.Callback()
     def on_reset_data_dir(self, _widget: Adw.ButtonRow):  # type: ignore
-        self.settings_data_dir.set_text(str(local_path))
+        self.data_dir_entry.set_text(str(local_path))
 
     @Gtk.Template.Callback()
     def on_delete_games(self, _widget: Adw.ButtonRow):  # type: ignore
@@ -123,7 +123,7 @@ class RencherSettings(Adw.PreferencesDialog):
     def nuke_games(self, _, response: str):
         if response != 'ok':
             return
-        data_dir = Path(self.settings_data_dir.get_text())
+        data_dir = Path(self.data_dir_entry.get_text())
         games_dir = data_dir / 'games'
 
         def nuke_thread():
