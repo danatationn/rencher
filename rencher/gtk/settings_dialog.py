@@ -15,7 +15,7 @@ from rencher.renpy.config import RencherConfig
 if TYPE_CHECKING:
     from rencher.gtk.window import RencherWindow
 
-filename = os.path.join(tmp_path, 'rencher/gtk/ui/settings.ui')
+filename = os.path.join(tmp_path, 'rencher/data/ui/settings.ui')
 @Gtk.Template(filename=str(filename))
 class RencherSettings(Adw.PreferencesDialog):
     __gtype_name__ = 'RencherSettings'

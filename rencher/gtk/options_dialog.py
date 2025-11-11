@@ -15,7 +15,7 @@ from rencher.renpy.paths import get_py_files
 if TYPE_CHECKING:
     from rencher.gtk.window import RencherWindow
 
-ui_path = os.path.join(tmp_path, 'rencher/gtk/ui/options.ui')
+ui_path = os.path.join(tmp_path, 'rencher/data/ui/options.ui')
 @Gtk.Template(filename=str(ui_path))
 class RencherOptions(Adw.PreferencesDialog):
     __gtype_name__ = 'RencherOptions'

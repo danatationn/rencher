@@ -22,7 +22,7 @@ from rencher.renpy.game import Game
 if TYPE_CHECKING:
     from rencher.gtk.application import RencherApplication
 
-filename = os.path.join(tmp_path, 'rencher/gtk/ui/window.ui')
+filename = os.path.join(tmp_path, 'rencher/data/ui/window.ui')
 @Gtk.Template(filename=str(filename))
 class RencherWindow(Adw.ApplicationWindow):
     __gtype_name__ = 'RencherWindow'

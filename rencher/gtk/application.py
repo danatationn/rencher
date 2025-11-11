@@ -110,15 +110,15 @@ class RencherApplication(Gtk.Application):
     #     self.window.pie_progress_button.activate()
 
     def on_show_shortcuts(self, *_):
-        ui_file = os.path.join(tmp_path, 'rencher/gtk/ui/shortcuts.ui')
+        ui_file = os.path.join(tmp_path, 'rencher/data/ui/shortcuts.ui')
+        old_ui_file = os.path.join(tmp_path, 'rencher/data/ui/shortcuts_gtk.ui')
         if os.path.isfile(ui_file):
             builder = Gtk.Builder.new_from_file(ui_file)
             dialog = builder.get_object('RencherShortcuts')
             if isinstance(dialog, Adw.ShortcutsDialog):
                 dialog.present(self.window)
-        else:
-            ui_file = os.path.join(tmp_path, 'rencher/gtk/ui/shortcuts_deprecated.ui')
-            builder = Gtk.Builder.new_from_file(ui_file)
+        elif os.path.isfile(old_ui_file):
+            builder = Gtk.Builder.new_from_file(old_ui_file)
             dialog = builder.get_object('RencherShortcuts')
             if isinstance(dialog, Gtk.ShortcutsWindow):
                 dialog.set_transient_for(self.window)

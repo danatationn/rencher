@@ -112,7 +112,7 @@ def launch() -> None:
     app = RencherApplication()
 
     from gi.repository import Gio
-    gres_path = os.path.join(tmp_path, 'rencher/gtk/res/resources.gresource')
+    gres_path = os.path.join(tmp_path, 'rencher/data/resources/resources.gresource')
     res = Gio.resource_load(gres_path)
     res._register()
 

@@ -4,6 +4,7 @@ import platform
 import shutil
 import subprocess
 import sys
+from pathlib import Path
 
 import gi
 
@@ -37,25 +38,21 @@ def compile_data() -> None:
 
     blpc_path = return_comp('blueprint-compiler')
     resc_path = return_comp('glib-compile-resources')
-
-    ui_dir = os.path.join(os.path.dirname(__file__), 'ui')
-    
-    blp_files = glob.glob(os.path.join(ui_dir, '*.blp'))
-    duct_tape_fix = [file for file in blp_files if 'shortcuts.blp' != os.path.basename(file)]
+    ui_dir = Path(__file__).parents[1] / 'data' / 'ui'
     args = ['python', blpc_path, 'batch-compile', ui_dir, ui_dir]
 
-    if platform.system() == 'Windows':
-        for file in duct_tape_fix:
-            args.extend([file])
-    else:
-        for file in blp_files:
+    blp_files = ui_dir.glob('*.blp')
+    for file in blp_files:
+        if file.name == 'shortcuts.blp' and platform.system() == 'Windows':
+            continue
+        else:
             args.extend([file])
 
     print('Compiling .blp files...')
     subprocess.run(args)
 
-    res_dir = os.path.join(os.path.dirname(__file__), 'res')
-    xml_file = os.path.join(res_dir, 'resources.gresource.xml')
+    res_dir = Path(__file__).parents[1] / 'data' / 'resources'
+    xml_file = res_dir / 'resources.gresource.xml'
 
     print('Compiling resources...')
     subprocess.run([resc_path, xml_file], cwd=res_dir)

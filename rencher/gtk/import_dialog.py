@@ -24,7 +24,7 @@ if TYPE_CHECKING:
     from rencher.gtk.window import RencherWindow
 
 
-filename = os.path.join(tmp_path, 'rencher/gtk/ui/import.ui')
+filename = os.path.join(tmp_path, 'rencher/data/ui/import.ui')
 @Gtk.Template(filename=filename)
 class RencherImport(Adw.PreferencesDialog):
     __gtype_name__ = 'RencherImport'
