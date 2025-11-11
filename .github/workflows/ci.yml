@@ -1,6 +1,5 @@
 name: Rencher
-on: 
-  workflow_dispatch: 
+on: [push, workflow_dispatch]
 
 jobs:
   linux-job:

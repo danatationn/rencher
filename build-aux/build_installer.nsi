@@ -4,6 +4,8 @@
 !include "FileFunc.nsh"
 !define NAME "Rencher"
 !define APPFILE "rencher.exe"
+!define VERSION "1.2.0.0"
+!define PUBLISHER "danatationn"
 !define MUI_ICON "..\assets\rencher-inst.ico"
 !define MUI_UNICON "..\assets\rencher-deinst.ico"
 !define MUI_HEADERIMAGE
@@ -17,6 +19,15 @@
 Name "${NAME}"
 OutFile "..\build\RencherInstaller.exe"
 InstallDir "$PROGRAMFILES\${NAME}"
+
+RequestExecutionLevel admin
+VIProductVersion "${VERSION}"
+VIAddVersionKey "ProductName" "${NAME}"
+VIAddVersionKey "CompanyName" "${PUBLISHER}"
+VIAddVersionKey "LegalCopyright" "© 2025 ${PUBLISHER}"
+VIAddVersionKey "FileDescription" "${NAME} Installer"
+VIAddVersionKey "FileVersion" "${VERSION}"
+VIAddVersionKey "ProductVersion" "${VERSION}"
 
 ShowInstDetails show
 ShowUninstDetails show
@@ -62,7 +73,15 @@ Section "Install"
 	SetOutPath $INSTDIR
 	File /r "..\build\exe.mingw_x86_64_ucrt_gnu-3.12\*.*"
 	WriteUninstaller "$INSTDIR\uninstaller.exe"
-	
+	WriteRegStr HKLM "SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\${NAME}" "DisplayName" "${NAME}"
+	WriteRegStr HKLM "SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\${NAME}" "DisplayVersion" "${VERSION}"
+	WriteRegStr HKLM "SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\${NAME}" "Publisher" "${PUBLISHER}"
+	WriteRegStr HKLM "SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\${NAME}" "UninstallString" "$INSTDIR\uninstaller.exe"
+	WriteRegStr HKLM "SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\${NAME}" "DisplayIcon" "$INSTDIR\${APPFILE}"
+	WriteRegStr HKLM "SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\${NAME}" "InstallLocation" "$INSTDIR"
+	WriteRegDWORD HKLM "SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\${NAME}" "NoModify" 1
+	WriteRegDWORD HKLM "SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\${NAME}" "NoRepair" 1
+
     ${If} $CHECK_DESKTOP == ${BST_CHECKED}
         CreateShortcut "$DESKTOP\${NAME}.lnk" "$INSTDIR\${APPFILE}"
     ${EndIf}
@@ -87,6 +106,7 @@ Section "Uninstall"
     Delete "$INSTDIR\uninstaller.exe"
     Delete "$INSTDIR\${NAME}.exe"
     RMDir /r "$INSTDIR"
+    DeleteRegKey HKLM "SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\${NAME}"
 
     Delete "$DESKTOP\${NAME}.lnk"
     Delete "$SMPROGRAMS\${NAME}\${NAME}.lnk"
