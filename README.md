@@ -19,7 +19,7 @@ it strives to be as simple as possible, while being as beautiful as possible
 </p>
 
 ## download!
-### [Windows](https://github.com/danatationn/Rencher/releases/latest/download/Rencher-Windows-Installer.exe) - [Linux](https://github.com/danatationn/Rencher/releases/latest/download/Rencher-x86_64.AppImage) - ~~macOS~~ (soon)
+### [Windows](https://github.com/danatationn/Rencher/releases/latest/download/RencherInstaller.exe) - [Linux](https://github.com/danatationn/Rencher/releases/latest/download/Rencher-x86_64.AppImage) - ~~macOS~~ (soon)
 
 ## tips
 * you can turn the update toasts in the settings ^^
