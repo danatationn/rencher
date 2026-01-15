@@ -1,4 +1,3 @@
-import glob
 import logging
 import os
 import platform
@@ -45,8 +44,13 @@ class Game:
         """
             returns false if game cannot be run/isn't a real game
         """
-        files = glob.glob(f'{self.apath}/**', recursive=True)
-        return validate_game_files(files)
+        paths: list[str] = []
+        for (topdir, dirs, files) in os.walk(self.apath):
+            for dir in dirs:
+                paths.append(os.path.join(topdir, dir))
+            for file in files:
+                paths.append(os.path.join(topdir, file))
+        return validate_game_files(paths)
         
 
     def get_executable(self) -> str:

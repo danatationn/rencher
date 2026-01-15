@@ -40,6 +40,7 @@ class RencherApplication(Gtk.Application):
         formatter = logging.Formatter('[%(levelname)s\t%(asctime)s.%(msecs)-3d %(module)s] %(message)s',
                                    datefmt='%H:%M:%S')
 
+        os.makedirs(rencher.local_path, exist_ok=True)
         file_handler = logging.FileHandler(os.path.join(rencher.local_path, 'log.txt'), mode='w')
         file_handler.setLevel(logging.DEBUG)
         file_handler.setFormatter(formatter)
@@ -58,7 +59,6 @@ class RencherApplication(Gtk.Application):
 
         actions = [
             ['show-import', self.on_show_import, ['<Primary>plus']],
-            # ['show-tasks', self.on_show_tasks, ['<Primary>b']],
             ['show-preferences', self.on_show_preferences, ['<Primary>comma']],
             ['show-shortcuts', self.on_show_shortcuts, ['<Primary>question']],
             ['show-about', self.on_show_about, []],
@@ -74,7 +74,7 @@ class RencherApplication(Gtk.Application):
 
     def do_command_line(self, command_line):
         options = command_line.get_options_dict()
-        
+
         if options.contains('verbose'):
             logging.getHandlerByName('console_handler').setLevel(logging.DEBUG)
         if options.contains('version'):
@@ -83,10 +83,10 @@ class RencherApplication(Gtk.Application):
         # if options.contains('data-dir'):
         #     data_dir = options.lookup_value('data-dir').get_string()
         #     logging.info(f'Setting data directory at {os.path.abspath(data_dir)}')
-            
+
         self.activate()
         return 0
-    
+
     def do_activate(self):
         Gtk.Application.do_activate(self)
 
@@ -105,9 +105,6 @@ class RencherApplication(Gtk.Application):
     def on_show_preferences(self, *_):
         self.window.settings_dialog.on_show()
         self.window.settings_dialog.present(self.window)
-
-    # def on_show_tasks(self, *_):
-    #     self.window.pie_progress_button.activate()
 
     def on_show_shortcuts(self, *_):
         ui_file = os.path.join(tmp_path, 'rencher/data/ui/shortcuts.ui')
@@ -157,7 +154,7 @@ class RencherApplication(Gtk.Application):
     def pause_monitor(self, rpath: str) -> None:
         if rpath not in self.file_monitor.pause_rpaths:
             self.file_monitor.pause_rpaths.append(rpath)
-            
+
     def resume_monitor(self, path: str) -> None:
         for rpath in self.file_monitor.pause_rpaths:
             if os.path.commonpath([path, rpath]):

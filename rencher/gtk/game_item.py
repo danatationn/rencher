@@ -13,7 +13,7 @@ def format_date(time: float) -> str:
     )
     yesterday = today.add_days(-1)
     tomorrow = today.add_days(1)
-    
+
     if date.to_unix() == 0:
         raise GameItemDateError()
     elif date.compare(tomorrow) >= 0:
@@ -39,7 +39,7 @@ def format_playtime(time: float) -> str:
 class GameItem(GObject.Object):
     """
         used mostly for binding labels and shi
-    
+
         uhh
     """
     __gtype_name__ = 'GameItem'
@@ -53,7 +53,7 @@ class GameItem(GObject.Object):
     version = GObject.Property(type=str)
     codename = GObject.Property(type=str)
 
-    def __init__(self, rpath: str = None, game: Game = None):
+    def __init__(self, rpath: str | None = None, game: Game | None = None):
         super().__init__()
 
         if not rpath and not game:
@@ -66,9 +66,27 @@ class GameItem(GObject.Object):
         self.game = game
         self.refresh(self.game)
 
-    def refresh(self, game: Game):
+    """def __getstate__(self) -> dict:
+        return {
+            'game': self._game,
+        }
+
+    def __setstate__(self, state: dict) -> None:
+        self.__init__()
+        game = state.get('_game', None)
+        if not game:
+            return
+        if not isinstance(game, Game):
+            return
+        if not game.is_valid:
+            return
+        self.game = game"""
+
+    def refresh(self, game: Game | None):
+        if not game:
+            return
         game.config.read()
-        
+
         property_map = {
             'name': (game.get_name, []),
             'rpath': (lambda: game.rpath, []),
@@ -79,7 +97,7 @@ class GameItem(GObject.Object):
             'version': (game.get_renpy_version, []),
             'codename': (game.get_codename, []),
         }
-        
+
         for prop, (func, args) in property_map.items():
             try:
                 value = func(*args)
@@ -93,7 +111,7 @@ class GameItem(GObject.Object):
                     setattr(self, prop, 'N/A')
             except Exception:
                 setattr(self, prop, 'N/A')
-        
+
     @property
     def game(self) -> Game:
         return self._game

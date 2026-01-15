@@ -14,6 +14,7 @@ dependencies = [
     "pygobject-stubs>=2.13.0",
     "tendo>=0.3.0",
     "sqlalchemy>=2.0.44",
+    "pygobject>=3.50.0",
 ]
 
 

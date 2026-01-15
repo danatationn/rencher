@@ -78,7 +78,7 @@ class RencherWindow(Adw.ApplicationWindow):
         self.library.connect('game-added', self.on_game_added)
         self.library.connect('game-changed', self.on_game_changed)
         self.library.connect('game-removed', self.on_game_removed)
-        self.library.load_games()
+        # self.library.load_cache()
 
         self.import_dialog = RencherImport(self)
         self.options_dialog = RencherOptions(self)
@@ -101,10 +101,12 @@ class RencherWindow(Adw.ApplicationWindow):
         self.tasks_popover = TasksPopover(self)
         self.pie_progress_button.set_popover(self.tasks_popover)
 
+        GLib.idle_add(self.library.load_games)
         GLib.timeout_add(250, self.check_process)
 
     def on_game_added(self, _, game_item: GameItem):
         row = Adw.ButtonRow(title=game_item.name)  # type: ignore
+        logging.debug(game_item.__dict__)
         row.game = game_item.game
         self.library_list_box.append(row)
         self.rows[game_item] = row
@@ -187,7 +189,7 @@ class RencherWindow(Adw.ApplicationWindow):
             self.library_view_stack.set_visible_child_name('selected')
         else:
             self.library_view_stack.set_visible_child_name('game-select')
-        
+
         game = getattr(row, 'game', None)
         if isinstance(game, Game):
             self.current_gameitem.refresh(game)
@@ -250,7 +252,7 @@ class RencherWindow(Adw.ApplicationWindow):
     def filter_func(self, widget: Gtk.ListBoxRow) -> bool:
         if not self.filter_text:
             return True
-        
+
         if hasattr(widget, 'game'):
             fuzz = partial_token_sort_ratio(widget.game.name, self.filter_text)
             if fuzz > 90:
