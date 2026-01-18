@@ -76,8 +76,7 @@ class TaskClass(GObject.Object):
             raise ValueError
 
 
-filename = os.path.join(tmp_path, 'rencher/data/ui/tasks_row.ui')
-@Gtk.Template(filename=filename)
+@Gtk.Template.from_resource('/com/github/danatationn/Rencher/ui/tasks_row.ui')
 class TasksRow(Gtk.ListBoxRow):
     __gtype_name__ = 'TasksRow'
     task: TaskClass
@@ -115,8 +114,7 @@ class TasksRow(Gtk.ListBoxRow):
         self.details.set_label(f'{task.progress}/{task.max_progress}')
 
 
-filename = os.path.join(tmp_path, 'rencher/data/ui/tasks_popover.ui')
-@Gtk.Template(filename=filename)
+@Gtk.Template.from_resource('/com/github/danatationn/Rencher/ui/tasks_popover.ui')
 class TasksPopover(Gtk.Popover):
     __gtype_name__ = 'TasksPopover'
     __gsignals__ = {

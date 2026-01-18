@@ -1,32 +1,33 @@
-project('rencher', version: '1.2.0')
+project('rencher', version: '1.2.1')
+
+name = 'Rencher'
+app_id = 'com.github.danatationn.Rencher'
+description = 'A Ren\'Py mod manager, made with DDLC mods in mind'
+
+pkgdata_dir = join_paths(
+	get_option('prefix'),
+	get_option('datadir'),
+	meson.project_name()
+)
 
 python = import('python')
 gnome = import('gnome')
+python3 = python.find_installation('python3')
 
-blueprint_compiler = find_program('blueprint-compiler', required: true)
+conf = configuration_data()
+conf.set('name', name)
+conf.set('project_name', meson.project_name())
+conf.set('app_id', app_id)
+conf.set('pkgdata_dir', pkgdata_dir)
+conf.set('description', description)
+conf.set('bin_dir', join_paths(get_option('prefix'), get_option('bindir')))
+conf.set('python_dir', join_paths(get_option('prefix'), python3.get_install_dir()))
 
-py_install = python.find_installation('python3')
-if not py_install.found()
-	error('no python')
-endif
-if not py_install.language_version().version_compare('>=3.12')
-	error('out of date python3 (<3.12)')
-endif
+subdir('data')
+subdir('rencher')
+install_subdir(meson.project_name(), install_dir: python3.get_install_dir())
 
-py_dir = py_install.get_install_dir()
-system = host_machine.system()
-if system == 'linux'
-	prefix = get_option('prefix')  # /usr
-	bin_dir = get_option('bindir')  # /bin
-	data_dir = get_option('datadir')  # /share
-	pkg_data_dir = join_paths(prefix, data_dir, meson.project_name())  # /usr/share/rencher
-elif system == 'windows'
-	error('wip')
-else
-	error('not yet supported')
-endif
-
-install_subdir(meson.project_name(), install_dir: py_dir)
-message(py_dir)
-
-gnome.post_install(gtk_update_icon_cache: true)
+gnome.post_install(
+	# gtk_update_icon_cache: true,
+	update_desktop_database: true,
+)

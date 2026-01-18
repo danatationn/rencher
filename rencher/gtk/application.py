@@ -28,7 +28,7 @@ class RencherApplication(Gtk.Application):
     def __init__(self, *args, **kwargs):
         super().__init__(
             *args, **kwargs,
-            application_id='com.github.danatationn.rencher',
+            application_id='com.github.danatationn.Rencher',
             flags=Gio.ApplicationFlags.HANDLES_COMMAND_LINE | Gio.ApplicationFlags.NON_UNIQUE,
         )
 
@@ -108,18 +108,11 @@ class RencherApplication(Gtk.Application):
 
     def on_show_shortcuts(self, *_):
         ui_file = os.path.join(tmp_path, 'rencher/data/ui/shortcuts.ui')
-        old_ui_file = os.path.join(tmp_path, 'rencher/data/ui/shortcuts_gtk.ui')
         if os.path.isfile(ui_file):
             builder = Gtk.Builder.new_from_file(ui_file)
             dialog = builder.get_object('RencherShortcuts')
             if isinstance(dialog, Adw.ShortcutsDialog):
                 dialog.present(self.window)
-        elif os.path.isfile(old_ui_file):
-            builder = Gtk.Builder.new_from_file(old_ui_file)
-            dialog = builder.get_object('RencherShortcuts')
-            if isinstance(dialog, Gtk.ShortcutsWindow):
-                dialog.set_transient_for(self.window)
-                dialog.show()
 
     def on_quit(self, *_):
         self.quit()
@@ -140,13 +133,8 @@ class RencherApplication(Gtk.Application):
             designers=['danatationn', 'vl1'],
         )
         dialog.set_release_notes("""<ul>
-            <li> Added tasks </li>
-            <li> Added crash dialogs on Linux </li>
-            <li> Added basic shortcuts </li>
-            <li> Swapped settings button for hamburger menu </li>
-            <li> Brought back filename restrictions for Windows </li>
-            <li> Fixed import dialog "memory leak" </li>
-            <li> More crash prevention </li>
+            <li> Faster library game loading </li>
+            <li> Fixed crash when starting Rencher for the first time </li>
         </ul>""")
 
         dialog.present(self.window)

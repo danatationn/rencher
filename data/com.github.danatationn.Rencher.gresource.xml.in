@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<gresources>
+  <gresource prefix="/com/github/danatationn/Rencher">
+ 	<file compressed="true" preprocess="xml-stripblanks">ui/import.ui</file>
+ 	<file compressed="true" preprocess="xml-stripblanks">ui/options.ui</file>
+ 	<file compressed="true" preprocess="xml-stripblanks">ui/settings.ui</file>
+ 	<file compressed="true" preprocess="xml-stripblanks">ui/shortcuts.ui</file>
+ 	<file compressed="true" preprocess="xml-stripblanks">ui/tasks_popover.ui</file>
+ 	<file compressed="true" preprocess="xml-stripblanks">ui/tasks_row.ui</file>
+  	<file compressed="true" preprocess="xml-stripblanks">ui/window.ui</file>
+
+    <file compressed="true">icons/rencher-icon.png</file>
+    <file compressed="true" preprocess="xml-stripblanks">icons/xbox-controller-symbolic.svg</file>
+    <file compressed="true" preprocess="xml-stripblanks">icons/cogged-wheel-symbolic.svg</file>
+    <file compressed="true" preprocess="xml-stripblanks">icons/view-sort-ascending-symbolic.svg</file>
+    <file compressed="true" preprocess="xml-stripblanks">icons/list-add-symbolic.svg</file>
+    <file compressed="true" preprocess="xml-stripblanks">icons/loupe-large-symbolic.svg</file>
+    <file compressed="true" preprocess="xml-stripblanks">icons/folder-open-symbolic.svg</file>
+    <file compressed="true" preprocess="xml-stripblanks">icons/external-link-symbolic.svg</file>
+    <file compressed="true" preprocess="xml-stripblanks">icons/file-cabinet-symbolic.svg</file>
+    <file compressed="true" preprocess="xml-stripblanks">icons/library-symbolic.svg</file>
+    <file compressed="true" preprocess="xml-stripblanks">icons/document-edit-symbolic.svg</file>
+    <file compressed="true" preprocess="xml-stripblanks">icons/menu-large-symbolic.svg</file>
+    <file compressed="true" preprocess="xml-stripblanks">icons/test-pass-symbolic.svg</file>
+    <file compressed="true" preprocess="xml-stripblanks">icons/list-large-symbolic.svg</file>
+    <file compressed="true" preprocess="xml-stripblanks">icons/stop-large-symbolic.svg</file>
+    <file compressed="true" preprocess="xml-stripblanks">icons/cross-large-symbolic.svg</file>
+  </gresource>
+</gresources>

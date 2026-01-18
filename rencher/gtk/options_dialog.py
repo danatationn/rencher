@@ -15,8 +15,7 @@ from rencher.renpy.paths import get_py_files
 if TYPE_CHECKING:
     from rencher.gtk.window import RencherWindow
 
-ui_path = os.path.join(tmp_path, 'rencher/data/ui/options.ui')
-@Gtk.Template(filename=str(ui_path))
+@Gtk.Template.from_resource('/com/github/danatationn/Rencher/ui/options.ui')
 class RencherOptions(Adw.PreferencesDialog):
     __gtype_name__ = 'RencherOptions'
 
@@ -116,7 +115,7 @@ class RencherOptions(Adw.PreferencesDialog):
                     self.window.current_gameitem.refresh(self.game)
                     self.window.library_list_box.select_row(row)
                     break
-                    
+
         self.game.config.write()
         GLib.idle_add(select)
 

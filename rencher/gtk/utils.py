@@ -28,35 +28,6 @@ def return_comp(name: str) -> str:
 
     return comp_path
 
-def compile_data() -> None:
-    """
-        converts all .blp files in usable .ui files using blueprint-compiler (provided you have it installed)
-    """
-
-    if getattr(sys, 'frozen', False):
-        return  # you can't build blp files if they don't exist 🤷
-
-    blpc_path = return_comp('blueprint-compiler')
-    resc_path = return_comp('glib-compile-resources')
-    ui_dir = Path(__file__).parents[1] / 'data' / 'ui'
-    args = ['python', blpc_path, 'batch-compile', ui_dir, ui_dir]
-
-    blp_files = ui_dir.glob('*.blp')
-    for file in blp_files:
-        if file.name == 'shortcuts.blp' and platform.system() == 'Windows':
-            continue
-        else:
-            args.extend([file])
-
-    print('Compiling .blp files...')
-    subprocess.run(args)
-
-    res_dir = Path(__file__).parents[1] / 'data' / 'resources'
-    xml_file = res_dir / 'resources.gresource.xml'
-
-    print('Compiling resources...')
-    subprocess.run([resc_path, xml_file], cwd=res_dir)
-
 def open_file_manager(path: str):
     if platform.system() == 'Linux':
         Gio.AppInfo.launch_default_for_uri('file:///' + path)
@@ -66,14 +37,14 @@ def open_file_manager(path: str):
 def windowficate_path(path: str) -> str:
     """
     returns a file that abides by the Windows file naming conventions
-    
+
     Args:
         path (str): is used
     Returns:
         str: the new path
     """
     forbidden_chars = ['<', '>', ':', '"', '/', '\\', '|', '?', '*']
-    forbidden_names = ['CON', 'PRN', 'AUX', 'NUL', 'COM1', 'COM2', 'COM3', 'COM4', 'COM5', 'COM6', 'COM7', 'COM8', 
+    forbidden_names = ['CON', 'PRN', 'AUX', 'NUL', 'COM1', 'COM2', 'COM3', 'COM4', 'COM5', 'COM6', 'COM7', 'COM8',
                        'COM9', 'COM¹', 'COM²', 'COM³', 'LPT1', 'LPT2', 'LPT3', 'LPT4', 'LPT5', 'LPT6', 'LPT7', 'LPT8',
                        'LPT9', 'LPT¹', 'LPT²', 'LPT³']
 

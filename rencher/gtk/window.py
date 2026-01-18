@@ -22,12 +22,11 @@ from rencher.renpy.game import Game
 if TYPE_CHECKING:
     from rencher.gtk.application import RencherApplication
 
-filename = os.path.join(tmp_path, 'rencher/data/ui/window.ui')
-@Gtk.Template(filename=str(filename))
+@Gtk.Template.from_resource('/com/github/danatationn/Rencher/window.ui')
 class RencherWindow(Adw.ApplicationWindow):
     __gtype_name__ = 'RencherWindow'
 
-    """ variables """
+    # variables
     game_process: subprocess.Popen | None = None
     process_time: float = None
     process_row: Gtk.ListBoxRow | None = None
@@ -39,7 +38,7 @@ class RencherWindow(Adw.ApplicationWindow):
     current_gameitem: GameItem = None
     rows: dict[GameItem, Adw.ActionRow] = {}
 
-    """ classes """
+    # classes
     application: 'RencherApplication'
     settings_dialog: RencherSettings
     import_dialog: RencherImport
@@ -48,7 +47,7 @@ class RencherWindow(Adw.ApplicationWindow):
     library: RencherLibrary
     tasks_popover: TasksPopover
 
-    """ templates """
+    # templates
     toast_overlay: Adw.ToastOverlay = Gtk.Template.Child()
     window_progress_bar: Gtk.ProgressBar = Gtk.Template.Child()
     split_view: Adw.OverlaySplitView = Gtk.Template.Child()

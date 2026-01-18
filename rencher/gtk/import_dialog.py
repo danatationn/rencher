@@ -24,8 +24,7 @@ if TYPE_CHECKING:
     from rencher.gtk.window import RencherWindow
 
 
-filename = os.path.join(tmp_path, 'rencher/data/ui/import.ui')
-@Gtk.Template(filename=filename)
+@Gtk.Template.from_resource('/com/github/danatationn/Rencher/ui/import.ui')
 class RencherImport(Adw.PreferencesDialog):
     __gtype_name__ = 'RencherImport'
 
@@ -243,7 +242,7 @@ class RencherImport(Adw.PreferencesDialog):
                     shutil.copy(path, target_path)
 
             GLib.idle_add(self.window.tasks_popover.update_task, task_date, i)
-            
+
         if is_mod:
             rpa_path = get_rpa_path(rpath)
             if rpa_path == rpath:
@@ -257,20 +256,20 @@ class RencherImport(Adw.PreferencesDialog):
                     relative_path = os.path.relpath(path, rpa_path)
                     target_path = os.path.join(new_rpa_path, relative_path)
                     shutil.move(path, target_path)
-    
+
                 # get_absolute_path is based off of get_rpa_files so we need to clear the cache
                 # otherwise it will dump the game files outside the folder
                 get_rpa_files.cache_clear()
-                    
+
             apath = get_absolute_path(rpath)
-    
+
             for i, path in enumerate(glob.iglob(f'{modded_game.apath}/**', recursive=True)):
                 if self.cancel_flag.is_set():
                     break
-                
+
                 relative_path = os.path.relpath(path, modded_game.apath)
                 target_path = os.path.join(apath, relative_path)
-                
+
                 if os.path.exists(target_path):
                     continue
                 if os.path.basename(target_path) == 'rencher.ini':
@@ -284,9 +283,9 @@ class RencherImport(Adw.PreferencesDialog):
                 else:
                     os.makedirs(os.path.dirname(target_path), exist_ok=True)
                     shutil.copy(path, target_path)
-                    
+
                 GLib.idle_add(self.window.tasks_popover.update_task, task_date, len(files) + i)
-            
+
         if not self.cancel_flag.is_set():
             game = Game(rpath=rpath)
             game.config.set('info', 'nickname', name)

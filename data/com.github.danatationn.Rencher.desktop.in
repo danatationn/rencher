@@ -1,0 +1,9 @@
+[Desktop Entry]
+Name=@name@
+Comment=@description@
+Exec=@bin_dir@/@project_name@ %U
+Icon=@app_id@
+Terminal=false
+Type=Application
+StartupNotify=true
+Categories=Game;

@@ -15,13 +15,12 @@ from rencher.renpy.config import RencherConfig
 if TYPE_CHECKING:
     from rencher.gtk.window import RencherWindow
 
-filename = os.path.join(tmp_path, 'rencher/data/ui/settings.ui')
-@Gtk.Template(filename=str(filename))
+@Gtk.Template.from_resource('/com/github/danatationn/Rencher/settings.ui')
 class RencherSettings(Adw.PreferencesDialog):
     __gtype_name__ = 'RencherSettings'
 
     window: 'RencherWindow'
-    config: RencherConfig = None
+    config: RencherConfig
 
     data_dir_entry: Adw.EntryRow = Gtk.Template.Child()
     updates_switch: Adw.SwitchRow = Gtk.Template.Child()

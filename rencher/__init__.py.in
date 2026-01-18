@@ -13,11 +13,6 @@ import sys
 import traceback
 from types import TracebackType
 
-import tendo
-from tendo import singleton
-
-from rencher.gtk.utils import compile_data
-
 local_path: str = ''
 config_path: str = ''
 tmp_path: str = os.path.abspath(os.path.join(__file__, '..', '..'))
@@ -27,9 +22,8 @@ if platform.system() == 'Linux':
     local_path = os.path.join(home_path, '.local/share/rencher')
     config_path = os.path.join(home_path, '.config/rencher.ini')
 elif platform.system() == 'Windows':
-    local_path = os.path.join(home_path, 'AppData/Local/Rencher') 
+    local_path = os.path.join(home_path, 'AppData/Local/Rencher')
     config_path = os.path.join(home_path, 'AppData/Local/Rencher/config.ini')
-
 
 class GameInvalidError(Exception):
     pass
@@ -49,12 +43,10 @@ def handle_global_exception(exc_type: type[BaseException], exc_value: BaseExcept
         sys.__excepthook__(exc_type, exc_value, exc_traceback)
         return
 
-    # if issubclass(exc_type, InvalidGameError):
+    # if issubclass(exc_type, tendo.singleton.SingleInstanceException):
+    #     show_err_dialog("There's already an instance of Rencher running!\n"
+    #                     "Close that one first!")
     #     return
-    if issubclass(exc_type, tendo.singleton.SingleInstanceException):
-        show_err_dialog("There's already an instance of Rencher running!\n"
-                        "Close that one first!")
-        return
 
     err_message = ''.join(traceback.format_exception(exc_type, exc_value, exc_traceback))
     print(err_message, file=sys.stderr)
@@ -77,9 +69,6 @@ def show_err_dialog(text: str) -> None:
 
 def launch() -> None:
     sys.excepthook = handle_global_exception
-    _ = singleton.SingleInstance()
-
-    compile_data()
 
     if getattr(sys, 'frozen', False):
         executable_folder = os.path.dirname(sys.executable)
@@ -108,11 +97,11 @@ def launch() -> None:
 
     # ui files get loaded when the import happens
     # we want the ui that we just compiled
-    from rencher.gtk.application import RencherApplication  # noqa: E402	
+    from rencher.gtk.application import RencherApplication  # noqa: E402
     app = RencherApplication()
 
     from gi.repository import Gio
-    gres_path = os.path.join(tmp_path, 'rencher/data/resources/resources.gresource')
+    gres_path = os.path.join('@pkgdata_dir@', '@app_id@.gresource')
     res = Gio.resource_load(gres_path)
     res._register()
 
