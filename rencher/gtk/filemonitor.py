@@ -17,9 +17,9 @@ from watchdog.events import (
 )
 from watchdog.observers import Observer
 
-from rencher import config_path, local_path
 from rencher.gtk.window import RencherWindow
 from rencher.renpy.config import RencherConfig
+from rencher.renpy.paths import config_path, local_path
 
 
 class RencherFileMonitor(FileSystemEventHandler):

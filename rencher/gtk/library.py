@@ -6,9 +6,9 @@ from typing import TYPE_CHECKING
 
 from gi.repository import GObject
 
-from rencher import GameInvalidError, GameNoExecutableError
 from rencher.gtk.game_item import GameItem
 from rencher.renpy.config import RencherConfig
+from rencher.renpy.game import GameInvalidError, GameNoExecutableError
 
 if TYPE_CHECKING:
     from rencher.gtk.window import RencherWindow

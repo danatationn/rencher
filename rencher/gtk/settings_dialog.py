@@ -7,15 +7,15 @@ from typing import TYPE_CHECKING
 
 from gi.repository import Adw, GLib, Gtk
 
-from rencher import local_path, tmp_path
 from rencher.gtk.tasks import TaskTypeEnum
 from rencher.gtk.utils import open_file_manager
 from rencher.renpy.config import RencherConfig
+from rencher.renpy.paths import local_path, tmp_path
 
 if TYPE_CHECKING:
     from rencher.gtk.window import RencherWindow
 
-@Gtk.Template.from_resource('/com/github/danatationn/Rencher/settings.ui')
+@Gtk.Template.from_resource('/com/github/danatationn/Rencher/ui/settings.ui')
 class RencherSettings(Adw.PreferencesDialog):
     __gtype_name__ = 'RencherSettings'
 

@@ -1,0 +1,92 @@
+#!/bin/env python3
+import glob
+import os
+import platform
+import shutil
+import subprocess
+import sys
+import traceback
+from types import TracebackType
+
+
+def launch() -> None:
+    # check if running from meson
+    if meson_root := os.environ.get('MESON_BUILD_ROOT', None):
+        sys.path.insert(1, meson_root)
+
+    sys.excepthook = handle_global_exception
+
+    if getattr(sys, 'frozen', False):
+        executable_folder = os.path.dirname(sys.executable)
+
+        # appimages accept relatives paths for the loader files
+        # we freeze rencher with relative paths, and swap them out with absolute paths on startup
+        if platform.system() == 'Linux' and 'APPIMAGE' not in os.environ:
+            loader_files = glob.glob(os.path.join(executable_folder, 'lib', 'libpixbufloader*.so'))
+            cache_text = subprocess.run(['gdk-pixbuf-query-loaders', *loader_files], capture_output=True).stdout
+            with open(os.path.join(executable_folder, 'lib', 'pixbuf-loaders.cache'), 'wb') as f:
+                f.write(cache_text)
+
+        # some windows machines display square black borders when not using cairo
+        if platform.system() == 'Windows':
+            os.environ['GSK_RENDERER'] = 'cairo'
+
+        os.environ['GTK_EXE_PREFIX'] = executable_folder
+        os.environ['GTK_DATA_PREFIX'] = executable_folder
+        os.environ['GTK_PATH'] = executable_folder
+        if not os.environ.get('XDG_DATA_DIRS', None):
+            os.environ['XDG_DATA_DIRS'] = os.pathsep + os.path.join(executable_folder, 'share')
+        else:
+            os.environ['XDG_DATA_DIRS'] += os.pathsep + os.path.join(executable_folder, 'share')
+        os.environ['FONTCONFIG_FILE'] = os.path.join(executable_folder, 'share/fonts/fonts.conf')
+        os.environ['FONTCONFIG_PATH'] = os.path.join(executable_folder, 'share/fonts')
+        os.environ['GDK_PIXBUF_MODULE_FILE'] = os.path.join(executable_folder, 'lib/pixbuf-loaders.cache')
+        os.environ['GI_TYPELIB_PATH'] = os.path.join(executable_folder, 'lib/girepository-1.0')
+        os.environ['GSETTINGS_SCHEMA_DIR'] = os.path.join(executable_folder, 'share/glib-2.0/schemas')
+
+    from gi.repository import Gio
+    gres_path = os.path.join('@pkgdata_dir@', '@app_id@.gresource')
+    res = Gio.resource_load(gres_path)
+    res._register()
+
+    from rencher.gtk.application import RencherApplication  # noqa: E402
+    app = RencherApplication()
+
+    try:
+        app.run(sys.argv)
+    except Exception as err:
+        handle_global_exception(type(err), err, err.__traceback__)
+
+def handle_global_exception(exc_type: type[BaseException], exc_value: BaseException, exc_traceback: TracebackType):
+    if issubclass(exc_type, KeyboardInterrupt):
+        sys.__excepthook__(exc_type, exc_value, exc_traceback)
+        return
+
+    # if issubclass(exc_type, tendo.singleton.SingleInstanceException):
+    #     show_err_dialog("There's already an instance of Rencher running!\n"
+    #                     "Close that one first!")
+    #     return
+
+    err_message = ''.join(traceback.format_exception(exc_type, exc_value, exc_traceback))
+    print(err_message, file=sys.stderr)
+    show_err_dialog('Oops! Rencher has crashed!\n'
+                    'Please send this error to the developer, along with a description on what you were doing.\n\n'
+                    + err_message)
+
+    sys.exit(1)
+
+def show_err_dialog(text: str) -> None:
+    # cx_freeze on windows already shows you an error with what went wrong
+    if platform.system() != 'Linux':
+        return
+
+    zenity_path = shutil.which('zenity')
+    kdialog_path = shutil.which('kdialog')
+    if zenity_path:
+        subprocess.run([zenity_path, '--title=Rencher', '--error', '--no-markup', '--no-wrap', '--text', text])
+    elif kdialog_path:
+        subprocess.run([kdialog_path, '--title=Rencher', '--error', text])
+
+
+if __name__ == '__main__':
+	launch()

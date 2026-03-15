@@ -6,25 +6,28 @@ import shutil
 import subprocess
 import time
 
-from rencher import GameInvalidError, GameNoExecutableError
 from rencher.renpy.config import GameConfig
 from rencher.renpy.paths import get_absolute_path, get_py_files, validate_game_files
 
+class GameInvalidError(Exception):
+    pass
+class GameNoExecutableError(GameInvalidError):
+    pass
 
 class Game:
-    rpath: str = None
-    apath: str = None
-    config: GameConfig = None
+    rpath: str
+    apath: str
+    config: GameConfig
 
-    def __init__(self, rpath: str = None, apath: str = None):
-        self.rpath = rpath  # relative path
-        self.apath = apath  # absolute path (root / the working directory)
-
+    def __init__(self, rpath: str | None = None, apath: str | None = None):
         if not rpath and apath:
             self.rpath = apath
-        if not apath and rpath:
-            self.apath = get_absolute_path(self.rpath)
-            if self.apath is None:
+            self.apath = apath
+        elif not apath and rpath:
+            self.rpath = rpath
+            if apath := get_absolute_path(rpath):
+                self.apath = apath
+            else:
                 name = os.path.basename(rpath)
                 raise GameInvalidError(f'{name} is not a valid game! ({rpath})')
 
@@ -51,7 +54,7 @@ class Game:
             for file in files:
                 paths.append(os.path.join(topdir, file))
         return validate_game_files(paths)
-        
+
 
     def get_executable(self) -> str:
         """
@@ -60,7 +63,7 @@ class Game:
         py_files = get_py_files(self.apath)
         codename = self.config.get_value('codename')
         exec_path = os.path.join(self.apath, f'{codename}.py')
-    
+
         if codename != '':
             return exec_path
         elif len(py_files) == 0:
@@ -69,18 +72,18 @@ class Game:
             return py_files[0]
         else:
             raise GameNoExecutableError
-        
+
     def get_codename(self) -> str:
         exec_name = os.path.basename(self.get_executable())
         return os.path.splitext(exec_name)[0]
-    
+
     def get_name(self) -> str:
         nickname = self.config['info']['nickname']
         if nickname != '':
             return nickname
         else:
             return os.path.basename(self.rpath)
-    
+
     def get_python_path(self) -> str | None:
         arch = platform.machine()
         sys = platform.system().lower()
@@ -107,7 +110,7 @@ class Game:
     def get_renpy_version(self) -> str | None:
         """
             tries to retrieve the game's ren'py version (WITHOUT USING EXEC)
-            
+
             there a lot of ways that versions are tracked based on what version it is
             1. ren'py 6:
                 * the version is located in `version_tuple` in `renpy/__init__.py`
@@ -122,7 +125,7 @@ class Game:
                     # i have no idea if this occurs with other versions. i just noticed it in ren'py 7.6
             4. ren'py 8:
                 * the version and commit number are located in `version` in `renpy/vc_version.py`
-            
+
         Returns:
             the version as a string. returns `None` if it couldn't be determined
         """
@@ -130,7 +133,7 @@ class Game:
         init_path = os.path.join(self.apath, 'renpy', '__init__.py')
         commit = 0
         version = ''
-        
+
         if os.path.isfile(vc_path):
             with open(vc_path) as f:
                 vc_content = f.read()
@@ -140,7 +143,7 @@ class Game:
                 commit_match = re.findall(r'vc_version.*(\b\d+\b)', vc_content, re.MULTILINE)
                 if commit_match:
                     commit = commit_match[0]
-        
+
         if os.path.isfile(init_path):
             with open(init_path) as f:
                 init_content = f.read()
@@ -148,7 +151,7 @@ class Game:
                 if version_tuple_match:
                     version_tuple = re.findall(r'\b\d+\b', version_tuple_match[0])
                     version = '.'.join(str(i) for i in version_tuple)
-        
+
         if commit:
             version += '.' + commit
         return version
@@ -163,7 +166,7 @@ class Game:
 
         args = [self.get_python_path()]
         env = os.environ
-        py_path = os.path.join(self.apath, self.get_executable()) 
+        py_path = os.path.join(self.apath, self.get_executable())
 
         if self.config['overwritten']['skip_splash_scr'] == 'true':
             env['RENPY_SKIP_SPLASHSCREEN'] = '1'
@@ -199,22 +202,22 @@ class Game:
         return subprocess.Popen(args, env=env)
 
     def setup(self) -> None:
-        """ 
+        """
             1. makes files executable for linux
-        
+
             2. in newer ren'py versions, a dll called "librenpython" got added
             this library includes all the python libraries ren'py needs (i think)
             this makes modding a bit more complicated, as certain conflicts might arise
-    
+
             PRE LIBRENPYTHON:
             * libraries were located in lib/ inside the exec path
             * you need to pass "-EO <python_path>" to args
-            
+
             POST LIBRENPYTHON:
             * lib/ folder is gone and instead replaced by librenpython
             * you need to pass "<python_path>" to args instead
         """
-        
+
         exec_path = self.get_python_path()
         exec_mode = os.stat(exec_path).st_mode
         os.chmod(exec_path, exec_mode | 0o111)

@@ -3,7 +3,7 @@ using Adw 1;
 
 template $RencherOptions: Adw.PreferencesDialog {
 	title: _("Options");
-	
+
 	Adw.PreferencesPage {
 		Adw.PreferencesGroup {
 			title: _("Info");
@@ -13,9 +13,9 @@ template $RencherOptions: Adw.PreferencesDialog {
 			}
 			Adw.ActionRow location_row {
 				styles ["property"]
-				
+
 				title: _("Location");
-				
+
 				[suffix]
                 Button {
                     icon-name: "external-link-symbolic";
@@ -30,14 +30,14 @@ template $RencherOptions: Adw.PreferencesDialog {
 			}
 			Adw.ButtonRow clear_info_button {
 				styles ["destructive-action"]
-				title: _("Clear Info");
-				
+				title: _("Clear Stats");
+
 				activated => $on_clear_info();
 			}
 			Adw.ButtonRow delete_game_button {
 				styles ["destructive-action"]
 				title: _("Delete Game");
-				
+
 				activated => $on_delete_game();
 			}
 		}
@@ -45,38 +45,38 @@ template $RencherOptions: Adw.PreferencesDialog {
 		Adw.PreferencesGroup {
 			title: _("Config Settings");
 			description: _("These might break some games. Here be dragons!");
-		
+
 			Adw.ExpanderRow {
 				title: _("Overwrite Skip Splash Screen");
 				expanded: bind overwrite_skip_splash_scr_switch.active;
-				
+
 				[action]
 				Switch overwrite_skip_splash_scr_switch {
 					halign: end;
 					valign: center;
-									
+
 					state-set => $on_switch_changed();
 				}
-				
+
 				Adw.SwitchRow skip_splash_scr_switch {
 					title: _("Skip Splash Screen");
 					sensitive: bind overwrite_skip_splash_scr_switch.active;
-									
+
 					activate => $on_switch_changed();
 				}
 			}
 			Adw.ExpanderRow {
 				title: _("Overwrite Skip Main Menu");
 				expanded: bind overwrite_skip_main_menu_switch.active;
-				
+
 				[action]
 				Switch overwrite_skip_main_menu_switch {
 					halign: end;
 					valign: center;
-									
+
 					state-set => $on_switch_changed();
 				}
-				
+
 				Adw.SwitchRow skip_main_menu_switch {
 					title: _("Skip Main Menu");
 					sensitive: bind overwrite_skip_main_menu_switch.active;
@@ -85,19 +85,19 @@ template $RencherOptions: Adw.PreferencesDialog {
 			Adw.ExpanderRow {
 				title: _("Overwrite Contained Game Saves");
 				expanded: bind overwrite_forced_save_dir_switch.active;
-				
+
 				[action]
 				Switch overwrite_forced_save_dir_switch {
 					halign: end;
 					valign: center;
-					
+
 					state-set => $on_switch_changed();
 				}
-				
+
 				Adw.SwitchRow forced_save_dir_switch {
 					title: _("Contained Game Saves");
 					sensitive: bind overwrite_forced_save_dir_switch.active;
-									
+
 					activate => $on_switch_changed();}
 			}
 			//Adw.SpinRow options_save_slot {

@@ -1,9 +1,10 @@
 from gi.repository import GLib, GObject
 
-from rencher import GameItemDateError
 from rencher.renpy.game import Game
 from rencher.renpy.paths import get_absolute_path
 
+class GameItemDateError(Exception):
+    pass
 
 def format_date(time: float) -> str:
     date = GLib.DateTime.new_from_unix_local(int(time))

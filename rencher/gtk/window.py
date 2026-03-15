@@ -8,7 +8,6 @@ from typing import TYPE_CHECKING
 from gi.repository import Adw, GLib, Gtk
 from thefuzz.fuzz import partial_token_sort_ratio
 
-from rencher import tmp_path
 from rencher.gtk.codename_dialog import RencherCodename
 from rencher.gtk.game_item import GameItem
 from rencher.gtk.import_dialog import RencherImport
@@ -22,20 +21,20 @@ from rencher.renpy.game import Game
 if TYPE_CHECKING:
     from rencher.gtk.application import RencherApplication
 
-@Gtk.Template.from_resource('/com/github/danatationn/Rencher/window.ui')
+@Gtk.Template.from_resource('/com/github/danatationn/Rencher/ui/window.ui')
 class RencherWindow(Adw.ApplicationWindow):
     __gtype_name__ = 'RencherWindow'
 
     # variables
     game_process: subprocess.Popen | None = None
-    process_time: float = None
+    process_time: float
     process_row: Gtk.ListBoxRow | None = None
-    is_terminating: bool = False
+    is_terminating: bool
     filter_text: str = ''
     combo_index: int = 0
     ascending_order: bool = False
-    pause_monitoring: str = None
-    current_gameitem: GameItem = None
+    pause_monitoring: str
+    current_gameitem: GameItem
     rows: dict[GameItem, Adw.ActionRow] = {}
 
     # classes
@@ -72,7 +71,7 @@ class RencherWindow(Adw.ApplicationWindow):
             self.get_style_context().add_class('devel')
 
         self.application = self.get_application()  # type: ignore
-        self.filemonitor = self.application.file_monitor
+        self.filemonitor = getattr(self.application, 'file_monitor')
         self.library = RencherLibrary(self)
         self.library.connect('game-added', self.on_game_added)
         self.library.connect('game-changed', self.on_game_changed)

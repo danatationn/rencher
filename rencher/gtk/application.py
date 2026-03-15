@@ -6,7 +6,6 @@ import gi
 import requests
 
 import rencher
-from rencher import tmp_path
 from rencher.renpy.config import RencherConfig
 
 gi.require_version('Gtk', '4.0')
@@ -17,11 +16,12 @@ Adw.init()
 
 from rencher.gtk.filemonitor import RencherFileMonitor  # noqa: E402
 from rencher.gtk.window import RencherWindow  # noqa: E402
+from rencher.renpy.paths import local_path  # noqa: E402
 
 
 class RencherApplication(Gtk.Application):
-    config: dict = None
-    window: RencherWindow = None
+    config: dict
+    window: RencherWindow
     file_monitor: RencherFileMonitor = None
 
 
@@ -40,8 +40,8 @@ class RencherApplication(Gtk.Application):
         formatter = logging.Formatter('[%(levelname)s\t%(asctime)s.%(msecs)-3d %(module)s] %(message)s',
                                    datefmt='%H:%M:%S')
 
-        os.makedirs(rencher.local_path, exist_ok=True)
-        file_handler = logging.FileHandler(os.path.join(rencher.local_path, 'log.txt'), mode='w')
+        os.makedirs(local_path, exist_ok=True)
+        file_handler = logging.FileHandler(os.path.join(local_path, 'log.txt'), mode='w')
         file_handler.setLevel(logging.DEBUG)
         file_handler.setFormatter(formatter)
         logger.addHandler(file_handler)
@@ -107,12 +107,9 @@ class RencherApplication(Gtk.Application):
         self.window.settings_dialog.present(self.window)
 
     def on_show_shortcuts(self, *_):
-        ui_file = os.path.join(tmp_path, 'rencher/data/ui/shortcuts.ui')
-        if os.path.isfile(ui_file):
-            builder = Gtk.Builder.new_from_file(ui_file)
-            dialog = builder.get_object('RencherShortcuts')
-            if isinstance(dialog, Adw.ShortcutsDialog):
-                dialog.present(self.window)
+        builder = Gtk.Builder.new_from_resource('/com/github/danatationn/Rencher/ui/shortcuts.ui')
+        dialog = builder.get_object('RencherShortcuts')
+        dialog.present(self.window)
 
     def on_quit(self, *_):
         self.quit()
@@ -159,6 +156,8 @@ class RencherApplication(Gtk.Application):
                 return
             version = response.json()['tag_name'].replace('v', '')
 
+            toast = Adw.Toast(timeout=5)
+
             if version > rencher.__version__:
                 if 'assets' in response.json() and len(response.json()['assets']) > 0:
                     download_url = response.json()['html_url']
@@ -167,15 +166,18 @@ class RencherApplication(Gtk.Application):
 
                 logging.info(f'A new update is available! (v{version})')
                 logging.info(download_url)
-                toast = Adw.Toast(title=f'A new update is available! (v{version})', timeout=5, button_label='Download')
+                toast.set_title(f'A new update is available! (v{version})')
+                toast.set_button_label('Download')
                 toast.connect('button-clicked', lambda *_: (
                     Gtk.show_uri(self.window, download_url, Gdk.CURRENT_TIME)
                 ))
 
                 GLib.idle_add(self.window.toast_overlay.add_toast, toast)
+            elif version == rencher.__version__:
+                toast.set_title(f'You\'re up to date! (v{rencher.__version__})')
             else:
-                message = f'You\'re up to date! (v{rencher.__version__})'
-                if show_up_to_date_toast:
-                    toast = Adw.Toast(title=message, timeout=5)
-                    GLib.idle_add(self.window.toast_overlay.add_toast, toast)
-                logging.info(message)
+                toast.set_title(f'You\'re bleeding-edge! (v{rencher.__version__})')
+
+            if show_up_to_date_toast:
+                GLib.idle_add(self.window.toast_overlay.add_toast, toast)
+            logging.info(toast.get_title())

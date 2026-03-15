@@ -6,11 +6,10 @@ from typing import TYPE_CHECKING
 
 from gi.repository import Adw, GLib, Gtk
 
-from rencher import config_path, tmp_path
 from rencher.gtk.tasks import TaskTypeEnum
 from rencher.gtk.utils import open_file_manager
 from rencher.renpy.game import Game
-from rencher.renpy.paths import get_py_files
+from rencher.renpy.paths import config_path, get_py_files
 
 if TYPE_CHECKING:
     from rencher.gtk.window import RencherWindow

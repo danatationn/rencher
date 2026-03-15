@@ -1,7 +1,19 @@
 import os
+import platform
 from functools import lru_cache
 from pathlib import Path
 
+local_path = Path()
+config_path = Path()
+tmp_path: str = os.path.abspath(os.path.join(__file__, '..', '..'))
+home_path: str = os.path.expanduser('~')
+
+if platform.system() == 'Linux':
+    local_path = Path.home() / '.local/share/rencher'
+    config_path = Path.home() / '.local/share/config.ini'
+elif platform.system() == 'Windows':
+    local_path = Path.home() / 'AppData/Local/Rencher'
+    config_path = Path.home() / 'AppData/Local/Rencher/config.ini'
 
 # @lru_cache
 def get_py_files(apath: Path | str) -> list[str]:
@@ -23,14 +35,14 @@ def get_rpa_files(rpath: Path | str) -> list[str]:
             ext = os.path.splitext(f)[1]
             if not ext.startswith('.rp'):
                 continue
+            # generic engine file
             if f.startswith('00'):
-                # generic engine file
                 continue
+            # .rpym files can be compiled (.rypmc)
             if ext.startswith('.rpym'):
-                # .rpym files can be compiled (.rypmc)
                 continue
+            # cache file
             if ext == '.rpyb':
-                # cache file
                 continue
             rp_files.append(os.path.join(top_dir, f))
 

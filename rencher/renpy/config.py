@@ -2,7 +2,7 @@ import os.path
 from configparser import ConfigParser
 from pathlib import Path
 
-from rencher import config_path, local_path
+from rencher.renpy.paths import config_path, local_path
 
 
 class GameConfig(ConfigParser):

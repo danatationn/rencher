@@ -1,6 +1,6 @@
 # Rencher - yet another mod manager
 <p align="center">
-	<img src="assets/rencher-logo.png" width="400px"/>
+	<img src="data/assets/rencher-logo.png" width="400px"/>
 <p/>
 
 Rencher is a Ren'Py game manager, made with DDLC mods in mind
@@ -11,18 +11,18 @@ it strives to be as simple as possible, while being as beautiful as possible
 <br/>
 
 <p>
-	<img src="assets/Screenshot From 2025-11-02 17-47-53.png" alt="Screenshot of Rencher's UI showing off the main window" width="384px"/>
-	<img src="assets/Screenshot From 2025-11-02 17-48-27.png" alt="Screenshot of Rencher's UI showing off the import menu" width="384px"/>
+	<img src="data/assets/Screenshot From 2025-11-02 17-47-53.png" alt="Screenshot of Rencher's UI showing off the main window" width="384px"/>
+	<img src="data/assets/Screenshot From 2025-11-02 17-48-27.png" alt="Screenshot of Rencher's UI showing off the import menu" width="384px"/>
 
-[//]: # (	<img src="assets/Screenshot From 2025-11-02 17-48-37.png" alt="Screenshot of Rencher's UI showing off the settings menu" width="384px"/>)
-[//]: # (	<img src="assets/Screenshot From 2025-11-02 17-48-08.png" alt="Screenshot of Rencher's UI showing off the tasks popover" width="384px"/>)
+[//]: # (	<img src="data/assets/Screenshot From 2025-11-02 17-48-37.png" alt="Screenshot of Rencher's UI showing off the settings menu" width="384px"/>)
+[//]: # (	<img src="data/assets/Screenshot From 2025-11-02 17-48-08.png" alt="Screenshot of Rencher's UI showing off the tasks popover" width="384px"/>)
 </p>
 
 ## download!
 ### [Windows](https://github.com/danatationn/Rencher/releases/latest/download/RencherInstaller.exe) - [Linux](https://github.com/danatationn/Rencher/releases/latest/download/Rencher-x86_64.AppImage) - ~~macOS~~ (soon)
 
 ## tips
-* you can turn the update toasts in the settings ^^
+* you can turn the update toasts in the settings
 * you can also delete the .zip files after importing. also in the settings
 * if you're importing an already set up DDLC mod, then just import it normally
 
