@@ -1,7 +1,7 @@
 project('rencher', version: '1.2.1')
 
 name = 'Rencher'
-app_id = 'com.github.danatationn.Rencher'
+app_id = 'com.github.danatationn.rencher'
 description = 'A Ren\'Py mod manager, made with DDLC mods in mind'
 
 pkgdata_dir = join_paths(
@@ -32,6 +32,6 @@ install_subdir(meson.project_name(), install_dir: python_install.get_install_dir
 
 
 gnome.post_install(
-	# gtk_update_icon_cache: true,
+	gtk_update_icon_cache: true,
 	update_desktop_database: true,
 )

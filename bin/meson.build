@@ -3,7 +3,8 @@ configure_file(
 	output: meson.project_name(),
 	configuration: conf,
 	install: true,
-	install_dir: get_option('bindir')
+	install_dir: get_option('bindir'),
+	install_mode: 'rwxr-xr-x'
 )
 
 run_target('run', command: [meson.project_build_root() / 'bin' / meson.project_name()])

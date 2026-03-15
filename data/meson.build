@@ -3,7 +3,8 @@ configure_file(
 	output: app_id + '.desktop',
 	configuration: conf,
 	install: true,
-	install_dir: join_paths(get_option('datadir'), 'applications')
+	install_dir: join_paths(get_option('datadir'), 'applications'),
+	install_mode: 'rwxr-xr-x'
 )
 
 blueprint = custom_target('blueprint',
@@ -20,6 +21,17 @@ blueprint = custom_target('blueprint',
 	build_always_stale: true,
 	build_by_default: true,
 	command: [find_program('blueprint-compiler'), 'batch-compile', '@OUTPUT@', '@CURRENT_SOURCE_DIR@', '@INPUT@'],
+)
+
+icon_conf = configure_file(
+	input: 'assets/rencher-icon.svg',
+	output: conf.get('app_id') + '.svg',
+	copy: true
+)
+
+install_data(
+	icon_conf,
+	install_dir: join_paths(get_option('datadir'), 'icons/hicolor/scalable/apps'),
 )
 
 gnome.compile_resources(app_id,

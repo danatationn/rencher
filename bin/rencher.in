@@ -10,6 +10,8 @@ from types import TracebackType
 
 
 def launch() -> None:
+    sys.path.insert(1, '@python_dir@')
+
     # check if running from meson
     if meson_root := os.environ.get('MESON_BUILD_ROOT', None):
         sys.path.insert(1, meson_root)
