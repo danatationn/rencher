@@ -9,6 +9,7 @@ import time
 from rencher.renpy.config import GameConfig
 from rencher.renpy.paths import get_absolute_path, get_py_files, validate_game_files
 
+
 class GameInvalidError(Exception):
     pass
 class GameNoExecutableError(GameInvalidError):

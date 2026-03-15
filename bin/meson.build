@@ -7,3 +7,4 @@ configure_file(
 )
 
 run_target('run', command: [meson.project_build_root() / 'bin' / meson.project_name()])
+run_target('dev', command: [join_paths(meson.project_build_root(), 'bin', meson.project_name()), '--verbose'])

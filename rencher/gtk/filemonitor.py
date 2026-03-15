@@ -26,7 +26,7 @@ class RencherFileMonitor(FileSystemEventHandler):
     """
         watch over files and act accordingly
     """
-    
+
     window: RencherWindow
     config: RencherConfig = RencherConfig()
     observer: Observer = None  # type: ignore
@@ -55,13 +55,13 @@ class RencherFileMonitor(FileSystemEventHandler):
         self.observer.schedule(self, self.data_dir, recursive=True)
         self.observer.start()
         logging.debug(f'Watching "{self.data_dir}/" for changes')
-    
+
     def queue_event(self, event: FileSystemEvent) -> None:
         # these are all the subsequent events from a directory event or whatever.
         # aka NONE OF THEM MATTER !!!!!!!!
         if getattr(event, 'is_synthetic', False):
             return
-        
+
         if event.dest_path:
             path = os.path.normpath(event.dest_path)
         else:
@@ -79,7 +79,7 @@ class RencherFileMonitor(FileSystemEventHandler):
             if path.startswith(rpath + os.sep):
                 game_item = item
                 break
-            
+
         if game_item:
             if game_item.game.is_valid:
                 key = game_item.rpath
@@ -99,22 +99,22 @@ class RencherFileMonitor(FileSystemEventHandler):
                 # at the end of deleting a game the folder gets added somehow
                 return
             action = 'added'
-        
+
         self.pending_changes[key]['last'] = time.time()
         self.pending_changes[key]['path'] = path
         self.pending_changes[key]['action'] = action
-    
+
     def flush_pending(self) -> bool:
         now = time.time()
         to_emit = []
-        
+
         for rpath, info in list(self.pending_changes.items()):
             if rpath in self.pause_rpaths or '*' in self.pause_rpaths:
                 continue
             if now - info['last'] >= 0.1:
                 to_emit.append((rpath, info['action']))
                 del self.pending_changes[rpath]
-        
+
         for rpath, action in to_emit:
             if action == 'changed':
                 self.window.library.change_game(rpath)
@@ -123,26 +123,24 @@ class RencherFileMonitor(FileSystemEventHandler):
             else:
                 self.window.library.add_game(rpath)
         return True
-    
+
     def on_moved(self, event: DirMovedEvent | FileMovedEvent) -> None:
         self.queue_event(event)
-            
+
     def on_deleted(self, event: DirDeletedEvent | FileDeletedEvent) -> None:
         if os.path.exists(event.src_path):
-            # this means it *actually* got edited
-            # idk either ok??
+            # this actually means that it was edited
             self.on_closed(event)
         else:
             self.queue_event(event)
-        
+
     def on_closed(self, event: FileClosedEvent | DirDeletedEvent | FileDeletedEvent) -> None:
         # edited
         if event.src_path == config_path:
-            if RencherConfig().get_data_dir() != self.data_dir:                
+            if RencherConfig().get_data_dir() != self.data_dir:
                 self.monitor_data_dir()
         else:
             self.queue_event(event)
 
     def on_modified(self, event: DirModifiedEvent | FileModifiedEvent) -> None:
         self.queue_event(event)
-        

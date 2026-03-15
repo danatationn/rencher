@@ -1,7 +1,7 @@
 from gi.repository import GLib, GObject
 
 from rencher.renpy.game import Game
-from rencher.renpy.paths import get_absolute_path
+
 
 class GameItemDateError(Exception):
     pass

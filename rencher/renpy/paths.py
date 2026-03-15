@@ -10,7 +10,7 @@ home_path: str = os.path.expanduser('~')
 
 if platform.system() == 'Linux':
     local_path = Path.home() / '.local/share/rencher'
-    config_path = Path.home() / '.local/share/config.ini'
+    config_path = Path.home() / '.local/share/rencher/config.ini'
 elif platform.system() == 'Windows':
     local_path = Path.home() / 'AppData/Local/Rencher'
     config_path = Path.home() / 'AppData/Local/Rencher/config.ini'
@@ -57,12 +57,12 @@ def get_rpa_path(rpath: Path | str) -> str | None:
     game_files = get_rpa_files(rpath)
     if not game_files:
         return None
-    
+
     # some mods apparently store ren'py files in lib/
     # those are further nested inside the game so just try and get the top folder
     rpa_path = min(game_files, key=lambda path: path.count(os.sep))
     return os.path.dirname(rpa_path)
- 
+
 def get_absolute_path(rpath: Path | str) -> str | None:
     if isinstance(rpath, Path):
         rpath = str(rpath)
@@ -94,7 +94,7 @@ def validate_game_files(files: list[str]) -> bool:
     rp_files = [file for file in files if '.rp' in os.path.splitext(file)[1]]
     game_files = [
         rp_file for rp_file in rp_files
-        if '00' not in os.path.splitext(rp_file)[0]  # generic engine file
+        if os.path.basename(rp_file)[0:2] != '00'  # generic engine file
         if '.rpym' not in os.path.splitext(rp_file)[1]  # .rpym files can be compiled (.rypmc)
         if os.path.splitext(rp_file)[1] != '.rpyb'  # cache file
     ]
@@ -128,6 +128,5 @@ def validate_game_files(files: list[str]) -> bool:
                     if os.path.splitext(file)[1] in ['.py', '.pyo', '.pyx', '.rpym', '.rpymc']]
     if not engine_files:
         return False
-    
-    return True
 
+    return True

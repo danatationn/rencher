@@ -6,7 +6,8 @@ requires-python = ">=3.12"
 dependencies = [
     "pycairo==1.27.0; sys.platform == 'linux'",
     "pygobject==3.50.0; sys.platform == 'linux'",
-    "cx-freeze>=8.3.0; sys.platform == 'linux'", # apparently doesn't build on windows?
+    # apparently doesn't build on windows?
+    "cx-freeze>=8.3.0; sys.platform == 'linux'",
     "rarfile>=4.2",
     "requests>=2.32.4",
     "thefuzz>=0.22.1",
@@ -26,8 +27,13 @@ py-modules = ["rencher"]
 
 [tool.setuptools.packages.find]
 where = ["."]
-namespaces = false  # so only modules get added
+# so only modules get added
+namespaces = false
 
+
+[tool.pyright]
+# pyright really love to complain about pygobject stubs not existing
+reportMissingModuleSource = false
 
 [tool.ruff]
 line-length = 120
@@ -48,6 +54,11 @@ extend-select = [
 [tool.ruff.format]
 quote-style = "single"
 indent-style = "space"
+
+[dependency-groups]
+dev = [
+    "pygobject-stubs>=2.13.0",
+]
 
 [tool.ruff.lint.flake8-implicit-str-concat]
 allow-multiline = false

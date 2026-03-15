@@ -104,7 +104,6 @@ class RencherWindow(Adw.ApplicationWindow):
 
     def on_game_added(self, _, game_item: GameItem):
         row = Adw.ButtonRow(title=game_item.name)  # type: ignore
-        logging.debug(game_item.__dict__)
         row.game = game_item.game
         self.library_list_box.append(row)
         self.rows[game_item] = row
