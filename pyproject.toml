@@ -32,8 +32,8 @@ namespaces = false
 
 
 [tool.pyright]
-# pyright really love to complain about pygobject stubs not existing
 reportMissingModuleSource = false
+reportUnusedCallResult = false
 
 [tool.ruff]
 line-length = 120

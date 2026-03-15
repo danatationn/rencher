@@ -1,5 +1,5 @@
 FROM ubuntu:25.10
-LABEL authors="dan"
+LABEL authors="danatationn"
 
 RUN apt update && apt install -y \
 	python3-dev \
@@ -19,5 +19,5 @@ WORKDIR /app
 COPY . .
 RUN python3 -m venv .venv
 RUN . .venv/bin/activate && pip3 install -r requirements.txt
-RUN . .venv/bin/activate && python3 build-aux/freeze.py
-RUN . .venv/bin/activate && python3 build-aux/appimage.py
+RUN . .venv/bin/activate && python3 freeze.py
+# RUN . .venv/bin/activate && python3 build-aux/appimage.py

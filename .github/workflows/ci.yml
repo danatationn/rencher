@@ -34,11 +34,11 @@ jobs:
           name: Rencher-Linux-Portable
           path: ./output/${{ steps.extract.outputs.FREEZE_DIR }}/
 
-      - name: Upload AppImage artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: Rencher-Linux-AppImage
-          path: ./output/Rencher-x86_64.AppImage
+      # - name: Upload AppImage artifact
+        # uses: actions/upload-artifact@v4
+        # with:
+          # name: Rencher-Linux-AppImage
+          # path: ./output/Rencher-x86_64.AppImage
 
   windows-job:
     name: Windows
@@ -55,8 +55,8 @@ jobs:
           msystem: UCRT64
           update: true
           install: >-
-            mingw-w64-ucrt-x86_64-python 
-            mingw-w64-ucrt-x86_64-python-pip 
+            mingw-w64-ucrt-x86_64-python
+            mingw-w64-ucrt-x86_64-python-pip
             mingw-w64-ucrt-x86_64-nsis
       - name: Install dependencies
         run: python build-aux/install_deps.py
@@ -64,7 +64,7 @@ jobs:
       - name: Freeze Rencher
         id: freeze
         run: |
-          python build-aux/freeze.py
+          python freeze.py
           FREEZE_DIR=$(python3 -c "import sysconfig; print(f'exe.{sysconfig.get_platform()}-{sysconfig.get_python_version()}')")
           echo "FREEZE_DIR=$FREEZE_DIR" >> $GITHUB_OUTPUT
 

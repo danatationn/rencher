@@ -31,12 +31,12 @@ def add_files(name: str, search_dir: str, target_dir: str) -> None:
         paths = glob.glob(os.path.join(search_dir, name), recursive=True)
     else:
         paths = [os.path.join(search_dir, name)]
-    
+
     for path in paths:
         if os.path.isfile(path):
             rel_path = os.path.relpath(path, start=search_dir)
             dest_path = os.path.join(target_dir, rel_path)
-            include_files.append((path, dest_path)) 
+            include_files.append((path, dest_path))
         else:
             raise FileNotFoundError(f'{path} could\'nt be found')
 
@@ -64,7 +64,7 @@ if mingw_prefix is None:
     add_files('**/*.conf', '/etc/fonts', 'share/fonts')
 else:
     add_files('**/*.conf', os.path.join(mingw_prefix, 'etc/fonts'), 'share/fonts')
-    
+
 typelibs = [
     "Adw-",
     "Gtk-4",
@@ -109,7 +109,7 @@ with open(temp_loaders_path, 'w') as temp_loaders_f, \
         # works fine w/ appimages but not regular frozen apps
         data = data.replace(os.path.join(sys.base_prefix, loaders_path, 'loaders'), 'lib')
     temp_loaders_f.write(data)
-    
+
 add_files('pixbuf-loaders.cache', os.path.dirname(temp_loaders_path), 'lib')
 add_files(f'*{ext}', os.path.join(sys.base_prefix, loaders_path, 'loaders'), 'lib')
 
@@ -122,7 +122,7 @@ setup(
     version=rencher.__version__,
     options={
         'build': {
-            'build_base': os.path.join(tmp_path, 'build'),
+            'build_base': os.path.join(tmp_path, 'build/root'),
         },
         'build_exe': {
             'packages': [],
