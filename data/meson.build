@@ -1,4 +1,4 @@
-configure_file(
+desktop = configure_file(
 	input: app_id + '.desktop.in',
 	output: app_id + '.desktop',
 	configuration: conf,
@@ -28,7 +28,6 @@ icon_conf = configure_file(
 	output: conf.get('app_id') + '.svg',
 	copy: true
 )
-
 install_data(
 	icon_conf,
 	install_dir: join_paths(get_option('datadir'), 'icons/hicolor/scalable/apps'),

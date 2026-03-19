@@ -21,14 +21,6 @@ def launch() -> None:
     if getattr(sys, 'frozen', False):
         executable_folder = os.path.dirname(sys.executable)
 
-        # appimages accept relatives paths for the loader files
-        # we freeze rencher with relative paths, and swap them out with absolute paths on startup
-        if platform.system() == 'Linux' and 'APPIMAGE' not in os.environ:
-            loader_files = glob.glob(os.path.join(executable_folder, 'lib', 'libpixbufloader*.so'))
-            cache_text = subprocess.run(['gdk-pixbuf-query-loaders', *loader_files], capture_output=True).stdout
-            with open(os.path.join(executable_folder, 'lib', 'pixbuf-loaders.cache'), 'wb') as f:
-                f.write(cache_text)
-
         # some windows machines display square black borders when not using cairo
         if platform.system() == 'Windows':
             os.environ['GSK_RENDERER'] = 'cairo'

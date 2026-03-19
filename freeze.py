@@ -12,25 +12,19 @@ from pathlib import Path
 
 from cx_Freeze import Executable, setup
 
+if platform.system() != 'Windows':
+    raise NotImplementedError("Freezing is only supported on Windows!")
+
 USAGE_MSG = f'\n\nUsage:\n\t{Path(__file__).name} build_dir [dest_dir]'
 TYPELIB_PREFIXES = ['Gtk-4', 'Gio-', 'Gdk-4', 'GLib-', 'Gsk-', 'GObject-', 'GModule-', 'GdkPixbuf-',
                     'Adw-', 'Graphene-', 'HarfBuzz-', 'Pango-', 'PangoCairo-', 'cairo-', 'freetype2-',
-                    'GdkWin32-4' if platform.system == 'Windows' else None,
-                    'Win32-' if platform.system == 'Windows' else None]
+                    'GdkWin32-4', 'Win32-']
 base_prefix = Path(sys.base_prefix)  # /usr
-lib_dir = base_prefix / 'bin' if platform.system == 'Windows' else base_prefix / 'lib'
-lib_ext = '.dll' if platform.system == 'Windows' else '.so'
-gui = 'Win32GUI' if platform.system == 'Windows' else 'gui'
-os_release = platform.freedesktop_os_release()
-distro = os_release.get('ID_LIKE', os_release['ID'])
+lib_dir = base_prefix / 'bin'
+lib_ext = '.dll'
+gui = 'Win32GUI'
 
-ldd_path = ''
-if platform.system() == 'Linux':
-    ldd_path = shutil.which('ldd')
-elif platform.system() == 'Windows':
-    ldd_path = shutil.which('ntldd')
-else:
-    raise NotImplementedError('Your OS is not currently supported')
+ldd_path = shutil.which('ntldd')
 if not ldd_path:
     raise FileNotFoundError('ldd was not found in path (not installed?)')
 
@@ -57,23 +51,20 @@ def freeze(argv: list[str]):
     include_files.extend(find_files('*', rencher_module, 'lib', recursive=True))
     include_files.extend(find_files('*', rencher_gres, 'share'))
 
-    if platform.system == 'Windows':
-        include_files.extend(find_files('gdbus.exe', lib_dir))
-        include_files.extend(find_files('gdbus.exe', lib_dir))
+    include_files.extend(find_files('gdbus.exe', lib_dir))
+    include_files.extend(find_files('gdbus.exe', lib_dir))
 
     include_files.extend(find_files('*.conf', '/etc/fonts/', 'share/fonts/', True))
     include_files.extend(find_files('libgtk-4*', lib_dir))
     include_files.extend(find_files('libadwaita-1*', lib_dir))
     include_files.extend(find_files('gschemas.compiled', base_prefix / 'share/glib-2.0/schemas/'))
     include_files.extend(find_files('pixbuf-loaders.cache', base_prefix / 'lib/gdk-pixbuf-2.0/2.10.0/'))
+    # include_files.extend(find_files('gdk-pixbuf-query-loaders', base_prefix / 'bin/', 'lib/'))
 
     for prefix in TYPELIB_PREFIXES:
         include_files.extend(find_files(f'{prefix}*.typelib', base_prefix / 'lib/girepository-1.0/'))
 
-    if distro == 'debian':
-        loaders_dir = base_prefix / '/lib/x86_64-linux-gnu/gdk-pixbuf-2.0/2.10.0/'
-    else:
-        loaders_dir = base_prefix / '/lib/gdk-pixbuf-2.0/2.10.0/'
+    loaders_dir = base_prefix / '/lib/gdk-pixbuf-2.0/2.10.0/'
     pixbuf_path = loaders_dir / 'loaders.cache'
 
     tmp_dir = Path(tempfile.mkdtemp())
@@ -81,22 +72,17 @@ def freeze(argv: list[str]):
     with open(tmp_pixbuf_path, 'w') as temp_f, \
         open(pixbuf_path) as f:
             data = f.read()
-
-            if sys.platform == 'win32':
-                data = data.replace('lib\\\\gdk-pixbuf-2.0\\\\2.10.0\\\\loaders', 'lib')
-            else:
-                # works fine w/ appimages but not regular frozen apps
-                data = data.replace(os.path.join(sys.base_prefix, pixbuf_path, 'loaders'), 'lib')
-            temp_f.write(data)
+            temp_f.write(data.replace('lib\\\\gdk-pixbuf-2.0\\\\2.10.0\\\\loaders', 'lib'))
     include_files.extend(find_files('loaders.cache', tmp_dir, 'lib'))
     include_files.extend(find_files(f'*.{lib_ext}*', loaders_dir / 'loaders', 'lib'))
 
-    # setup() requires the first argument to be 'build'
+
     build_dir = Path(argv[1], 'bin/rencher')
     if len(argv) > 2:
         dest_dir = argv[2]
     else:
         dest_dir = Path('build').absolute()
+    # setup() requires the first argument to be 'build'
     argv[1] = 'build'
 
     setup(
