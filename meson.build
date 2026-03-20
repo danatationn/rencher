@@ -25,16 +25,23 @@ conf.set('pkgdata_dir', pkgdata_dir)
 conf.set('description', description)
 conf.set('bin_dir', join_paths(get_option('prefix'), get_option('bindir')))
 conf.set('python_dir', join_paths(get_option('prefix'), python_install.get_install_dir()))
+if host_machine.system() == 'windows'
+    conf.set('venv_dir', meson.current_source_dir() / '.venv/Lib/site-packages')
+else
+    conf.set('venv_dir', meson.current_source_dir() / '.venv/lib/python3.14/site-packages')
+endif
 
 # install
 subdir('rencher')
 subdir('data')
 subdir('bin')
 install_subdir(meson.project_name(), install_dir: python_install.get_install_dir())
-gnome.post_install(
-	gtk_update_icon_cache: true,
-	update_desktop_database: true,
-)
+if host_machine.system() == 'linux'
+    gnome.post_install(
+    	gtk_update_icon_cache: true,
+    	update_desktop_database: true,
+    )
+endif
 
 # appimage
 appimagetool = find_program('appimagetool', required: false)

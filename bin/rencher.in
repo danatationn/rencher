@@ -1,5 +1,4 @@
 #!/bin/env python3
-import glob
 import os
 import platform
 import shutil
@@ -10,7 +9,8 @@ from types import TracebackType
 
 
 def launch() -> None:
-    sys.path.insert(1, '@python_dir@')
+    sys.path.insert(0, '@python_dir@')
+    sys.path.append('@venv_dir@')
 
     # check if running from meson
     if meson_root := os.environ.get('MESON_BUILD_ROOT', None):
@@ -39,17 +39,20 @@ def launch() -> None:
         os.environ['GSETTINGS_SCHEMA_DIR'] = os.path.join(executable_folder, 'share/glib-2.0/schemas')
 
     from gi.repository import Gio
+
     gres_path = os.path.join('@pkgdata_dir@', '@app_id@.gresource')
     res = Gio.resource_load(gres_path)
     res._register()
 
     from rencher.gtk.application import RencherApplication  # noqa: E402
+
     app = RencherApplication()
 
     try:
         app.run(sys.argv)
     except Exception as err:
         handle_global_exception(type(err), err, err.__traceback__)
+
 
 def handle_global_exception(exc_type: type[BaseException], exc_value: BaseException, exc_traceback: TracebackType):
     if issubclass(exc_type, KeyboardInterrupt):
@@ -63,11 +66,13 @@ def handle_global_exception(exc_type: type[BaseException], exc_value: BaseExcept
 
     err_message = ''.join(traceback.format_exception(exc_type, exc_value, exc_traceback))
     print(err_message, file=sys.stderr)
-    show_err_dialog('Oops! Rencher has crashed!\n'
-                    'Please send this error to the developer, along with a description on what you were doing.\n\n'
-                    + err_message)
+    show_err_dialog(
+        'Oops! Rencher has crashed!\n'
+        'Please send this error to the developer, along with a description on what you were doing.\n\n' + err_message
+    )
 
     sys.exit(1)
+
 
 def show_err_dialog(text: str) -> None:
     # cx_freeze on windows already shows you an error with what went wrong
@@ -83,4 +88,4 @@ def show_err_dialog(text: str) -> None:
 
 
 if __name__ == '__main__':
-	launch()
+    launch()
