@@ -35,15 +35,22 @@ it strives to be as simple as possible, while being as beautiful as possible
 ## building / compiling
 ### Linux
 * install pip packages
-* make meson build dir with `$ meson setup [BUILDDIR] -Dprefix=$(pwd)/[BUILDDIR]/[PREFIX]` (replace the brackets with any names you want; i went with `build` and `root`)
-* run `ninja -C [BUILDDIR] install`
-* launch rencher by running `ninja -C [BUILDDIR] run`
+* make meson build dir with `$ meson setup build -Dprefix=$(pwd)/build/root` (replace the brackets with any names you want; i went with `build` and `root`)
+* run `ninja -C build install`
+* launch rencher by running `ninja -C build run`
 
 <details> <summary> AppImage </summary>
 
 * install [appimagetool](https://github.com/AppImage/appimagetool) to path
-* run `ninja -C [BUILDDIR] appimage`
+* run `ninja -C build appimage`
 * your appimage should be in the build dir now
+</details>
+
+<details> <summary> Flatpak </summary>
+
+* `flatpak-builder --install --user build/flatpak com.github.danatationn.rencher.yml` 
+* `flatpak run com.github.danatationn.rencher`
+* that's it
 </details>
 
 ### Windows

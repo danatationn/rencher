@@ -42,27 +42,3 @@ if host_machine.system() == 'linux'
     	update_desktop_database: true,
     )
 endif
-
-# appimage
-appimagetool = find_program('appimagetool', required: false)
-if appimagetool.found()
-	run_target('appimage',
-		command: ['sh', '-c',
-			'''
-			cp -r @0@/.venv/lib/python*/site-packages/. $1/lib/python3.14/site-packages/ &&
-			cp @1@ $1/AppRun &&
-			chmod +x $1/AppRun &&
-			cp @2@ $1/rencher-icon.svg &&
-			cp @3@ $1/rencher.desktop &&
-			ARCH=$(uname -m) @4@ $1 $1/../Rencher.AppImage
-			'''.format(
-				meson.current_source_dir(),
-				meson.current_source_dir() / 'data/AppRun',
-				meson.current_source_dir() / 'data/assets/rencher-icon.svg',
-				meson.current_build_dir() / 'data' / app_id + '.desktop',
-				appimagetool.full_path(),
-			),
-			'sh', get_option('prefix'),
-		]
-	)
-endif

@@ -9,11 +9,12 @@ tmp_path: str = os.path.abspath(os.path.join(__file__, '..', '..'))
 home_path: str = os.path.expanduser('~')
 
 if platform.system() == 'Linux':
-    local_path = Path.home() / '.local/share/rencher'
-    config_path = Path.home() / '.local/share/rencher/config.ini'
+    data_home = Path(os.environ.get('XDG_DATA_HOME', Path.home() / '.local' / 'share'))
+    local_path = data_home / 'rencher'
+    config_path = local_path / 'config.ini'
 elif platform.system() == 'Windows':
-    local_path = Path.home() / 'AppData/Local/Rencher'
-    config_path = Path.home() / 'AppData/Local/Rencher/config.ini'
+    local_path = Path.home() / 'AppData' / 'Local' / 'Rencher'
+    config_path = local_path / 'config.ini'
 
 # @lru_cache
 def get_py_files(apath: Path | str) -> list[str]:

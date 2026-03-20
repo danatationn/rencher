@@ -1,0 +1,23 @@
+app-id: com.github.danatationn.rencher
+runtime: org.gnome.Platform
+runtime-version: '49'
+sdk: org.gnome.Sdk
+command: rencher
+
+finish-args:
+  - --share=network
+  - --share=ipc
+  - --socket=fallback-x11
+  - --socket=wayland
+  - --device=dri
+  - --filesystem=home
+  - --talk-name=org.freedesktop.Flatpak
+
+modules:
+  - python3-modules.json
+
+  - name: rencher
+    buildsystem: meson
+    sources:
+      - type: dir
+        path: .

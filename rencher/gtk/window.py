@@ -1,12 +1,10 @@
 import logging
 import os.path
 import subprocess
-import sys
 import time
 from typing import TYPE_CHECKING
 
 from gi.repository import Adw, GLib, Gtk
-from thefuzz.fuzz import partial_token_sort_ratio
 
 from rencher.gtk.codename_dialog import RencherCodename
 from rencher.gtk.game_item import GameItem
@@ -67,8 +65,8 @@ class RencherWindow(Adw.ApplicationWindow):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        if not getattr(sys, 'frozen', False):
-            self.get_style_context().add_class('devel')
+        # if not getattr(sys, 'frozen', False):
+            # self.get_style_context().add_class('devel')
 
         self.application = self.get_application()  # type: ignore
         self.filemonitor = getattr(self.application, 'file_monitor')
@@ -251,8 +249,7 @@ class RencherWindow(Adw.ApplicationWindow):
             return True
 
         if hasattr(widget, 'game'):
-            fuzz = partial_token_sort_ratio(widget.game.name, self.filter_text)
-            if fuzz > 90:
+            if self.filter_text in widget.game.name:
                 return True
         return False
 

@@ -195,6 +195,10 @@ class Game:
 
             args.extend(['--savedir', save_dir])
 
+        if env.get('FLATPAK_ID'):
+            args.insert(0, 'flatpak-spawn')
+            args.insert(1, '--host')
+
         config_dict = {}
         for item in self.config['overwritten']:
             config_dict[item] = self.config['overwritten'][item]
