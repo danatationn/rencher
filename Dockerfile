@@ -14,10 +14,17 @@ RUN apt update && apt install -y \
 	libadwaita-1-dev \
 	ccache \
 	blueprint-compiler \
-    file
+    file \
+    flatpak-builder \
+    flatpak \
+	meson
 WORKDIR /app
 COPY . .
-RUN python3 -m venv .venv
-RUN . .venv/bin/activate && pip3 install -r requirements.txt
-RUN . .venv/bin/activate && python3 freeze.py
-# RUN . .venv/bin/activate && python3 build-aux/appimage.py
+RUN pip install uv --break-system-packages
+RUN uv sync
+RUN . .venv/bin/activate && meson setup build -Dprefix=$(pwd)/build/root
+RUN . .venv/bin/activate && ninja -C build install
+RUN flatpak remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo --system
+RUN flatpak install org.gnome.Sdk//49 org.gnome.Platform//49 --system -y
+RUN flatpak-builder --disable-sandbox --disable-rofiles-fuse --install --user build/flatpak com.github.danatationn.rencher.yml
+RUN flatpak build-bundle ~/.local/share/flatpak/repo Rencher.flatpak com.github.danatationn.rencher

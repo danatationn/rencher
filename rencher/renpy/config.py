@@ -42,7 +42,7 @@ class GameConfig(ConfigParser):
 
     @override
     def read(self,
-             filenames: StrOrBytesPath | Iterable[StrOrBytesPath] | None = None,
+             filenames: 'StrOrBytesPath' | Iterable['StrOrBytesPath'] | None = None,
              encoding: str | None = None) -> list[str]:
         if not filenames:
             filenames = self.game_config_path
@@ -80,7 +80,7 @@ class GameConfig(ConfigParser):
                 self['overwritten'][key] = rencher_config['settings'][key]
 
     @override
-    def write(self, fp: SupportsWrite[str] | None = None, space_around_delimiters: bool = True):
+    def write(self, fp: 'SupportsWrite[str] | None' = None, space_around_delimiters: bool = True):
         new_config = ConfigParser()
         for section in ['info', 'options']:
             new_config.add_section(section)

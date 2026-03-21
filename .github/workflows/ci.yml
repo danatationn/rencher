@@ -5,37 +5,58 @@ jobs:
   linux-job:
     name: Linux
     runs-on: ubuntu-latest
+    container:
+      image: ubuntu:25.10
+      options: --privileged
     steps:
-      - name: Checkout
-        uses: actions/checkout@v3
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@v3
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-      - name: Build Docker image
-        uses: docker/build-push-action@v6
-        with:
-          context: .
-          tags: rencher-builder:latest
-          load: true
-  
-      - name: Create container and extract files
-        id: extract
+      - uses: actions/checkout@v4
+      - name: Install packages
+        env:
+          DEBIAN_FRONTEND: noninteractive
         run: |
-          docker create --name temp-container rencher-builder:latest
-          docker cp temp-container:/app/build ./output/
-          FREEZE_DIR=$(docker run rencher-builder python3 -c "import sysconfig; print(f'exe.{sysconfig.get_platform()}-{sysconfig.get_python_version()}')")
-          echo "FREEZE_DIR=$FREEZE_DIR" >> $GITHUB_OUTPUT
-          docker rm temp-container
-  
-      - name: Upload frozen files artifact
+            apt update && apt install -y \
+              python3-dev \
+              python3-pip \
+              python3-venv \
+              cmake \
+              gobject-introspection \
+              libgirepository1.0-dev \
+              libgirepository-2.0-dev \
+              libgtk-4-dev \
+              patchelf \
+              libadwaita-1-dev \
+              ccache \
+              blueprint-compiler \
+              file \
+              flatpak-builder \
+              meson \
+              nodejs
+            pip install uv --break-system-packages
+      - name: Setup environment
+        run: |
+            uv sync
+            meson setup build -Dprefix=$(pwd)/build/root
+            ninja -C build install
+      - name: Cache Flatpak runtimes
+        uses: actions/cache@v4
+        with:
+          path: /var/lib/flatpak
+          key: flatpak-${{ runner.os }}-49
+      - name: Package Flatpak
+        run: |
+            flatpak remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo --system
+            flatpak install org.gnome.Sdk//49 org.gnome.Platform//49 --system -y --no-related
+            flatpak-builder --install --user build/flatpak com.github.danatationn.rencher.yml
+            flatpak build-bundle ~/.local/share/flatpak/repo build/Rencher.flatpak com.github.danatationn.rencher
+      - name: Upload Flatpak artifact
         uses: actions/upload-artifact@v4
         with:
-          name: Rencher-Linux-Portable
-          path: ./output/${{ steps.extract.outputs.FREEZE_DIR }}/
+          name: Rencher-Linux-Flatpak
+          path: build/Rencher.flatpak
 
   windows-job:
     name: Windows
+    if: false
     runs-on: windows-2025
     defaults:
       run:
