@@ -27,41 +27,67 @@ it strives to be as simple as possible, while being as beautiful as possible
 * if you're importing an already set up DDLC mod, then just import it normally
 
 ## possible upcoming features
-- [ ] store (vndb, itch.io, the old DDMC mod list thing)
-- [ ] asset viewer (unrpa + unrpyc)
 - [ ] Discord RPC
+- [ ] asset viewer (unrpa + unrpyc)
+- [ ] store (vndb, itch.io, the old DDMC mod list thing)
 - [ ] more...
 
-## building / compiling
+## testing / building
 ### Linux
-* install pip packages
-* make meson build dir with `$ meson setup build -Dprefix=$(pwd)/build/root` (replace the brackets with any names you want; i went with `build` and `root`)
-* run `ninja -C build install`
-* launch rencher by running `ninja -C build run`
-
-<details> <summary> AppImage </summary>
-
-* install [appimagetool](https://github.com/AppImage/appimagetool) to path
-* run `ninja -C build appimage`
-* your appimage should be in the build dir now
-</details>
+1. `uv sync`
+2. `meson setup build -Dprefix=$(pwd)/build/root`
+3. `ninja -C install`
 
 <details> <summary> Flatpak </summary>
 
-* `flatpak-builder --install --user build/flatpak com.github.danatationn.rencher.yml` 
-* `flatpak run com.github.danatationn.rencher`
-* that's it
+`flatpak-builder --install --user build/flatpak com.github.danatationn.rencher.yml` 
+* running the flatpak
+
+	`flatpak run com.github.danatationn.rencher`
+* exporting as .flatpak	
+
+	`flatpak build-bundle ~/.local/share/flatpak/repo Rencher.flatpak com.github.danatationn.rencher`
 </details>
 
 ### Windows
-1. make sure you have MSYS2 installed
-2. boot into MSYS2 UCRT64 (important!!)
-3. run `build-aux/install_deps.py`
-	* this tries to install all MSYS2 and Python packages necessary for building and running
-4. run `build-aux/freeze.py`
-	* this will spit out an executable with some folders in `build/`
-5. (optional) run `makensis build-aux/build_installer.nsi`
-	* this will spit out an installer for rencher in `build/`
+> [!NOTE]
+> uv is not used as we want to install the pip packages system-wide
+
+* setting up the environment
+	1. install [msys2](https://www.msys2.org/)
+	2. launch msys2 ucrt64
+	3. `pacman -Sy mingw-w64-ucrt-x86_64-python\
+            mingw-w64-ucrt-x86_64-python-pip\
+            mingw-w64-ucrt-x86_64-nsis\
+            mingw-w64-ucrt-x86_64-gtk4\
+            mingw-w64-ucrt-x86_64-libadwaita\
+            mingw-w64-ucrt-x86_64-cmake\
+            mingw-w64-ucrt-x86_64-gcc\
+            mingw-w64-ucrt-x86_64-blueprint-compiler\
+            mingw-w64-ucrt-x86_64-meson\
+            mingw-w64-ucrt-x86_64-gobject-introspection\
+            mingw-w64-ucrt-x86_64-ntldd\
+            mingw-w64-ucrt-x86_64-python-cx-freeze\
+			mingw-w64-ucrt-x86_64-git`
+	4. `git clone https://github.com/danatationn/rencher`
+	5. `cd rencher`
+	6. `pip install -r requirements.txt --break-system-packages`
+	7. `meson setup build -Dprefix=$(pwd)/build/root`
+	8. `ninja -C install`
+
+* freezing (python to exe)
+
+	`ninja -C build freeze`
+
+* making the installer
+
+	`ninja -C build makensis`
+
+### Universal
+
+* running rencher within meson
+
+	`ninja -C build run` or `ninja -C build dev` if you want debug logs
 
 ## credits and license
 

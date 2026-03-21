@@ -22,6 +22,7 @@ template $RencherWindow : Adw.ApplicationWindow {
 		        icon-name: "loupe-large-symbolic";
 		        sensitive: bind split_view.show-sidebar;
 		        tooltip-text: _("Search");
+				toggled => $on_search_toggled();
 		    }
 
 			[end]
@@ -50,7 +51,7 @@ template $RencherWindow : Adw.ApplicationWindow {
 							SearchBar {
 								search-mode-enabled: bind library_search_button.active;
 								Box {
-									SearchEntry {
+									SearchEntry library_search_entry {
 										placeholder-text: _("Search");
 										search-changed => $on_search_changed();
 									}

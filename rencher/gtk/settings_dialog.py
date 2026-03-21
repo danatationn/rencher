@@ -3,21 +3,22 @@ import platform
 import threading
 import time
 from pathlib import Path
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, override
 
 from gi.repository import Adw, GLib, Gtk
+from gi.repository.GObject import GObject
 
 from rencher.gtk.tasks import TaskTypeEnum
 from rencher.gtk.utils import open_file_manager
 from rencher.renpy.config import RencherConfig
-from rencher.renpy.paths import local_path, tmp_path
+from rencher.renpy.paths import local_path
 
 if TYPE_CHECKING:
     from rencher.gtk.window import RencherWindow
 
 @Gtk.Template.from_resource('/com/github/danatationn/Rencher/ui/settings.ui')
 class RencherSettings(Adw.PreferencesDialog):
-    __gtype_name__ = 'RencherSettings'
+    __gtype_name__: str = 'RencherSettings'
 
     window: 'RencherWindow'
     config: RencherConfig
@@ -29,20 +30,21 @@ class RencherSettings(Adw.PreferencesDialog):
     skip_main_menu_switch: Adw.SwitchRow = Gtk.Template.Child()
     forced_save_dir_switch: Adw.SwitchRow = Gtk.Template.Child()
     windowficate_switch: Adw.SwitchRow = Gtk.Template.Child()
+    switches_list: list[tuple[Adw.SwitchRow, str]]
 
-    def __init__(self, window, *args, **kwargs):
+    def __init__(self, window: 'RencherWindow', *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        self.window = window
         self.switches_list = [
-            [self.delete_import_switch, 'delete_on_import'],
-            [self.updates_switch, 'suppress_updates'],
-            [self.skip_splash_scr_switch, 'skip_splash_scr'],
-            [self.skip_main_menu_switch, 'skip_main_menu'],
-            [self.forced_save_dir_switch, 'forced_save_dir'],
-            [self.windowficate_switch, 'windowficate_filenames'],
+            (self.delete_import_switch, 'delete_on_import'),
+            (self.updates_switch, 'suppress_updates'),
+            (self.skip_splash_scr_switch, 'skip_splash_scr'),
+            (self.skip_main_menu_switch, 'skip_main_menu'),
+            (self.forced_save_dir_switch, 'forced_save_dir'),
+            (self.windowficate_switch, 'windowficate_filenames'),
         ]
 
+        self.window = window
         if platform.system() == 'Windows':
             self.windowficate_switch.set_visible(False)  # force it on
 
@@ -58,6 +60,7 @@ class RencherSettings(Adw.PreferencesDialog):
             if self.config['settings'][key] == 'true':
                 switch.set_active(True)
 
+    @override
     def do_closed(self):
         old_data_dir = self.config['settings']['data_dir']
 
@@ -97,7 +100,7 @@ class RencherSettings(Adw.PreferencesDialog):
 
     @Gtk.Template.Callback()
     def on_check_updates(self, _):
-        thread = threading.Thread(target=lambda: self.window.application.check_version(show_up_to_date_toast=True))
+        thread = threading.Thread(target=lambda: self.window.app.check_version(show_up_to_date_toast=True))
         thread.start()
         self.close()
 
@@ -126,7 +129,7 @@ class RencherSettings(Adw.PreferencesDialog):
         games_dir = data_dir / 'games'
 
         def nuke_thread():
-            self.window.application.pause_monitor('*')
+            self.window.filemonitor.pause_monitor('*')
             toast = Adw.Toast(title='All games have been successfully deleted', timeout=5)
             total_work = 0
             completed = 0
@@ -175,7 +178,7 @@ class RencherSettings(Adw.PreferencesDialog):
                     GLib.idle_add(lambda r=root: self.window.library.remove_game(r))
 
             GLib.idle_add(lambda: (
-                self.window.application.resume_monitor('*'),
+                self.window.filemonitor.resume_monitor('*'),
                 self.window.toast_overlay.add_toast(toast),
             ))
 

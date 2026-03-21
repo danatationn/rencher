@@ -19,7 +19,7 @@ class RencherLibrary(GObject.Object):
     game_items: dict[str, GameItem] = {}
     window: 'RencherWindow'
 
-    __gsignals__ = {
+    __gsignals__: dict[str, tuple[GObject.SignalFlags, None, tuple[object]]] = {
         'game-added': (GObject.SignalFlags.RUN_FIRST, None, (GameItem,)),
         'game-removed': (GObject.SignalFlags.RUN_FIRST, None, (GameItem,)),
         'game-changed': (GObject.SignalFlags.RUN_FIRST, None, (GameItem,)),
@@ -74,10 +74,10 @@ class RencherLibrary(GObject.Object):
     def add_game(self, rpath: str) -> None:
         try:
             game_item = GameItem(rpath=rpath)
-        except GameInvalidError:
-            pass
         except GameNoExecutableError:
             self.window.codename_dialog.popup(rpath)
+        except GameInvalidError:
+            pass
         else:
             if rpath not in self.game_items:
                 self.game_items[rpath] = game_item

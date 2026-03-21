@@ -1,13 +1,18 @@
 import os.path
+from collections.abc import Iterable
 from configparser import ConfigParser
 from pathlib import Path
+from typing import TYPE_CHECKING, override
 
 from rencher.renpy.paths import config_path, local_path
+
+if TYPE_CHECKING:
+    from _typeshed import StrOrBytesPath, SupportsWrite
 
 
 class GameConfig(ConfigParser):
     game_config_path: Path
-    structure = {
+    structure: dict[str, dict[str, str | float]] = {
         'info': {
             'nickname': '',
             'last_played': 0.0,
@@ -35,11 +40,15 @@ class GameConfig(ConfigParser):
         self.game_config_path = Path(game_config_path)
         self.read(game_config_path)
 
-    def read(self, filenames=None, encoding=None):
+    @override
+    def read(self,
+             filenames: StrOrBytesPath | Iterable[StrOrBytesPath] | None = None,
+             encoding: str | None = None) -> list[str]:
         if not filenames:
             filenames = self.game_config_path
-        super().read(filenames)
+        read_ok = super().read(filenames)
         self.validate()
+        return read_ok
 
     def validate(self):
         rencher_config = RencherConfig()
@@ -70,7 +79,8 @@ class GameConfig(ConfigParser):
             else:
                 self['overwritten'][key] = rencher_config['settings'][key]
 
-    def write(self, fp=None, space_around_delimiters=True):
+    @override
+    def write(self, fp: SupportsWrite[str] | None = None, space_around_delimiters: bool = True):
         new_config = ConfigParser()
         for section in ['info', 'options']:
             new_config.add_section(section)
@@ -85,13 +95,13 @@ class GameConfig(ConfigParser):
         new_config.write(fp, space_around_delimiters)
         fp.close()
 
-    def get_value(self, key: str, overwritten: bool = None) -> str | float | bool | None:
+    def get_value(self, key: str, overwritten: bool  = False) -> str | float | bool | None:
         if key in self['info']:
             try:
                 return self['info'].getfloat(key)
             except ValueError:
                 return self['info'][key]
-        
+
         if key in self['options']:
             if key in self.structure['overwritten'].keys() and overwritten:
                 value = self['overwritten'][key]
@@ -100,7 +110,7 @@ class GameConfig(ConfigParser):
                     value = self['options'].getint(key)
                 except ValueError:
                     value = self['options'][key]
-            
+
             if value == 'true':
                 return True
             elif value == 'false':
@@ -114,13 +124,16 @@ class RencherConfig(ConfigParser):
         super().__init__()
         self.read()
 
-    def read(self, filenames=None, encoding=None):
+    @override
+    def read(self, filenames: StrOrBytesPath | Iterable[StrOrBytesPath] | None = None,
+             encoding: str | None = None) -> list[str]:
         if not filenames:
             filenames = config_path
-        super().read(filenames)
+        read_ok = super().read(filenames)
         self.validate()
+        return read_ok
 
-    def validate(self):
+    def validate(self) -> None:
         structure = {
             'settings': {
                 'data_dir': '',
@@ -144,7 +157,8 @@ class RencherConfig(ConfigParser):
         if not os.path.isfile(config_path):
             self.write()
 
-    def write(self, fp=None, space_around_delimiters=True):
+    @override
+    def write(self, fp: SupportsWrite[str] | None = None, space_around_delimiters: bool = True) -> None:
         config_dir = Path(config_path).parent
         config_dir.mkdir(parents=True, exist_ok=True)
 
@@ -156,6 +170,6 @@ class RencherConfig(ConfigParser):
 
     def get_data_dir(self) -> str:
         if self['settings']['data_dir'] == '':
-            return local_path
+            return str(local_path)
         else:
             return self['settings']['data_dir']

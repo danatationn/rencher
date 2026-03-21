@@ -28,6 +28,11 @@ namespaces = false
 [tool.pyright]
 reportMissingModuleSource = false
 reportUnusedCallResult = false
+reportAny = false
+reportUnknownMemberType = false
+reportMissingParameterType = false
+reportUnknownParameterType = false
+reportUnknownArgumentType = false
 
 [tool.ruff]
 line-length = 120

@@ -1,10 +1,12 @@
 import logging
 import os
+from pathlib import Path
 import platform
 import re
 import shutil
 import subprocess
 import time
+from typing import override
 
 from rencher.renpy.config import GameConfig
 from rencher.renpy.paths import get_absolute_path, get_py_files, validate_game_files
@@ -20,7 +22,10 @@ class Game:
     apath: str
     config: GameConfig
 
-    def __init__(self, rpath: str | None = None, apath: str | None = None):
+    def __init__(self, rpath: str | Path | None = None, apath: str | Path | None = None):
+        rpath = str(rpath) if rpath is not None else None
+        apath = str(apath) if apath is not None else None
+
         if not rpath and apath:
             self.rpath = apath
             self.apath = apath
@@ -35,12 +40,14 @@ class Game:
         config_path = os.path.join(self.apath, 'game/rencher.ini')
         self.config = GameConfig(config_path)
 
-    def __eq__(self, other) -> bool:
+    @override
+    def __eq__(self, other: object) -> bool:
         if isinstance(other, Game):
             return self.rpath == other.rpath
         else:
             return False
 
+    @override
     def __hash__(self):
         return hash(self.rpath)
 
@@ -138,27 +145,27 @@ class Game:
         if os.path.isfile(vc_path):
             with open(vc_path) as f:
                 vc_content = f.read()
-                version_match = re.findall(r'version .*\'(.*)\'', vc_content, re.MULTILINE)
+                version_match: list[str] = re.findall(r'version .*\'(.*)\'', vc_content, re.MULTILINE)
                 if version_match:
                     version = version_match[0]
-                commit_match = re.findall(r'vc_version.*(\b\d+\b)', vc_content, re.MULTILINE)
+                commit_match: list[str] = re.findall(r'vc_version.*(\b\d+\b)', vc_content, re.MULTILINE)
                 if commit_match:
                     commit = commit_match[0]
 
         if os.path.isfile(init_path):
             with open(init_path) as f:
                 init_content = f.read()
-                version_tuple_match = re.findall(r'version_tuple.*\((\d.*)\)', init_content, re.MULTILINE)
+                version_tuple_match: list[str] = re.findall(r'version_tuple.*\((\d.*)\)', init_content, re.MULTILINE)
                 if version_tuple_match:
-                    version_tuple = re.findall(r'\b\d+\b', version_tuple_match[0])
+                    version_tuple: list[str] = re.findall(r'\b\d+\b', version_tuple_match[0])
                     version = '.'.join(str(i) for i in version_tuple)
 
         if commit:
             version += '.' + commit
         return version
 
-    @property
-    def run(self) -> subprocess.Popen:
+    # @property
+    def run(self) -> subprocess.Popen[bytes]:
         """
             launches the game with the specified options
         """
@@ -223,12 +230,14 @@ class Game:
             * you need to pass "<python_path>" to args instead
         """
 
-        exec_path = self.get_python_path()
+        if not (exec_path := self.get_python_path()):
+            return
         exec_mode = os.stat(exec_path).st_mode
         os.chmod(exec_path, exec_mode | 0o111)
 
         try:
-            exec_path = self.get_python_path()
+            if not (exec_path := self.get_python_path()):
+                return
             libs_path = os.path.join(os.path.dirname(exec_path), 'lib')
             librenpython_path = os.path.join(os.path.dirname(exec_path), 'librenpython.so')
             if os.path.isdir(libs_path) and os.path.isfile(librenpython_path):

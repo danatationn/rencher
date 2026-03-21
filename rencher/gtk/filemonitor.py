@@ -2,6 +2,7 @@ import logging
 import os
 import time
 from collections import defaultdict
+from typing import TYPE_CHECKING, override
 
 from gi.repository import GLib
 from watchdog.events import (
@@ -17,10 +18,11 @@ from watchdog.events import (
 )
 from watchdog.observers import Observer
 
-from rencher.gtk.window import RencherWindow
 from rencher.renpy.config import RencherConfig
 from rencher.renpy.paths import config_path, local_path
 
+if TYPE_CHECKING:
+    from rencher.gtk.window import RencherWindow
 
 class RencherFileMonitor(FileSystemEventHandler):
     """
@@ -29,7 +31,7 @@ class RencherFileMonitor(FileSystemEventHandler):
 
     window: RencherWindow
     config: RencherConfig = RencherConfig()
-    observer: Observer = None  # type: ignore
+    observer: Observer = None  # pyright: ignore[reportInvalidTypeForm]
     data_dir: str
     pending_changes = defaultdict(lambda: {'last': 0.0, 'path': '', 'action': ''})
     pause_rpaths: list[str] = []
@@ -101,7 +103,7 @@ class RencherFileMonitor(FileSystemEventHandler):
             action = 'added'
 
         self.pending_changes[key]['last'] = time.time()
-        self.pending_changes[key]['path'] = path
+        self.pending_changes[key]['path'] = str(path)
         self.pending_changes[key]['action'] = action
 
     def flush_pending(self) -> bool:
@@ -124,9 +126,11 @@ class RencherFileMonitor(FileSystemEventHandler):
                 self.window.library.add_game(rpath)
         return True
 
+    @override
     def on_moved(self, event: DirMovedEvent | FileMovedEvent) -> None:
         self.queue_event(event)
 
+    @override
     def on_deleted(self, event: DirDeletedEvent | FileDeletedEvent) -> None:
         if os.path.exists(event.src_path):
             # this actually means that it was edited
@@ -134,6 +138,7 @@ class RencherFileMonitor(FileSystemEventHandler):
         else:
             self.queue_event(event)
 
+    @override
     def on_closed(self, event: FileClosedEvent | DirDeletedEvent | FileDeletedEvent) -> None:
         # edited
         if event.src_path == config_path:
@@ -142,5 +147,16 @@ class RencherFileMonitor(FileSystemEventHandler):
         else:
             self.queue_event(event)
 
+    @override
     def on_modified(self, event: DirModifiedEvent | FileModifiedEvent) -> None:
         self.queue_event(event)
+
+    def pause_monitor(self, rpath: str) -> None:
+        if rpath not in self.pause_rpaths:
+            self.pause_rpaths.append(rpath)
+
+    def resume_monitor(self, path: str) -> None:
+        for rpath in self.pause_rpaths:
+            if os.path.commonpath([path, rpath]):
+                self.pause_rpaths.remove(rpath)
+        self.flush_pending()

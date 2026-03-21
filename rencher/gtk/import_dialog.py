@@ -221,7 +221,7 @@ class RencherImport(Adw.PreferencesDialog):
         if not self.cancel_flag.is_set():
             logging.info(f'Importing the game at "{rpath}/"')
         start = time.perf_counter()
-        self.window.application.pause_monitor(rpath)
+        self.window.app.pause_monitor(rpath)
 
         if is_mod:
             game_files = glob.glob(f'{modded_game.rpath}/**', recursive=True)
@@ -326,9 +326,9 @@ class RencherImport(Adw.PreferencesDialog):
                 else:
                     logging.info(f'Archive "{location_stem}" deleted!')
 
-            self.window.application.resume_monitor(rpath)
+            self.window.app.resume_monitor(rpath)
         else:
             shutil.rmtree(rpath)
             logging.info(f'Importing cancelled. Total thread runtime: {time.perf_counter() - start:.2f}s')
-            self.window.application.resume_monitor(rpath)
+            self.window.app.resume_monitor(rpath)
         GLib.idle_add(self.window.tasks_popover.update_task, task_date, total_work)

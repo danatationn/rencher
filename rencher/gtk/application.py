@@ -1,6 +1,8 @@
 import logging
 import os
 import threading
+from configparser import ConfigParser
+from typing import override
 
 import gi
 import requests
@@ -20,9 +22,9 @@ from rencher.renpy.paths import local_path  # noqa: E402
 
 
 class RencherApplication(Gtk.Application):
-    config: dict
+    config: ConfigParser
     window: RencherWindow
-    file_monitor: RencherFileMonitor = None
+    file_monitor: RencherFileMonitor
 
 
     def __init__(self, *args, **kwargs):
@@ -57,12 +59,12 @@ class RencherApplication(Gtk.Application):
         urllib3_logger = logging.getLogger('urllib3')
         urllib3_logger.setLevel(logging.WARNING)
 
-        actions = [
-            ['show-import', self.on_show_import, ['<Primary>plus']],
-            ['show-preferences', self.on_show_preferences, ['<Primary>comma']],
-            ['show-shortcuts', self.on_show_shortcuts, ['<Primary>question']],
-            ['show-about', self.on_show_about, []],
-            ['quit', self.on_quit, ['<Primary>q', '<Primary>w']],
+        actions: list[ tuple[str, object, list[str]]] = [
+            ('show-import', self.on_show_import, ['<Primary>plus']),
+            ('show-preferences', self.on_show_preferences, ['<Primary>comma']),
+            ('show-shortcuts', self.on_show_shortcuts, ['<Primary>question']),
+            ('show-about', self.on_show_about, []),
+            ('quit', self.on_quit, ['<Primary>q', '<Primary>w']),
         ]
 
         for name, callback, accels in actions:
@@ -72,6 +74,7 @@ class RencherApplication(Gtk.Application):
             if accels:
                 self.set_accels_for_action(f'app.{name}', accels)
 
+    @override
     def do_command_line(self, command_line):
         options = command_line.get_options_dict()
 
@@ -87,13 +90,13 @@ class RencherApplication(Gtk.Application):
         self.activate()
         return 0
 
+    @override
     def do_activate(self):
         Gtk.Application.do_activate(self)
 
         self.config = RencherConfig()
         self.window = RencherWindow(application=self)
         self.window.present()
-        self.file_monitor = RencherFileMonitor(self.window)
 
         if self.config['settings']['suppress_updates'] != 'true':
             version_thread = threading.Thread(target=self.check_version)
@@ -132,19 +135,10 @@ class RencherApplication(Gtk.Application):
         dialog.set_release_notes("""<ul>
             <li> Faster library game loading </li>
             <li> Fixed crash when starting Rencher for the first time </li>
+            <li> Build system overhaul </li>
         </ul>""")
 
         dialog.present(self.window)
-
-    def pause_monitor(self, rpath: str) -> None:
-        if rpath not in self.file_monitor.pause_rpaths:
-            self.file_monitor.pause_rpaths.append(rpath)
-
-    def resume_monitor(self, path: str) -> None:
-        for rpath in self.file_monitor.pause_rpaths:
-            if os.path.commonpath([path, rpath]):
-                self.file_monitor.pause_rpaths.remove(rpath)
-        self.file_monitor.flush_pending()
 
     def check_version(self, show_up_to_date_toast: bool = False) -> None:
         try:

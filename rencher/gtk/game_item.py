@@ -43,16 +43,16 @@ class GameItem(GObject.Object):
 
         uhh
     """
-    __gtype_name__ = 'GameItem'
+    __gtype_name__: str = 'GameItem'
     _game: Game
-    name = GObject.Property(type=str)
-    rpath = GObject.Property(type=str)
-    apath = GObject.Property(type=str)
-    last_played = GObject.Property(type=str)
-    playtime = GObject.Property(type=str)
-    added_on = GObject.Property(type=str)
-    version = GObject.Property(type=str)
-    codename = GObject.Property(type=str)
+    name: GObject.Property = GObject.Property(type=str)
+    rpath: GObject.Property = GObject.Property(type=str)
+    apath: GObject.Property = GObject.Property(type=str)
+    last_played: GObject.Property = GObject.Property(type=str)
+    playtime: GObject.Property = GObject.Property(type=str)
+    added_on: GObject.Property = GObject.Property(type=str)
+    version: GObject.Property = GObject.Property(type=str)
+    codename: GObject.Property = GObject.Property(type=str)
 
     def __init__(self, rpath: str | None = None, game: Game | None = None):
         super().__init__()
@@ -88,7 +88,7 @@ class GameItem(GObject.Object):
             return
         game.config.read()
 
-        property_map = {
+        property_map: dict[str, tuple[object, list[str]]] = {
             'name': (game.get_name, []),
             'rpath': (lambda: game.rpath, []),
             'apath': (lambda: game.apath, []),

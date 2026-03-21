@@ -2,7 +2,7 @@ import os
 import threading
 import time
 from configparser import ConfigParser
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, override
 
 from gi.repository import Adw, GLib, Gtk
 
@@ -16,7 +16,7 @@ if TYPE_CHECKING:
 
 @Gtk.Template.from_resource('/com/github/danatationn/Rencher/ui/options.ui')
 class RencherOptions(Adw.PreferencesDialog):
-    __gtype_name__ = 'RencherOptions'
+    __gtype_name__: str = 'RencherOptions'
 
     nickname_entry: Adw.EntryRow = Gtk.Template.Child()
     location_row: Adw.ActionRow = Gtk.Template.Child()
@@ -27,19 +27,20 @@ class RencherOptions(Adw.PreferencesDialog):
     overwrite_skip_splash_scr_switch: Gtk.Switch = Gtk.Template.Child()
     overwrite_skip_main_menu_switch: Gtk.Switch = Gtk.Template.Child()
     overwrite_forced_save_dir_switch: Gtk.Switch = Gtk.Template.Child()
+    switches_list: list[tuple[Gtk.Switch, Adw.SwitchRow, str]]
     # options_save_slot: Adw.SpinRow = Gtk.Template.Child()
 
-    game: Game = None
-    rencher_config: ConfigParser = None
+    game: Game
+    rencher_config: ConfigParser
 
     def __init__(self, window: 'RencherWindow'):
         super().__init__()
 
-        self.window = window
+        self.window: RencherWindow = window
         self.switches_list = [
-            [self.overwrite_skip_splash_scr_switch, self.skip_splash_scr_switch, 'skip_splash_scr'],
-            [self.overwrite_skip_main_menu_switch, self.skip_main_menu_switch, 'skip_main_menu'],
-            [self.overwrite_forced_save_dir_switch, self.forced_save_dir_switch, 'forced_save_dir'],
+            (self.overwrite_skip_splash_scr_switch, self.skip_splash_scr_switch, 'skip_splash_scr'),
+            (self.overwrite_skip_main_menu_switch, self.skip_main_menu_switch, 'skip_main_menu'),
+            (self.overwrite_forced_save_dir_switch, self.forced_save_dir_switch, 'forced_save_dir'),
         ]
 
         # self.options_save_slot.set_adjustment(Gtk.Adjustment(
@@ -86,6 +87,7 @@ class RencherOptions(Adw.PreferencesDialog):
             elif self.rencher_config['settings'][key] == 'true':
                 switch.set_active(True)
 
+    @override
     def do_closed(self):
         if not os.path.isdir(self.game.rpath):
             return  # it got deleted
@@ -110,7 +112,7 @@ class RencherOptions(Adw.PreferencesDialog):
 
         def select():
             for row in self.window.library_list_box:  # type: ignore
-                if row.game.rpath == self.game.rpath:
+                if row.game_item.rpath == self.game.rpath:
                     self.window.current_gameitem.refresh(self.game)
                     self.window.library_list_box.select_row(row)
                     break
@@ -182,7 +184,7 @@ class RencherOptions(Adw.PreferencesDialog):
             return
 
         def delete_thread():
-            self.window.application.pause_monitor(self.game.rpath)
+            self.window.filemonitor.pause_monitor(self.game.rpath)
             toast = Adw.Toast(title=f'"{self.game.name}" has been deleted', timeout=5)
             task_date = time.time()
             total_work = 0
@@ -228,7 +230,7 @@ class RencherOptions(Adw.PreferencesDialog):
 
             GLib.idle_add(lambda: (
                 self.window.library.remove_game(self.game.rpath),
-                self.window.application.resume_monitor(self.game.rpath),
+                self.window.filemonitor.resume_monitor(self.game.rpath),
                 self.window.toast_overlay.add_toast(toast),
             ))
 

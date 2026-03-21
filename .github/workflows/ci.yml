@@ -2,43 +2,37 @@ name: Rencher
 on: [push, workflow_dispatch]
 
 jobs:
-  # linux-job:
-  # name: Linux
-  # runs-on: ubuntu-latest
-  # steps:
-  #   - name: Checkout
-  #     uses: actions/checkout@v3
-  #   - name: Set up QEMU
-  #     uses: docker/setup-qemu-action@v3
-  #   - name: Set up Docker Buildx
-  #     uses: docker/setup-buildx-action@v3
-  #   - name: Build Docker image
-  #     uses: docker/build-push-action@v6
-  #     with:
-  #       context: .
-  #       tags: rencher-builder:latest
-  #       load: true
-
-  #   - name: Create container and extract files
-  #     id: extract
-  #     run: |
-  #       docker create --name temp-container rencher-builder:latest
-  #       docker cp temp-container:/app/build ./output/
-  #       FREEZE_DIR=$(docker run rencher-builder python3 -c "import sysconfig; print(f'exe.{sysconfig.get_platform()}-{sysconfig.get_python_version()}')")
-  #       echo "FREEZE_DIR=$FREEZE_DIR" >> $GITHUB_OUTPUT
-  #       docker rm temp-container
-
-  #   - name: Upload frozen files artifact
-  #     uses: actions/upload-artifact@v4
-  #     with:
-  #       name: Rencher-Linux-Portable
-  #       path: ./output/${{ steps.extract.outputs.FREEZE_DIR }}/
-
-  # - name: Upload AppImage artifact
-  # uses: actions/upload-artifact@v4
-  # with:
-  # name: Rencher-Linux-AppImage
-  # path: ./output/Rencher-x86_64.AppImage
+  linux-job:
+    name: Linux
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+      - name: Build Docker image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          tags: rencher-builder:latest
+          load: true
+  
+      - name: Create container and extract files
+        id: extract
+        run: |
+          docker create --name temp-container rencher-builder:latest
+          docker cp temp-container:/app/build ./output/
+          FREEZE_DIR=$(docker run rencher-builder python3 -c "import sysconfig; print(f'exe.{sysconfig.get_platform()}-{sysconfig.get_python_version()}')")
+          echo "FREEZE_DIR=$FREEZE_DIR" >> $GITHUB_OUTPUT
+          docker rm temp-container
+  
+      - name: Upload frozen files artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Rencher-Linux-Portable
+          path: ./output/${{ steps.extract.outputs.FREEZE_DIR }}/
 
   windows-job:
     name: Windows
