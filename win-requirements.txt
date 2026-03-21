@@ -1,0 +1,4 @@
+# for windows
+rarfile>=4.2
+requests>=2.32.4
+watchdog>=6.0.0

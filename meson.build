@@ -30,6 +30,14 @@ if host_machine.system() == 'windows'
 else
     conf.set('venv_dir', meson.current_source_dir() / '.venv/lib/python3.14/site-packages')
 endif
+freeze_dir = run_command(
+    python_install, '-c',
+    'import sysconfig; print(f"exe.{sysconfig.get_platform()}-{sysconfig.get_python_version()}")',
+    check: true,
+).stdout().strip()
+conf.set('build_dir', meson.project_build_root() / freeze_dir)
+
+message(conf.get('build_dir'))
 
 # install
 subdir('rencher')
@@ -41,4 +49,16 @@ if host_machine.system() == 'linux'
     	gtk_update_icon_cache: true,
     	update_desktop_database: true,
     )
+endif
+
+# freeze
+if host_machine.system() == 'windows'
+    nsi = configure_file(
+        input: 'build_installer.nsi.in',
+        output: 'build_installer.nsi',
+        configuration: conf
+    )
+
+    run_target('freeze', command: ['freeze.py', get_option('prefix'), meson.project_build_root()])
+    run_target('makensis', command: ['makensis', nsi])
 endif

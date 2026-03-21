@@ -68,7 +68,8 @@ def handle_global_exception(exc_type: type[BaseException], exc_value: BaseExcept
     print(err_message, file=sys.stderr)
     show_err_dialog(
         'Oops! Rencher has crashed!\n'
-        'Please send this error to the developer, along with a description on what you were doing.\n\n' + err_message
+        + 'Please send this error to the developer, along with a description on what you were doing.\n\n'
+        + err_message,
     )
 
     sys.exit(1)

@@ -52,8 +52,8 @@ indent-style = "space"
 [dependency-groups]
 dev = [
     "pygobject-stubs>=2.13.0",
-    "cx-freeze>=8.6.2",
-    "flatpak-pip-generator>=25.0.0",
+    "cx-freeze>=8.6.2; sys.platform == 'Windows'",
+    "flatpak-pip-generator>=25.0.0; sys.platform == 'Linux'",
 ]
 
 [tool.ruff.lint.flake8-implicit-str-concat]

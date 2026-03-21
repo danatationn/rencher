@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 """
 HEAVILY inspired by the Nicotine+ cxfreeze script:
 https://github.com/nicotine-plus/nicotine-plus/blob/master/build-aux/windows/setup.py
@@ -95,10 +96,10 @@ def freeze(argv: list[str]):
     if len(argv) > 2:
         dest_dir = Path(argv[2])
     else:
-        dest_dir = Path('build').absolute()
+        dest_dir = Path(__file__) / 'build'
     icon_path = Path(__file__).parent / 'data' / 'assets' / 'rencher-icon.ico'
     # setup() requires the first argument to be 'build'
-    argv[1] = 'build'
+    sys.argv = [argv[0], 'build']
 
     setup(
         name='Rencher',
@@ -109,7 +110,7 @@ def freeze(argv: list[str]):
                 'build_base': dest_dir,
             },
             'build_exe': {
-                'packages': ['requests', 'configparser', 'watchdog', 'thefuzz', 'rarfile', 'cairo'],
+                'packages': ['requests', 'configparser', 'watchdog', 'rarfile', 'cairo'],
                 'excludes': [],
                 'optimize': 2,
                 'include_files': include_files,
@@ -132,7 +133,10 @@ def freeze(argv: list[str]):
 
 
 def find_files(
-    pattern: str, search_path: Path | str, dest_path: Path | str = Path(), recursive: bool = False
+    pattern: str,
+    search_path: Path | str,
+    dest_path: Path | str = Path(),
+    recursive: bool = False,
 ) -> list[tuple[Path, Path]]:
     source_files: list[Path] = []
     files: list[tuple[Path, Path]] = []
