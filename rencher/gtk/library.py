@@ -5,7 +5,7 @@ import pickle
 from pathlib import Path
 from typing import TYPE_CHECKING
 
-from gi.repository import GObject
+from gi.repository import Gio, GObject
 
 from rencher.gtk.game_item import GameItem
 from rencher.renpy.config import RencherConfig
@@ -16,8 +16,8 @@ if TYPE_CHECKING:
 
 
 class RencherLibrary(GObject.Object):
-    game_items: dict[str, GameItem] = {}
     window: 'RencherWindow'
+    store: Gio.ListStore
 
     __gsignals__: dict[str, tuple[GObject.SignalFlags, None, tuple[object]]] = {
         'game-added': (GObject.SignalFlags.RUN_FIRST, None, (GameItem,)),
@@ -28,13 +28,26 @@ class RencherLibrary(GObject.Object):
     def __init__(self, window: 'RencherWindow'):
         super().__init__()
         self.window = window
+        self.store = Gio.ListStore(item_type=GameItem)
+
+    def find(self, rpath: str | Path) -> tuple[int, GameItem] | None:
+        rpath = os.path.normpath(rpath)
+        for item in self.store:
+            if not item:
+                continue
+            item_rpath = os.path.normpath(item.rpath)
+            if rpath == item_rpath or rpath.startswith(item_rpath + os.sep):
+                found, pos = self.store.find(item)
+                if found:
+                    logging.debug(f'{rpath} belongs to {item.rpath}')
+                    return pos, item
+        return None
 
     def load_games(self) -> None:
         data_dir = RencherConfig().get_data_dir()
         games_dir = Path(data_dir) / 'games'
         games_dir.mkdir(exist_ok=True, parents=True)
-        for rpath in dict(self.game_items):
-            self.remove_game(rpath)
+        self.store.remove_all()
 
         loop = asyncio.new_event_loop()
         asyncio.set_event_loop(loop)
@@ -42,36 +55,13 @@ class RencherLibrary(GObject.Object):
             rpath = os.path.join(games_dir, d)
             loop.run_in_executor(None, self.add_game, rpath)
 
-    def make_cache(self) -> None:
-        data_dir = RencherConfig().get_data_dir()
-        cache_dir = os.path.join(data_dir, 'cache')
-        library_cache = os.path.join(cache_dir, 'library.pickle')
-        os.makedirs(cache_dir, exist_ok=True)
-        with open(library_cache, 'wb') as f:
-            pickle.dump(self.game_items, f)
-
-    def load_cache(self) -> None:
-        data_dir = RencherConfig().get_data_dir()
-        cache_dir = os.path.join(data_dir, 'cache')
-        library_cache = os.path.join(cache_dir, 'library.pickle')
-        try:
-            with open(library_cache, 'rb') as f:
-                data = pickle.load(f)
-        except FileNotFoundError:
-            logging.debug('cache not found')
-        except EOFError:
-            pass
-        # except pickle.UnpicklingError:
-        #     logging.debug('unpickling error')
-        else:
-            for rpath, game_item in data.items():
-                logging.debug(f'{rpath=} {game_item=}')
-                logging.debug(game_item.__dict__)
-                self.game_items[rpath] = game_item
-                self.emit('game-added', game_item)
-                logging.debug(f'p+{game_item.name}')
-
     def add_game(self, rpath: str) -> None:
+        if self.find(rpath):
+            self.change_game(rpath)
+            return
+        else:
+            logging.debug(f'+{rpath}')
+
         try:
             game_item = GameItem(rpath=rpath)
         except GameNoExecutableError:
@@ -79,25 +69,21 @@ class RencherLibrary(GObject.Object):
         except GameInvalidError:
             pass
         else:
-            if rpath not in self.game_items:
-                self.game_items[rpath] = game_item
-                self.emit('game-added', game_item)
-                logging.debug(f'+{game_item.name}')
-            else:
-                self.change_game(rpath)
+            self.store.append(game_item)
+            self.emit('game-added', game_item)
 
     def remove_game(self, rpath: str) -> None:
-        game_item = self.game_items.pop(rpath, None)
-        self.emit('game-removed', game_item)
-        if game_item:
-            logging.debug(f'-{game_item.name}')
+        logging.debug(f'-{rpath}')
+        result = self.find(rpath)
+        if result:
+            i, item = result
+            self.store.remove(i)
+            self.emit('game-removed', item)
 
     def change_game(self, rpath: str) -> None:
-        if rpath in self.game_items:
-            self.emit('game-changed', self.game_items[rpath])
-            logging.debug(f'~{self.game_items[rpath].name}')
-
-    def get_game(self, rpath: str) -> GameItem | None:
-        if rpath in self.game_items:
-            return self.game_items[rpath]
-        return None
+        logging.debug(f'~{rpath}')
+        result = self.find(rpath)
+        if result:
+            i, game_item = result
+            game_item.refresh(game_item.game)
+            self.store.items_changed(i, 1, 1)

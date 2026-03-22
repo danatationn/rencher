@@ -53,6 +53,16 @@ jobs:
         with:
           name: Rencher-Linux-Flatpak
           path: build/Rencher.flatpak
+      - name: Make AppImage
+        if: false
+        run: |
+            wget https://github.com/niess/python-appimage/releases/download/python3.14/python3.14.0-cp314-cp314t-manylinux2014_x86_64.AppImage
+            chmod +x python3.14.0-cp314-cp314t-manylinux2014_x86_64.AppImage
+            ./python3.14.0-cp314-cp314t-manylinux2014_x86_64.AppImage --appimage-extract
+            wget -c "https://raw.githubusercontent.com/linuxdeploy/linuxdeploy-plugin-gtk/master/linuxdeploy-plugin-gtk.sh"
+            wget -c "https://github.com/linuxdeploy/linuxdeploy/releases/download/continuous/linuxdeploy-x86_64.AppImage"
+            chmod +x linuxdeploy-x86_64.AppImage linuxdeploy-plugin-gtk.sh
+
 
   windows-job:
     name: Windows

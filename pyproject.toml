@@ -6,6 +6,7 @@ requires-python = ">=3.12"
 dependencies = [
     "pycairo==1.27.0; sys.platform == 'linux'",
     "pygobject==3.50.0; sys.platform == 'linux'",
+    "pypresence>=4.6.1",
     "rarfile>=4.2",
     "requests>=2.32.4",
     "watchdog>=6.0.0",
@@ -33,6 +34,7 @@ reportUnknownMemberType = false
 reportMissingParameterType = false
 reportUnknownParameterType = false
 reportUnknownArgumentType = false
+reportMissingTypeStubs = false
 
 [tool.ruff]
 line-length = 120

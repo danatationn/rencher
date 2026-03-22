@@ -24,9 +24,11 @@ class RencherOptions(Adw.PreferencesDialog):
     skip_splash_scr_switch: Adw.SwitchRow = Gtk.Template.Child()
     skip_main_menu_switch: Adw.SwitchRow = Gtk.Template.Child()
     forced_save_dir_switch: Adw.SwitchRow = Gtk.Template.Child()
+    discord_rpc_switch: Adw.SwitchRow = Gtk.Template.Child()
     overwrite_skip_splash_scr_switch: Gtk.Switch = Gtk.Template.Child()
     overwrite_skip_main_menu_switch: Gtk.Switch = Gtk.Template.Child()
     overwrite_forced_save_dir_switch: Gtk.Switch = Gtk.Template.Child()
+    overwrite_discord_rpc_switch: Gtk.Switch = Gtk.Template.Child()
     switches_list: list[tuple[Gtk.Switch, Adw.SwitchRow, str]]
     # options_save_slot: Adw.SpinRow = Gtk.Template.Child()
 
@@ -41,6 +43,7 @@ class RencherOptions(Adw.PreferencesDialog):
             (self.overwrite_skip_splash_scr_switch, self.skip_splash_scr_switch, 'skip_splash_scr'),
             (self.overwrite_skip_main_menu_switch, self.skip_main_menu_switch, 'skip_main_menu'),
             (self.overwrite_forced_save_dir_switch, self.forced_save_dir_switch, 'forced_save_dir'),
+            (self.overwrite_discord_rpc_switch, self.discord_rpc_switch, 'discord_rpc'),
         ]
 
         # self.options_save_slot.set_adjustment(Gtk.Adjustment(

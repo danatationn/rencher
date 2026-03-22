@@ -22,7 +22,6 @@ from rencher.renpy.paths import (
     get_py_files,
     get_rpa_files,
     get_rpa_path,
-    tmp_path,
     validate_game_files,
 )
 
@@ -64,7 +63,7 @@ class RencherImport(Adw.PreferencesDialog):
     def do_show(self):
         list_store = Gio.ListStore.new(GameItem)
 
-        for _, game_item in self.window.library.game_items.items():
+        for _, game_item in enumerate(self.window.library.store):
             if not game_item.game.is_mod:
                 list_store.append(game_item)
 
@@ -149,7 +148,7 @@ class RencherImport(Adw.PreferencesDialog):
         location_stem = os.path.splitext(os.path.basename(location))[0]
         is_mod = self.mod_switch.get_active()
         modded_game: GameItem = self.game_combo.get_selected_item()  # type: ignore
-        archive: zipfile | rarfile = None  # type: ignore
+        archive: zipfile.ZipFile | rarfile.RarFile
 
         data_dir = RencherConfig().get_data_dir()
         game_dir = os.path.join(data_dir, 'games')
@@ -221,7 +220,7 @@ class RencherImport(Adw.PreferencesDialog):
         if not self.cancel_flag.is_set():
             logging.info(f'Importing the game at "{rpath}/"')
         start = time.perf_counter()
-        self.window.app.pause_monitor(rpath)
+        self.window.filemonitor.pause_monitor(rpath)
 
         if is_mod:
             game_files = glob.glob(f'{modded_game.rpath}/**', recursive=True)
@@ -311,9 +310,11 @@ class RencherImport(Adw.PreferencesDialog):
             self.window.library.add_game(rpath)
             selected_row = self.window.library_list_box.get_selected_row()
             if not selected_row:
-                game_item = self.window.library.get_game(rpath)
-                row = self.window.rows[game_item]
-                self.window.library_list_box.select_row(row)
+                result = self.window.library.find(rpath)
+                if result:
+                    _, game_item = result
+                    row = self.window.rows[game_item]
+                    self.window.library_list_box.select_row(row)
 
             logging.info(f'Importing done in {time.perf_counter() - start:.2f}s')
             if RencherConfig()['settings']['delete_on_import'] == 'true':
@@ -326,9 +327,9 @@ class RencherImport(Adw.PreferencesDialog):
                 else:
                     logging.info(f'Archive "{location_stem}" deleted!')
 
-            self.window.app.resume_monitor(rpath)
+            self.window.filemonitor.resume_monitor(rpath)
         else:
             shutil.rmtree(rpath)
             logging.info(f'Importing cancelled. Total thread runtime: {time.perf_counter() - start:.2f}s')
-            self.window.app.resume_monitor(rpath)
+            self.window.filemonitor.resume_monitor(rpath)
         GLib.idle_add(self.window.tasks_popover.update_task, task_date, total_work)

@@ -5,6 +5,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING
 
 from gi.repository import Adw, GLib, GObject, Gtk
+from pypresence import Presence
 
 from rencher.gtk.codename_dialog import RencherCodename
 from rencher.gtk.filemonitor import RencherFileMonitor
@@ -27,14 +28,13 @@ class RencherWindow(Adw.ApplicationWindow):
     # variables
     game_process: subprocess.Popen[bytes] | None = None
     process_time: float
-    process_row: Gtk.ListBoxRow | None = None
-    is_terminating: bool
+    is_terminating: bool = False
     filter_text: str = ''
     combo_index: int = 0
     ascending_order: bool = False
     pause_monitoring: str
     current_gameitem: GameItem
-    rows: dict[GameItem, Adw.ButtonRow] = {}
+    rpc: Presence
 
     # classes
     app: 'RencherApplication'
@@ -70,12 +70,13 @@ class RencherWindow(Adw.ApplicationWindow):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        self.app = self.get_application()
-        self.filemonitor = RencherFileMonitor(self)
+        self.app = self.get_application()  # pyright: ignore[reportAttributeAccessIssue]
         self.library = RencherLibrary(self)
+        self.filemonitor = RencherFileMonitor(self.library)
         self.library.connect('game-added', self.on_game_added)
         self.library.connect('game-changed', self.on_game_changed)
         self.library.connect('game-removed', self.on_game_removed)
+
         # self.library.load_cache()
 
         self.import_dialog = RencherImport(self)
@@ -102,37 +103,29 @@ class RencherWindow(Adw.ApplicationWindow):
         GLib.idle_add(self.library.load_games)
         GLib.timeout_add(250, self.check_process)
 
-    def on_game_added(self, _, game_item: GameItem):
+        self.rpc = Presence(1485229562123124818)
+        self.rpc.connect()
+
+    def on_game_added(self, game_item: GameItem) -> None:
         row = Adw.ButtonRow()
-        row.game_item = game_item  # pyright: ignore[reportAttributeAccessIssue]
+        game_item.row = row
         game_item.bind_property('name', row, 'title', GObject.BindingFlags.SYNC_CREATE)
         self.library_list_box.append(row)
-        self.rows[game_item] = row
-        if self.library_list_box.get_selected_row():
-            self.library_view_stack.set_visible_child_name('selected')
-        else:
-            self.library_view_stack.set_visible_child_name('game-select')
         self.split_view.set_show_sidebar(True)
 
-    def on_game_removed(self, _, game_item: GameItem):
-        if game_item in self.rows:
-            row = self.rows[game_item]
-            if getattr(row, 'game_item', None) == game_item:
-                self.library_list_box.remove(row)
-                del self.rows[game_item]
+    def on_game_removed(self, _, game_item: GameItem) -> None:
+        if game_item in self.library.store:
+            self.library_list_box.remove(game_item.row)
 
-        if len(self.rows) == 0:
+        if len(self.library.store) == 0:
             self.library_view_stack.set_visible_child_name('empty')
             self.split_view.set_show_sidebar(False)
 
-    def on_game_changed(self, _, game_item: GameItem):
-        if not self.current_gameitem:
-            return
+    def on_game_changed(self, _, game_item: GameItem) -> None:
         if self.current_gameitem.rpath == game_item.rpath:
             self.current_gameitem.refresh(game_item.game)
 
-        if game_item in self.rows:
-            game_item.refresh(game_item.game)
+        game_item.refresh(game_item.game)
 
     def update_pie_paintable(self):
         fraction = self.tasks_popover.get_total_fraction()
@@ -226,6 +219,7 @@ class RencherWindow(Adw.ApplicationWindow):
             self.play_button.get_style_context().add_class('suggested-action')
             self.options_button.set_sensitive(True)
             self.is_terminating = False
+            self.rpc.clear()
 
             if self.game_process is None:
                 return True
@@ -245,12 +239,12 @@ class RencherWindow(Adw.ApplicationWindow):
 
             self.game_process = None
             self.process_row = None
-
         else:
             if self.is_terminating:
                 self.play_button.set_label('Stopping')
             else:
                 self.play_button.set_label('Stop')
+                self.rpc.update(state='aa')
             self.play_button.get_style_context().remove_class('suggested-action')
             self.play_button.get_style_context().add_class('destructive-action')
             self.options_button.set_sensitive(False)

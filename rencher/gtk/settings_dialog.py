@@ -30,6 +30,7 @@ class RencherSettings(Adw.PreferencesDialog):
     skip_main_menu_switch: Adw.SwitchRow = Gtk.Template.Child()
     forced_save_dir_switch: Adw.SwitchRow = Gtk.Template.Child()
     windowficate_switch: Adw.SwitchRow = Gtk.Template.Child()
+    discord_rpc_switch: Adw.SwitchRow = Gtk.Template.Child()
     switches_list: list[tuple[Adw.SwitchRow, str]]
 
     def __init__(self, window: 'RencherWindow', *args, **kwargs):
@@ -42,6 +43,7 @@ class RencherSettings(Adw.PreferencesDialog):
             (self.skip_main_menu_switch, 'skip_main_menu'),
             (self.forced_save_dir_switch, 'forced_save_dir'),
             (self.windowficate_switch, 'windowficate_filenames'),
+            (self.discord_rpc_switch, 'discord_rpc'),
         ]
 
         self.window = window

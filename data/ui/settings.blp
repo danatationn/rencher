@@ -3,14 +3,14 @@ using Adw 1;
 
 template $RencherSettings : Adw.PreferencesDialog {
 	title: _("Settings");
-	
+
 	Adw.PreferencesPage {
 		Adw.PreferencesGroup {
 			title: _("Data Preferences");
 
 			Adw.EntryRow data_dir_entry {
 				title: _("Data Directory");
-				
+
 				[suffix]
 				Button {
 					icon-name: "external-link-symbolic";
@@ -23,7 +23,7 @@ template $RencherSettings : Adw.PreferencesDialog {
 					styles ["flat"]
 					valign: center;
 					icon-name: "folder-open-symbolic";
-					
+
 					clicked => $on_picker_clicked();
 				}
 			}
@@ -44,6 +44,9 @@ template $RencherSettings : Adw.PreferencesDialog {
 				visible: false; // #soon
 				title: _("Download Missing Ren'Py Binaries");
 			}
+			Adw.SwitchRow discord_rpc_switch {
+				title: _("Enable Discord RPC");
+			}
 			Adw.SwitchRow updates_switch {
 				title: _("Supress Update Notifications");
 			}
@@ -61,11 +64,11 @@ template $RencherSettings : Adw.PreferencesDialog {
 				title: _("Delete Files On Import");
 			}
 		}
-		
+
 		Adw.PreferencesGroup {
 			title: _("Config Defaults");
 			description: _("These might break some games. Here be dragons!");
-			
+
 			Adw.SwitchRow skip_splash_scr_switch {
 				title: _("Skip Splash Screen");
 			}

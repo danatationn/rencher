@@ -1,4 +1,5 @@
-from gi.repository import GLib, GObject
+import subprocess
+from gi.repository import Adw, GLib, GObject
 
 from rencher.renpy.game import Game
 
@@ -45,6 +46,8 @@ class GameItem(GObject.Object):
     """
     __gtype_name__: str = 'GameItem'
     _game: Game
+    _row: Adw.ButtonRow
+    _process: subprocess.Popen[bytes]
     name: GObject.Property = GObject.Property(type=str)
     rpath: GObject.Property = GObject.Property(type=str)
     apath: GObject.Property = GObject.Property(type=str)
@@ -64,26 +67,30 @@ class GameItem(GObject.Object):
         if rpath and not game:
             game = Game(rpath=rpath)
 
-        self.game = game
-        self.refresh(self.game)
+        if game:
+            self.game = game
+            self.refresh(self.game)
 
-    """def __getstate__(self) -> dict:
-        return {
-            'game': self._game,
-        }
+    # def __getstate__(self) -> dict:
+    #     return {
+    #         'game': self._game,
+    #     }
 
-    def __setstate__(self, state: dict) -> None:
-        self.__init__()
-        game = state.get('_game', None)
-        if not game:
-            return
-        if not isinstance(game, Game):
-            return
-        if not game.is_valid:
-            return
-        self.game = game"""
+    # def __setstate__(self, state: dict) -> None:
+    #     self.__init__()
+    #     game = state.get('_game', None)
+    #     if not game:
+    #         return
+    #     if not isinstance(game, Game):
+    #         return
+    #     if not game.is_valid:
+    #         return
+    #     self.game = game
 
-    def refresh(self, game: Game | None):
+    def run(self) -> None:
+        self._process = self.game.run()
+
+    def refresh(self, game: Game | None) -> None:
         if not game:
             return
         game.config.read()
@@ -117,6 +124,17 @@ class GameItem(GObject.Object):
     def game(self) -> Game:
         return self._game
     @game.setter
-    def game(self, value: Game):
+    def game(self, value: Game) -> None:
         self._game = value
         self.refresh(value)
+
+    @property
+    def row(self) -> Adw.ButtonRow:
+        return self._row
+    @row.setter
+    def row(self, value: Adw.ButtonRow) -> None:
+        self._row = value
+
+    @property
+    def process(self) -> subprocess.Popen[bytes] | None:
+        return self._process

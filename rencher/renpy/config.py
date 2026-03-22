@@ -25,13 +25,15 @@ class GameConfig(ConfigParser):
             'skip_splash_scr': '',
             'skip_main_menu': '',
             'forced_save_dir': '',
-            'save_slot': 1,
+            'discord_rpc': '',
+            # 'save_slot': 1,
         },
 
         'overwritten': {
             'skip_splash_scr': '',
             'skip_main_menu': '',
             'forced_save_dir': '',
+            'discord_rpc': '',
         },
     }
 
@@ -142,6 +144,7 @@ class RencherConfig(ConfigParser):
                 'skip_splash_scr': 'false',
                 'skip_main_menu': 'false',
                 'forced_save_dir': 'false',
+                'discord_rpc': 'true',
                 'windowficate_filenames': 'true',
             },
         }

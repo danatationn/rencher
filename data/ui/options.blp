@@ -47,7 +47,27 @@ template $RencherOptions: Adw.PreferencesDialog {
 			description: _("These might break some games. Here be dragons!");
 
 			Adw.ExpanderRow {
-				title: _("Overwrite Skip Splash Screen");
+				title: _("Override Discord RPC");
+				expanded: bind overwrite_discord_rpc_switch.active;
+
+				[action]
+				Switch overwrite_discord_rpc_switch {
+					halign: end;
+					valign: center;
+					state-set => $on_switch_changed();
+				}
+
+				Adw.SwitchRow discord_rpc_switch {
+					title: _("Enable Discord RPC");
+					sensitive: bind overwrite_discord_rpc_switch.active;
+
+					activate => $on_switch_changed();
+				}
+
+			}
+
+			Adw.ExpanderRow {
+				title: _("Override Skip Splash Screen");
 				expanded: bind overwrite_skip_splash_scr_switch.active;
 
 				[action]
@@ -66,7 +86,7 @@ template $RencherOptions: Adw.PreferencesDialog {
 				}
 			}
 			Adw.ExpanderRow {
-				title: _("Overwrite Skip Main Menu");
+				title: _("Override Skip Main Menu");
 				expanded: bind overwrite_skip_main_menu_switch.active;
 
 				[action]
@@ -83,7 +103,7 @@ template $RencherOptions: Adw.PreferencesDialog {
 				}
 			}
 			Adw.ExpanderRow {
-				title: _("Overwrite Contained Game Saves");
+				title: _("Override Contained Game Saves");
 				expanded: bind overwrite_forced_save_dir_switch.active;
 
 				[action]

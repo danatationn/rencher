@@ -2,7 +2,7 @@ import logging
 import os
 import time
 from collections import defaultdict
-from typing import TYPE_CHECKING, override
+from typing import override
 
 from gi.repository import GLib
 from watchdog.events import (
@@ -18,38 +18,37 @@ from watchdog.events import (
 )
 from watchdog.observers import Observer
 
+from rencher.gtk.library import RencherLibrary
 from rencher.renpy.config import RencherConfig
 from rencher.renpy.paths import config_path, local_path
 
-if TYPE_CHECKING:
-    from rencher.gtk.window import RencherWindow
 
 class RencherFileMonitor(FileSystemEventHandler):
     """
         watch over files and act accordingly
     """
 
-    window: RencherWindow
-    config: RencherConfig = RencherConfig()
     observer: Observer = None  # pyright: ignore[reportInvalidTypeForm]
     data_dir: str
     pending_changes = defaultdict(lambda: {'last': 0.0, 'path': '', 'action': ''})
     pause_rpaths: list[str] = []
+    library: RencherLibrary
 
-    def __init__(self, window: RencherWindow):
+    def __init__(self, library: RencherLibrary):
         super().__init__()
-        self.window = window
         self.monitor_data_dir()
+        self.library = library
         GLib.timeout_add(250, self.flush_pending)
 
     def monitor_data_dir(self) -> None:
         if self.observer is not None:
             self.observer.stop()
 
-        self.config.read()
+        config = RencherConfig()
+        config.read()
         if not os.path.isdir(local_path):
-            self.config.write()  # automatically makes the dir and config
-        self.data_dir = self.config.get_data_dir()
+            config.write()  # automatically makes the dir and config
+        self.data_dir = config.get_data_dir()
         os.makedirs(self.data_dir, exist_ok=True)
 
         self.observer = Observer()
@@ -65,9 +64,9 @@ class RencherFileMonitor(FileSystemEventHandler):
             return
 
         if event.dest_path:
-            path = os.path.normpath(event.dest_path)
+            path = str(os.path.normpath(event.dest_path))
         else:
-            path = os.path.normpath(event.src_path)
+            path = str(os.path.normpath(event.src_path))
 
         if path == config_path:
             return
@@ -76,13 +75,14 @@ class RencherFileMonitor(FileSystemEventHandler):
         if os.path.dirname(path) == self.data_dir:
             return
 
-        game_item = None
-        for rpath, item in self.window.library.game_items.items():
-            if path.startswith(rpath + os.sep):
-                game_item = item
-                break
+        # game_item = None
+        # for _, item in enumerate(self.library.store):
+            # if item and path.startswith(item.rpath + os.sep):
+                # game_item = item
+                # break
 
-        if game_item:
+        if (result := self.library.find(path)):
+            _, game_item = result
             if game_item.game.is_valid:
                 key = game_item.rpath
                 action = 'changed'
@@ -93,7 +93,7 @@ class RencherFileMonitor(FileSystemEventHandler):
             games_dir = os.path.join(self.data_dir, 'games')
             rel_path = os.path.relpath(path, games_dir)
             top_dir = rel_path.split(os.sep, 1)[0]
-            key = os.path.join(games_dir, top_dir)
+            key = os.path.normpath(os.path.join(games_dir, top_dir))
             if top_dir in ['..', '.']:
                 # when refreshing the data directory, it would hallucinate a game with the path "[datadir]/games/.."
                 return
@@ -105,6 +105,7 @@ class RencherFileMonitor(FileSystemEventHandler):
         self.pending_changes[key]['last'] = time.time()
         self.pending_changes[key]['path'] = str(path)
         self.pending_changes[key]['action'] = action
+        logging.debug(f'queue_event: action={action!r} key={key!r}')
 
     def flush_pending(self) -> bool:
         now = time.time()
@@ -119,11 +120,12 @@ class RencherFileMonitor(FileSystemEventHandler):
 
         for rpath, action in to_emit:
             if action == 'changed':
-                self.window.library.change_game(rpath)
+                self.library.change_game(rpath)
             elif action == 'removed':
-                self.window.library.remove_game(rpath)
+                self.library.remove_game(rpath)
             else:
-                self.window.library.add_game(rpath)
+                self.library.add_game(rpath)
+            logging.debug(f'flush_pending: action={action!r} rpath={rpath!r}')
         return True
 
     @override

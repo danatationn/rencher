@@ -1,11 +1,11 @@
 import logging
 import os
-from pathlib import Path
 import platform
 import re
 import shutil
 import subprocess
 import time
+from pathlib import Path
 from typing import override
 
 from rencher.renpy.config import GameConfig
@@ -21,6 +21,7 @@ class Game:
     rpath: str
     apath: str
     config: GameConfig
+
 
     def __init__(self, rpath: str | Path | None = None, apath: str | Path | None = None):
         rpath = str(rpath) if rpath is not None else None
