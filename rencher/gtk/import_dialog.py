@@ -12,7 +12,7 @@ from typing import TYPE_CHECKING
 import rarfile
 from gi.repository import Adw, Gio, GLib, Gtk
 
-from rencher.gtk.game_item import GameItem
+from rencher.gtk.game_entry import GameEntry
 from rencher.gtk.tasks import TaskTypeEnum
 from rencher.gtk.utils import windowficate_path
 from rencher.renpy.config import RencherConfig
@@ -61,7 +61,7 @@ class RencherImport(Adw.PreferencesDialog):
         self.type_combo.set_model(string_list)
 
     def do_show(self):
-        list_store = Gio.ListStore.new(GameItem)
+        list_store = Gio.ListStore.new(GameEntry)
 
         for _, game_item in enumerate(self.window.library.store):
             if not game_item.game.is_mod:
@@ -69,7 +69,7 @@ class RencherImport(Adw.PreferencesDialog):
 
         self.game_combo.set_model(list_store)
         self.game_combo.set_expression(
-            Gtk.PropertyExpression.new(GameItem, None, 'name'),
+            Gtk.PropertyExpression.new(GameEntry, None, 'name'),
         )
 
         if self.has_imported:
@@ -147,7 +147,7 @@ class RencherImport(Adw.PreferencesDialog):
         location = self.location_entry.get_text()
         location_stem = os.path.splitext(os.path.basename(location))[0]
         is_mod = self.mod_switch.get_active()
-        modded_game: GameItem = self.game_combo.get_selected_item()  # type: ignore
+        modded_game: GameEntry = self.game_combo.get_selected_item()  # type: ignore
         archive: zipfile.ZipFile | rarfile.RarFile
 
         data_dir = RencherConfig().get_data_dir()

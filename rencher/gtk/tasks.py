@@ -116,16 +116,16 @@ class TasksRow(Gtk.ListBoxRow):
 
 @Gtk.Template.from_resource('/com/github/danatationn/Rencher/ui/tasks_popover.ui')
 class TasksPopover(Gtk.Popover):
-    __gtype_name__ = 'TasksPopover'
-    __gsignals__ = {
+    __gtype_name__: str = 'TasksPopover'
+    __gsignals__: dict[str, tuple[GObject.SignalFlags, None, tuple[object]]] = {
         'task-added': (GObject.SignalFlags.RUN_FIRST, None, (float,)),
         'task-changed': (GObject.SignalFlags.RUN_FIRST, None, (float,)),
         'task-removed': (GObject.SignalFlags.RUN_FIRST, None, (float,)),
     }
 
     window: 'RencherWindow'
-    tasks: dict[float, TaskClass] = {}
-    rows: dict[float, TasksRow] = {}
+    tasks: dict[float, TaskClass]
+    rows: dict[float, TasksRow]
     stack: Gtk.Stack = Gtk.Template.Child()
     scrolled_window: Gtk.ScrolledWindow = Gtk.Template.Child()
     empty_status_page: Adw.StatusPage = Gtk.Template.Child()
@@ -133,6 +133,8 @@ class TasksPopover(Gtk.Popover):
 
     def __init__(self, window: 'RencherWindow', *args, **kwargs):
         super().__init__(*args, **kwargs)
+        self.tasks = {}
+        self.rows = {}
         self.window = window
 
     def get_total_fraction(self) -> float:

@@ -6,7 +6,6 @@ from pathlib import Path
 from typing import TYPE_CHECKING, override
 
 from gi.repository import Adw, GLib, Gtk
-from gi.repository.GObject import GObject
 
 from rencher.gtk.tasks import TaskTypeEnum
 from rencher.gtk.utils import open_file_manager

@@ -30,14 +30,16 @@ class RencherFileMonitor(FileSystemEventHandler):
 
     observer: Observer = None  # pyright: ignore[reportInvalidTypeForm]
     data_dir: str
-    pending_changes = defaultdict(lambda: {'last': 0.0, 'path': '', 'action': ''})
-    pause_rpaths: list[str] = []
+    pending_changes: defaultdict[object, dict[str, float | str]]
+    pause_rpaths: list[str]
     library: RencherLibrary
 
     def __init__(self, library: RencherLibrary):
         super().__init__()
         self.monitor_data_dir()
         self.library = library
+        self.pause_rpaths = []
+        self.pending_changes = defaultdict(lambda: {'last': 0.0, 'path': '', 'action': ''})
         GLib.timeout_add(250, self.flush_pending)
 
     def monitor_data_dir(self) -> None:
@@ -105,7 +107,7 @@ class RencherFileMonitor(FileSystemEventHandler):
         self.pending_changes[key]['last'] = time.time()
         self.pending_changes[key]['path'] = str(path)
         self.pending_changes[key]['action'] = action
-        logging.debug(f'queue_event: action={action!r} key={key!r}')
+        # logging.debug(f'queue_event: action={action!r} key={key!r}')
 
     def flush_pending(self) -> bool:
         now = time.time()
@@ -125,7 +127,7 @@ class RencherFileMonitor(FileSystemEventHandler):
                 self.library.remove_game(rpath)
             else:
                 self.library.add_game(rpath)
-            logging.debug(f'flush_pending: action={action!r} rpath={rpath!r}')
+            # logging.debug(f'flush_pending: action={action!r} rpath={rpath!r}')
         return True
 
     @override

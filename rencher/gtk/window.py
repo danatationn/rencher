@@ -1,15 +1,17 @@
+import asyncio
 import logging
 import subprocess
+import threading
 import time
 from pathlib import Path
 from typing import TYPE_CHECKING
 
 from gi.repository import Adw, GLib, GObject, Gtk
-from pypresence import Presence
+from pypresence import AioPresence
 
 from rencher.gtk.codename_dialog import RencherCodename
 from rencher.gtk.filemonitor import RencherFileMonitor
-from rencher.gtk.game_item import GameItem
+from rencher.gtk.game_entry import GameEntry
 from rencher.gtk.import_dialog import RencherImport
 from rencher.gtk.library import RencherLibrary
 from rencher.gtk.options_dialog import RencherOptions
@@ -26,15 +28,23 @@ class RencherWindow(Adw.ApplicationWindow):
     __gtype_name__: str = 'RencherWindow'
 
     # variables
-    game_process: subprocess.Popen[bytes] | None = None
+    rows: dict[GameEntry, Gtk.ListBoxRow]
+    games: dict[Gtk.ListBoxRow, GameEntry]
+    current_game_entry: GameEntry
+    running: GameEntry | None
+
+    game_process: subprocess.Popen[bytes] | None
     process_time: float
-    is_terminating: bool = False
+    is_terminating: bool
+    pause_monitoring: str
+
     filter_text: str = ''
     combo_index: int = 0
-    ascending_order: bool = False
-    pause_monitoring: str
-    current_gameitem: GameItem
-    rpc: Presence
+    ascending_order: bool
+
+    _rpc_loop: asyncio.AbstractEventLoop
+    _rpc_thread: threading.Thread
+    rpc: AioPresence
 
     # classes
     app: 'RencherApplication'
@@ -70,30 +80,35 @@ class RencherWindow(Adw.ApplicationWindow):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
+        self.rows = {}
+        self.games = {}
+        self.game_process = None
+        self.running = None
+        self.is_terminating = False
+        self.ascending_order = False
+
         self.app = self.get_application()  # pyright: ignore[reportAttributeAccessIssue]
         self.library = RencherLibrary(self)
-        self.filemonitor = RencherFileMonitor(self.library)
         self.library.connect('game-added', self.on_game_added)
         self.library.connect('game-changed', self.on_game_changed)
         self.library.connect('game-removed', self.on_game_removed)
+        self.library_list_box.set_sort_func(self.sort_func)
+        self.library_list_box.set_filter_func(self.filter_func)
+        self.filemonitor = RencherFileMonitor(self.library)
 
-        # self.library.load_cache()
+        self.current_game_entry = GameEntry()
+        self.current_game_entry.bind_property('name', self.selected_status_page, 'title')
+        self.current_game_entry.bind_property('last_played', self.last_played_row, 'subtitle')
+        self.current_game_entry.bind_property('playtime', self.playtime_row, 'subtitle')
+        self.current_game_entry.bind_property('added_on', self.added_on_row, 'subtitle')
+        self.current_game_entry.bind_property('version', self.version_row, 'subtitle')
+        self.current_game_entry.bind_property('rpath', self.rpath_row, 'subtitle')
+        self.current_game_entry.bind_property('codename', self.codename_row, 'subtitle')
 
         self.import_dialog = RencherImport(self)
         self.options_dialog = RencherOptions(self)
         self.settings_dialog = RencherSettings(self)
         self.codename_dialog = RencherCodename(self)
-        self.library_list_box.set_sort_func(self.sort_func)
-        self.library_list_box.set_filter_func(self.filter_func)
-
-        self.current_gameitem = GameItem()
-        self.current_gameitem.bind_property('name', self.selected_status_page, 'title')
-        self.current_gameitem.bind_property('last_played', self.last_played_row, 'subtitle')
-        self.current_gameitem.bind_property('playtime', self.playtime_row, 'subtitle')
-        self.current_gameitem.bind_property('added_on', self.added_on_row, 'subtitle')
-        self.current_gameitem.bind_property('version', self.version_row, 'subtitle')
-        self.current_gameitem.bind_property('rpath', self.rpath_row, 'subtitle')
-        self.current_gameitem.bind_property('codename', self.codename_row, 'subtitle')
 
         self.pie = PiePaintable()
         self.pie_image = Gtk.Image.new_from_paintable(self.pie)
@@ -103,29 +118,39 @@ class RencherWindow(Adw.ApplicationWindow):
         GLib.idle_add(self.library.load_games)
         GLib.timeout_add(250, self.check_process)
 
-        self.rpc = Presence(1485229562123124818)
-        self.rpc.connect()
+        self._rpc_loop = asyncio.new_event_loop()
+        self.rpc = AioPresence(1485229562123124818, loop=self._rpc_loop)
+        self._rpc_thread = threading.Thread(target=self._rpc_loop.run_forever, daemon=True)
+        self._rpc_thread.start()
+        asyncio.run_coroutine_threadsafe(self._rpc_connect(), self._rpc_loop)
 
-    def on_game_added(self, game_item: GameItem) -> None:
-        row = Adw.ButtonRow()
-        game_item.row = row
-        game_item.bind_property('name', row, 'title', GObject.BindingFlags.SYNC_CREATE)
+    def on_game_added(self, _, entry: GameEntry) -> None:
+        row = Adw.ButtonRow(title=entry.name)
+        self.rows[entry] = row
+        self.games[row] = entry
         self.library_list_box.append(row)
         self.split_view.set_show_sidebar(True)
+        if not self.library_list_box.get_selected_row():
+            self.library_view_stack.set_visible_child_name('game-select')
 
-    def on_game_removed(self, _, game_item: GameItem) -> None:
-        if game_item in self.library.store:
-            self.library_list_box.remove(game_item.row)
+    def on_game_changed(self, _, entry: GameEntry) -> None:
+        if self.current_game_entry.rpath == entry.rpath:
+            self.current_game_entry.refresh(entry.game)
+
+        entry.refresh(entry.game)
+
+        if row := self.rows.get(entry, None):
+            row.set_title(entry.name)  # pyright: ignore[reportAttributeAccessIssue]
+
+    def on_game_removed(self, _, entry: GameEntry) -> None:
+        row = self.rows.pop(entry, None)
+        if row:
+            self.games.pop(row, None)
+            self.library_list_box.remove(row)
 
         if len(self.library.store) == 0:
             self.library_view_stack.set_visible_child_name('empty')
             self.split_view.set_show_sidebar(False)
-
-    def on_game_changed(self, _, game_item: GameItem) -> None:
-        if self.current_gameitem.rpath == game_item.rpath:
-            self.current_gameitem.refresh(game_item.game)
-
-        game_item.refresh(game_item.game)
 
     def update_pie_paintable(self):
         fraction = self.tasks_popover.get_total_fraction()
@@ -136,6 +161,15 @@ class RencherWindow(Adw.ApplicationWindow):
         else:
             self.pie_progress_button.set_icon_name('test-pass')
 
+    async def _rpc_connect(self):
+        try:
+            await self.rpc.connect()
+        except Exception as e:
+            logging.error(f'RPC failed to connect! ({e})')
+
+    def _rpc_call(self, coro) -> None:
+        asyncio.run_coroutine_threadsafe(coro, self._rpc_loop)
+
     @Gtk.Template.Callback()
     def on_import_clicked(self, *_) -> None:  # type: ignore
         self.import_dialog.do_show()
@@ -143,22 +177,24 @@ class RencherWindow(Adw.ApplicationWindow):
 
     @Gtk.Template.Callback()
     def on_play_clicked(self, _widget: Gtk.Button) -> None:
-        selected_button_row = self.library_list_box.get_selected_row()
-        game_item = getattr(selected_button_row, 'game_item', None)
-        if not game_item:
+        selected_row = self.library_list_box.get_selected_row()
+        if not selected_row:
             return
-        if isinstance(game_item, GameItem) and not game_item.game.is_launchable:
+        if not (entry := self.games.get(selected_row, None)) or not entry.game:
+            return
+
+        if not entry.game.is_launchable:
             alert = Adw.AlertDialog(heading='Error', body='This game has no valid executables!')
             alert.add_response('ok', 'OK')
             alert.choose(self)
             return
 
         if _widget.get_style_context().has_class('suggested-action'):
-            self.game_process = game_item.game.run()
+            self.game_process = entry.game.run()
+            self.running = entry
             self.process_time = time.time()
             self.check_process()  # so the button changes instantly
-            self.process_row = selected_button_row
-            self.filemonitor.pause_monitor(game_item.rpath)
+            self.filemonitor.pause_monitor(entry.rpath)
         else:
             if self.game_process:
                 self.play_button.set_label('Stopping')
@@ -167,21 +203,22 @@ class RencherWindow(Adw.ApplicationWindow):
 
     @Gtk.Template.Callback()
     def on_dir_clicked(self, _widget: Gtk.Button) -> None:
-        selected_button_row = self.library_list_box.get_selected_rows()[0]
-        game_item: GameItem | None = getattr(selected_button_row, 'game_item', None)
-        if game_item and game_item.apath:
-            open_file_manager(game_item.apath)
+        selected_row = self.library_list_box.get_selected_row()
+        if not selected_row:
+            return
+        entry = self.games.get(selected_row, None)
+        if entry and entry.apath:
+            open_file_manager(entry.apath)
 
     @Gtk.Template.Callback()
     def on_game_selected(self, _widget: Gtk.ListBox, row: Gtk.ListBoxRow) -> None:
         if row:
             self.library_view_stack.set_visible_child_name('selected')
-        else:
-            self.library_view_stack.set_visible_child_name('game-select')
+        # else:
+            # self.library_view_stack.set_visible_child_name('game-select')
 
-        game_item = getattr(row, 'game_item', None)
-        if isinstance(game_item, GameItem):
-            self.current_gameitem.refresh(game_item.game)
+        if entry := self.games.get(row, None):
+            self.current_game_entry.refresh(entry.game)
 
     @Gtk.Template.Callback()
     def on_search_changed(self, _widget: Gtk.SearchEntry):
@@ -200,11 +237,11 @@ class RencherWindow(Adw.ApplicationWindow):
 
     @Gtk.Template.Callback()
     def on_options_clicked(self, _widget: Gtk.Button):
-        selected_button_row = self.library_list_box.get_selected_row()
-        game_item: GameItem | None = getattr(selected_button_row, 'game_item', None)
-
-        if game_item:
-            self.options_dialog.change_game(game_item.game)
+        selected_row = self.library_list_box.get_selected_row()
+        if not selected_row:
+            return None
+        if (entry := self.games.get(selected_row, None)) and entry.game:
+            self.options_dialog.change_game(entry.game)
             self.options_dialog.present(self)
 
     @Gtk.Template.Callback()
@@ -219,32 +256,26 @@ class RencherWindow(Adw.ApplicationWindow):
             self.play_button.get_style_context().add_class('suggested-action')
             self.options_button.set_sensitive(True)
             self.is_terminating = False
-            self.rpc.clear()
+            self._rpc_call(self.rpc.clear())
 
-            if self.game_process is None:
+            if self.game_process is None or self.running is None or self.running.game is None:
                 return True
 
-            args = self.game_process.args
-            first_arg = args[0] if isinstance(args, list) else args
-            exec_path = Path(str(first_arg))
-            if not exec_path.is_file():
-                return True
-            apath = exec_path.parents[2]
-            game = Game(apath=apath)
-            playtime = game.config.get_value('playtime')
+            playtime = self.running.game.config.get_value('playtime')
             if self.process_time and isinstance(playtime, float):
                 playtime += time.time() - self.process_time
-                game.cleanup(playtime)
-            self.filemonitor.resume_monitor(game.rpath)
+                self.running.game.cleanup(playtime)
+            self.filemonitor.resume_monitor(self.running.game.rpath)
 
             self.game_process = None
-            self.process_row = None
+            self.running = None
         else:
             if self.is_terminating:
                 self.play_button.set_label('Stopping')
             else:
                 self.play_button.set_label('Stop')
-                self.rpc.update(state='aa')
+                if self.running and self.running.game and self.running.game.config['overwritten']['discord_rpc'] == 'true':
+                    self._rpc_call(self.rpc.update(state=self.running.game.name))
             self.play_button.get_style_context().remove_class('suggested-action')
             self.play_button.get_style_context().add_class('destructive-action')
             self.options_button.set_sensitive(False)
@@ -259,26 +290,26 @@ class RencherWindow(Adw.ApplicationWindow):
             return False
 
     def sort_func(self, one: Adw.ActionRow, two: Adw.ActionRow) -> int:
-        game_one: GameItem | None = getattr(one, 'game_item', None)
-        game_two: GameItem | None= getattr(two, 'game_item', None)
-        if not game_one or not game_two:
+        entry_one = self.games.get(one, None)
+        entry_two = self.games.get(two, None)
+        if not entry_one or not entry_one.game or not entry_two or not entry_two.game:
             return 0
 
         one_value: str | int | float
         two_value: str | int | float
 
         if self.combo_index == 0:
-            one_value = game_one.name.lower()
-            two_value = game_two.name.lower()
+            one_value = entry_one.name.lower()
+            two_value = entry_two.name.lower()
         elif self.combo_index == 1:
-            one_value = game_one.game.config['info'].get('last_played', 0)
-            two_value = game_two.game.config['info'].get('last_played', 0)
+            one_value = entry_one.game.config['info'].get('last_played', 0)
+            two_value = entry_two.game.config['info'].get('last_played', 0)
         elif self.combo_index == 2:
-            one_value = float(game_one.game.config['info'].get('playtime', 0))
-            two_value = float(game_two.game.config['info'].get('playtime', 0))
+            one_value = float(entry_one.game.config['info'].get('playtime', 0))
+            two_value = float(entry_two.game.config['info'].get('playtime', 0))
         else:
-            one_value = game_one.game.config['info'].get('added_on', 0)
-            two_value = game_two.game.config['info'].get('added_on', 0)
+            one_value = entry_one.game.config['info'].get('added_on', 0)
+            two_value = entry_two.game.config['info'].get('added_on', 0)
 
         if str(one_value) < str(two_value):
             res = 1

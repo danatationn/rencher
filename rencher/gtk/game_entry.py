@@ -1,5 +1,6 @@
 import subprocess
-from gi.repository import Adw, GLib, GObject
+
+from gi.repository import GLib, GObject
 
 from rencher.renpy.game import Game
 
@@ -38,16 +39,15 @@ def format_playtime(time: float) -> str:
     else:
         raise GameItemDateError()
 
-class GameItem(GObject.Object):
+class GameEntry(GObject.Object):
     """
         used mostly for binding labels and shi
 
         uhh
     """
-    __gtype_name__: str = 'GameItem'
-    _game: Game
-    _row: Adw.ButtonRow
-    _process: subprocess.Popen[bytes]
+    __gtype_name__: str = 'GameEntry'
+    _game: Game | None = None
+    _process: subprocess.Popen[bytes] | None = None
     name: GObject.Property = GObject.Property(type=str)
     rpath: GObject.Property = GObject.Property(type=str)
     apath: GObject.Property = GObject.Property(type=str)
@@ -88,7 +88,8 @@ class GameItem(GObject.Object):
     #     self.game = game
 
     def run(self) -> None:
-        self._process = self.game.run()
+        if self.game:
+            self._process = self.game.run()
 
     def refresh(self, game: Game | None) -> None:
         if not game:
@@ -121,19 +122,30 @@ class GameItem(GObject.Object):
                 setattr(self, prop, 'N/A')
 
     @property
-    def game(self) -> Game:
+    def game(self) -> Game | None:
         return self._game
     @game.setter
     def game(self, value: Game) -> None:
         self._game = value
         self.refresh(value)
-
     @property
-    def row(self) -> Adw.ButtonRow:
-        return self._row
-    @row.setter
-    def row(self, value: Adw.ButtonRow) -> None:
-        self._row = value
+    def is_mod(self) -> bool | None:
+        if self._game:
+            return self._game.is_mod
+        else:
+            return None
+    @property
+    def is_valid(self) -> bool | None:
+        if self._game:
+            return self._game.is_valid
+        else:
+            return None
+    @property
+    def is_launchable(self) -> bool | None:
+        if self._game:
+            return self._game.is_launchable
+        else:
+            return None
 
     @property
     def process(self) -> subprocess.Popen[bytes] | None:

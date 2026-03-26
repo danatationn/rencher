@@ -148,26 +148,28 @@ class RencherApplication(Gtk.Application):
         else:
             if response.status_code == 404:
                 return
-            version = response.json()['tag_name'].replace('v', '')
+            version_str = response.json()['tag_name'].replace('v', '')
+            upstream_version = tuple(map(int, version_str.split('.')))
+            rencher_version = tuple(map(int, rencher.__version__.split('.')))
 
             toast = Adw.Toast(timeout=5)
 
-            if version > rencher.__version__:
+            if upstream_version > rencher_version:
                 if 'assets' in response.json() and len(response.json()['assets']) > 0:
                     download_url = response.json()['html_url']
                 else:
                     return
 
-                logging.info(f'A new update is available! (v{version})')
+                logging.info(f'A new update is available! (v{version_str})')
                 logging.info(download_url)
-                toast.set_title(f'A new update is available! (v{version})')
+                toast.set_title(f'A new update is available! (v{version_str})')
                 toast.set_button_label('Download')
                 toast.connect('button-clicked', lambda *_: (
                     Gtk.show_uri(self.window, download_url, Gdk.CURRENT_TIME)
                 ))
 
                 GLib.idle_add(self.window.toast_overlay.add_toast, toast)
-            elif version == rencher.__version__:
+            elif upstream_version == rencher_version:
                 toast.set_title(f'You\'re up to date! (v{rencher.__version__})')
             else:
                 toast.set_title(f'You\'re bleeding-edge! (v{rencher.__version__})')

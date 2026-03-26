@@ -116,22 +116,26 @@ class Game:
                 return exec_path
         return None
 
-    def get_renpy_version(self) -> str | None:
+    def get_renpy_version(self) -> list[int] | None:
         """
-            tries to retrieve the game's ren'py version (WITHOUT USING EXEC)
+            tries to retrieve the game's ren'py version
 
             there a lot of ways that versions are tracked based on what version it is
+
             1. ren'py 6:
                 * the version is located in `version_tuple` in `renpy/__init__.py`
                 * the commit number is located in `vc_version` in `renpy/vc_version.py`
+
             2. ren'py 7:
-                * the version is located in the first `version_tuple` located in`renpy/ __init__.py`
-                    # there are 2 version tuples
-                      the py2 one (the real one) and the py3 one (the one preparing for ren'py 8)
+                * the version is located in the first `version_tuple` located in `renpy/__init__.py`
+                    - there are 2 version tuples
+                    - the py2 one (the real one) and the py3 one (the one preparing for ren'py 8)
                 * the commit number is located in `vc_version` in `renpy/vc_version.py`
+
             3. ren'py 7.6:
                 * same as ren'py 7, however it's stored as a `VersionTuple`
-                    # i have no idea if this occurs with other versions. i just noticed it in ren'py 7.6
+                    - i have no idea if this occurs with other versions. i just noticed it in ren'py 7.6
+
             4. ren'py 8:
                 * the version and commit number are located in `version` in `renpy/vc_version.py`
 
@@ -140,29 +144,29 @@ class Game:
         """
         vc_path = os.path.join(self.apath, 'renpy', 'vc_version.py')
         init_path = os.path.join(self.apath, 'renpy', '__init__.py')
-        commit = 0
-        version = ''
+        commit: int | None = None
+        version: list[int] = []
 
         if os.path.isfile(vc_path):
             with open(vc_path) as f:
                 vc_content = f.read()
-                version_match: list[str] = re.findall(r'version .*\'(.*)\'', vc_content, re.MULTILINE)
+                version_match = re.findall(r'version .*\'(.*)\'', vc_content, re.MULTILINE)
                 if version_match:
-                    version = version_match[0]
-                commit_match: list[str] = re.findall(r'vc_version.*(\b\d+\b)', vc_content, re.MULTILINE)
+                    version = list(map(int, version_match[0].split('.')))
+                commit_match = re.findall(r'vc_version.*(\b\d+\b)', vc_content, re.MULTILINE)
                 if commit_match:
-                    commit = commit_match[0]
+                    commit = int(commit_match[0])
 
         if os.path.isfile(init_path):
             with open(init_path) as f:
                 init_content = f.read()
-                version_tuple_match: list[str] = re.findall(r'version_tuple.*\((\d.*)\)', init_content, re.MULTILINE)
-                if version_tuple_match:
-                    version_tuple: list[str] = re.findall(r'\b\d+\b', version_tuple_match[0])
-                    version = '.'.join(str(i) for i in version_tuple)
+                version_match = re.findall(r'version_tuple.*\((\d.*)\)', init_content, re.MULTILINE)
+                if version_match:
+                    version_list = re.findall(r'\b\d+\b', version_match[0])
+                    version = list(map(int, version_list[0].split('.')))
 
         if commit:
-            version += '.' + commit
+            version.append(commit)
         return version
 
     # @property
@@ -252,13 +256,13 @@ class Game:
         self.config.write()
 
     @property
-    def name(self):
+    def name(self) -> str:
         return self.get_name()
     @property
-    def codename(self):
+    def codename(self) -> str:
         return self.get_codename()
     @property
-    def version(self):
+    def version(self) -> str | None:
         return self.get_renpy_version()
     @property
     def is_mod(self):

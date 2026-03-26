@@ -1,13 +1,12 @@
 import asyncio
 import logging
 import os.path
-import pickle
 from pathlib import Path
 from typing import TYPE_CHECKING
 
-from gi.repository import Gio, GObject
+from gi.repository import Gio, GLib, GObject, Gtk
 
-from rencher.gtk.game_item import GameItem
+from rencher.gtk.game_entry import GameEntry
 from rencher.renpy.config import RencherConfig
 from rencher.renpy.game import GameInvalidError, GameNoExecutableError
 
@@ -20,17 +19,17 @@ class RencherLibrary(GObject.Object):
     store: Gio.ListStore
 
     __gsignals__: dict[str, tuple[GObject.SignalFlags, None, tuple[object]]] = {
-        'game-added': (GObject.SignalFlags.RUN_FIRST, None, (GameItem,)),
-        'game-removed': (GObject.SignalFlags.RUN_FIRST, None, (GameItem,)),
-        'game-changed': (GObject.SignalFlags.RUN_FIRST, None, (GameItem,)),
+        'game-added': (GObject.SignalFlags.RUN_FIRST, None, (GameEntry,)),
+        'game-removed': (GObject.SignalFlags.RUN_FIRST, None, (GameEntry,)),
+        'game-changed': (GObject.SignalFlags.RUN_FIRST, None, (GameEntry,)),
     }
 
     def __init__(self, window: 'RencherWindow'):
         super().__init__()
         self.window = window
-        self.store = Gio.ListStore(item_type=GameItem)
+        self.store = Gio.ListStore(item_type=GameEntry)
 
-    def find(self, rpath: str | Path) -> tuple[int, GameItem] | None:
+    def find(self, rpath: str | Path) -> tuple[int, GameEntry] | None:
         rpath = os.path.normpath(rpath)
         for item in self.store:
             if not item:
@@ -39,9 +38,16 @@ class RencherLibrary(GObject.Object):
             if rpath == item_rpath or rpath.startswith(item_rpath + os.sep):
                 found, pos = self.store.find(item)
                 if found:
-                    logging.debug(f'{rpath} belongs to {item.rpath}')
+                    # logging.debug(f'{rpath} belongs to {item.rpath}')
                     return pos, item
         return None
+
+    def find_row(self, row: Gtk.ListBoxRow) -> GameEntry | None:
+        for item in self.store:
+            if not item:
+                continue
+            if item.row == row:
+                return item
 
     def load_games(self) -> None:
         data_dir = RencherConfig().get_data_dir()
@@ -54,6 +60,7 @@ class RencherLibrary(GObject.Object):
         for d in games_dir.iterdir():
             rpath = os.path.join(games_dir, d)
             loop.run_in_executor(None, self.add_game, rpath)
+            # self.add_game(rpath)
 
     def add_game(self, rpath: str) -> None:
         if self.find(rpath):
@@ -63,7 +70,7 @@ class RencherLibrary(GObject.Object):
             logging.debug(f'+{rpath}')
 
         try:
-            game_item = GameItem(rpath=rpath)
+            game_item = GameEntry(rpath=rpath)
         except GameNoExecutableError:
             self.window.codename_dialog.popup(rpath)
         except GameInvalidError:
@@ -87,3 +94,4 @@ class RencherLibrary(GObject.Object):
             i, game_item = result
             game_item.refresh(game_item.game)
             self.store.items_changed(i, 1, 1)
+            self.emit('game-changed', game_item)

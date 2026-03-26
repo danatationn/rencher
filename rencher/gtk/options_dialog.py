@@ -1,3 +1,4 @@
+import logging
 import os
 import threading
 import time
@@ -81,14 +82,18 @@ class RencherOptions(Adw.PreferencesDialog):
             self.codename_combo.set_selected(codename_index)
 
         for overwrite_switch, switch, key in self.switches_list:
-            if game.config['options'][key] != '':
+            if game.config['options'][key] != '':  # overwritten
                 overwrite_switch.set_active(True)
                 if game.config['options'][key] == 'true':
                     switch.set_active(True)
                 else:
                     switch.set_active(False)
-            elif self.rencher_config['settings'][key] == 'true':
+            elif self.rencher_config['settings'][key] == 'true':  # default
                 switch.set_active(True)
+                overwrite_switch.set_active(False)
+            else:
+                overwrite_switch.set_active(False)
+                switch.set_active(False)
 
     @override
     def do_closed(self):
@@ -114,9 +119,9 @@ class RencherOptions(Adw.PreferencesDialog):
                 self.game.config['overwritten'][key] = self.rencher_config['settings'][key]
 
         def select():
-            for row in self.window.library_list_box:  # type: ignore
-                if row.game_item.rpath == self.game.rpath:
-                    self.window.current_gameitem.refresh(self.game)
+            for row, entry in self.window.games.items():
+                if entry.rpath == self.game.rpath:
+                    self.window.current_game_entry.refresh(self.game)
                     self.window.library_list_box.select_row(row)
                     break
 
