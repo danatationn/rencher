@@ -191,8 +191,10 @@ class RencherOptions(Adw.PreferencesDialog):
         if response != 'ok':
             return
 
+
         def delete_thread():
             self.window.filemonitor.pause_monitor(self.game.rpath)
+            # GLib.idle_add(self.window.library.remove_game, self.game.rpath)
             toast = Adw.Toast(title=f'"{self.game.name}" has been deleted', timeout=5)
             task_date = time.time()
             total_work = 0

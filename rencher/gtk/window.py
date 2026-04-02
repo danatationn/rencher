@@ -89,9 +89,9 @@ class RencherWindow(Adw.ApplicationWindow):
 
         self.app = self.get_application()  # pyright: ignore[reportAttributeAccessIssue]
         self.library = RencherLibrary(self)
-        self.library.connect('game-added', self.on_game_added)
-        self.library.connect('game-changed', self.on_game_changed)
-        self.library.connect('game-removed', self.on_game_removed)
+        self.library.connect('game-added', self._on_game_added)
+        self.library.connect('game-changed', self._on_game_changed)
+        self.library.connect('game-removed', self._on_game_removed)
         self.library_list_box.set_sort_func(self.sort_func)
         self.library_list_box.set_filter_func(self.filter_func)
         self.filemonitor = RencherFileMonitor(self.library)
@@ -124,7 +124,7 @@ class RencherWindow(Adw.ApplicationWindow):
         self._rpc_thread.start()
         asyncio.run_coroutine_threadsafe(self._rpc_connect(), self._rpc_loop)
 
-    def on_game_added(self, _, entry: GameEntry) -> None:
+    def _on_game_added(self, _, entry: GameEntry) -> None:
         row = Adw.ButtonRow(title=entry.name)
         self.rows[entry] = row
         self.games[row] = entry
@@ -133,7 +133,7 @@ class RencherWindow(Adw.ApplicationWindow):
         if not self.library_list_box.get_selected_row():
             self.library_view_stack.set_visible_child_name('game-select')
 
-    def on_game_changed(self, _, entry: GameEntry) -> None:
+    def _on_game_changed(self, _, entry: GameEntry) -> None:
         if self.current_game_entry.rpath == entry.rpath:
             self.current_game_entry.refresh(entry.game)
 
@@ -142,7 +142,7 @@ class RencherWindow(Adw.ApplicationWindow):
         if row := self.rows.get(entry, None):
             row.set_title(entry.name)  # pyright: ignore[reportAttributeAccessIssue]
 
-    def on_game_removed(self, _, entry: GameEntry) -> None:
+    def _on_game_removed(self, _, entry: GameEntry) -> None:
         row = self.rows.pop(entry, None)
         if row:
             self.games.pop(row, None)
@@ -219,6 +219,9 @@ class RencherWindow(Adw.ApplicationWindow):
 
         if entry := self.games.get(row, None):
             self.current_game_entry.refresh(entry.game)
+        elif len(self.games) > 0:
+            first_row = next(iter(self.games))
+            self.library_list_box.select_row(first_row)
 
     @Gtk.Template.Callback()
     def on_search_changed(self, _widget: Gtk.SearchEntry):
