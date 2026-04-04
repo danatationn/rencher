@@ -35,6 +35,8 @@ TYPELIB_PREFIXES = [
     'cairo-',
     'freetype2-',
     'GdkWin32-4',
+    'GioWin32',
+    'GLibWin32',
     'Win32-',
 ]
 base_prefix = Path(os.environ['MSYSTEM_PREFIX'])
@@ -42,10 +44,6 @@ if not base_prefix:
     raise ValueError('MSYSTEM_PREFIX environment variable is not set')
 lib_dir = base_prefix / 'bin'
 lib_ext = '.dll'
-
-ldd_path = shutil.which('ntldd')
-if not ldd_path:
-    raise FileNotFoundError('ntldd was not found in path (not installed?)')
 
 pkgconf_path = shutil.which('pkg-config')
 if not pkgconf_path:
@@ -96,10 +94,20 @@ def freeze(argv: list[str]):
     if len(argv) > 2:
         dest_dir = Path(argv[2])
     else:
-        dest_dir = Path(__file__) / 'build'
+        dest_dir = Path(__file__).parent / 'build'
     icon_path = Path(__file__).parent / 'data' / 'assets' / 'rencher-icon.ico'
     # setup() requires the first argument to be 'build'
     sys.argv = [argv[0], 'build']
+    if lib_path := os.environ.get('MINGW_PREFIX', None):
+        sys.path.insert(
+            0,
+            os.path.join(
+                lib_path,
+                'lib',
+                f'python{sysconfig.get_python_version()}',
+                'site-packages',
+            ),
+        )
 
     setup(
         name='Rencher',
@@ -110,8 +118,6 @@ def freeze(argv: list[str]):
                 'build_base': dest_dir,
             },
             'build_exe': {
-                'packages': ['requests', 'configparser', 'watchdog', 'rarfile', 'cairo'],
-                'excludes': [],
                 'optimize': 2,
                 'include_files': include_files,
                 'include_msvcr': True,
