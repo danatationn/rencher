@@ -108,6 +108,7 @@ jobs:
           echo "FREEZE_DIR=$FREEZE_DIR" >> $GITHUB_OUTPUT
 
       - name: Build NSIS installer
+        if: false
         run: ninja -C build makensis
 
       - name: Upload frozen files artifact
@@ -118,6 +119,7 @@ jobs:
 
       - name: Upload NSIS installer artifact
         uses: actions/upload-artifact@v4
+        if: false
         with:
           name: Rencher-Windows-Installer
           path: build/RencherInstaller.exe
