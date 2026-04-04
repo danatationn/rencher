@@ -95,6 +95,7 @@ jobs:
       - name: Setup Environment
         run: |
           uv sync
+          source .venv/Scripts/activate
           meson setup build -Dprefix=$(pwd)/build/root/
           ninja -C build install
 
