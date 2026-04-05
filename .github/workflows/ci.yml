@@ -95,21 +95,15 @@ jobs:
       - name: Setup Environment
         run: |
           uv sync
-          source .venv/Scripts/activate
-          meson setup build -Dprefix=$(pwd)/build/root/
+          meson setup build --prefix $(pwd)/build/root/
           ninja -C build install
 
       - name: Freeze Rencher
         id: freeze
         run: |
-          source .venv/Scripts/activate
           python freeze.py build/root/
           FREEZE_DIR=$(python -c "import sysconfig; print(f'exe.{sysconfig.get_platform()}-{sysconfig.get_python_version()}')")
           echo "FREEZE_DIR=$FREEZE_DIR" >> $GITHUB_OUTPUT
-
-      - name: Build NSIS installer
-        if: false
-        run: ninja -C build makensis
 
       - name: Upload frozen files artifact
         uses: actions/upload-artifact@v4
@@ -117,9 +111,13 @@ jobs:
           name: Rencher-Windows-Portable
           path: build/${{ steps.freeze.outputs.FREEZE_DIR }}
 
+      - name: Build NSIS installer
+        # if: false
+        run: ninja -C build makensis
+
       - name: Upload NSIS installer artifact
         uses: actions/upload-artifact@v4
-        if: false
+        # if: false
         with:
           name: Rencher-Windows-Installer
           path: build/RencherInstaller.exe

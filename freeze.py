@@ -98,16 +98,10 @@ def freeze(argv: list[str]):
     icon_path = Path(__file__).parent / 'data' / 'assets' / 'rencher-icon.ico'
     # setup() requires the first argument to be 'build'
     sys.argv = [argv[0], 'build']
-    if lib_path := os.environ.get('MINGW_PREFIX', None):
-        sys.path.insert(
-            0,
-            os.path.join(
-                lib_path,
-                'lib',
-                f'python{sysconfig.get_python_version()}',
-                'site-packages',
-            ),
-        )
+
+    # the script should look inside of venv even when outside of it (for ci)
+    if (venv_path := Path('.venv')).is_dir():
+        sys.path.insert(0, venv_path / 'Lib' / 'site-packages')
 
     setup(
         name='Rencher',
@@ -118,6 +112,7 @@ def freeze(argv: list[str]):
                 'build_base': dest_dir,
             },
             'build_exe': {
+                'packages': ['requests', 'configparser', 'watchdog', 'rarfile', 'cairo'],
                 'optimize': 2,
                 'include_files': include_files,
                 'include_msvcr': True,

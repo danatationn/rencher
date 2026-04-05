@@ -20,7 +20,6 @@ class GameConfig(ConfigParser):
             'added_on': 0.0,
             'codename': '',
         },
-
         'options': {
             'skip_splash_scr': '',
             'skip_main_menu': '',
@@ -28,7 +27,6 @@ class GameConfig(ConfigParser):
             'discord_rpc': '',
             # 'save_slot': 1,
         },
-
         'overwritten': {
             'skip_splash_scr': '',
             'skip_main_menu': '',
@@ -43,9 +41,9 @@ class GameConfig(ConfigParser):
         self.read(game_config_path)
 
     @override
-    def read(self,
-             filenames: 'StrOrBytesPath' | Iterable['StrOrBytesPath'] | None = None,
-             encoding: str | None = None) -> list[str]:
+    def read(
+        self, filenames: 'StrOrBytesPath | Iterable[StrOrBytesPath] | None' = None, encoding: str | None = None
+    ) -> list[str]:
         if not filenames:
             filenames = self.game_config_path
         read_ok = super().read(filenames)
@@ -97,7 +95,7 @@ class GameConfig(ConfigParser):
         new_config.write(fp, space_around_delimiters)
         fp.close()
 
-    def get_value(self, key: str, overwritten: bool  = False) -> str | float | bool | None:
+    def get_value(self, key: str, overwritten: bool = False) -> str | float | bool | None:
         if key in self['info']:
             try:
                 return self['info'].getfloat(key)
@@ -121,14 +119,16 @@ class GameConfig(ConfigParser):
                 return value
         return None
 
+
 class RencherConfig(ConfigParser):
     def __init__(self):
         super().__init__()
         self.read()
 
     @override
-    def read(self, filenames: StrOrBytesPath | Iterable[StrOrBytesPath] | None = None,
-             encoding: str | None = None) -> list[str]:
+    def read(
+        self, filenames: 'StrOrBytesPath | Iterable[StrOrBytesPath] | None' = None, encoding: str | None = None
+    ) -> list[str]:
         if not filenames:
             filenames = config_path
         read_ok = super().read(filenames)
@@ -161,7 +161,7 @@ class RencherConfig(ConfigParser):
             self.write()
 
     @override
-    def write(self, fp: SupportsWrite[str] | None = None, space_around_delimiters: bool = True) -> None:
+    def write(self, fp: 'SupportsWrite[str] | None' = None, space_around_delimiters: bool = True) -> None:
         config_dir = Path(config_path).parent
         config_dir.mkdir(parents=True, exist_ok=True)
 
