@@ -122,7 +122,7 @@ def freeze(argv: list[str]):
         },
         executables=[
             Executable(
-                base='console',
+                base='gui',
                 script=build_dir,
                 target_name='rencher',
                 icon=icon_path,
