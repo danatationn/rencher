@@ -59,8 +59,10 @@ def freeze(argv: list[str]):
         print(f'ERROR: "{argv[1]}" is not a directory!' + USAGE_MSG)
         return
 
-    rencher_module = Path(argv[1]) / f'lib/python{sys.version_info.major}.{sys.version_info.minor}/site-packages/'
-    rencher_gres = Path(argv[1]) / 'share/rencher/com.github.danatationn.rencher.gresource'
+    rencher_module = (
+        Path(argv[1]) / 'lib' / f'python{sys.version_info.major}.{sys.version_info.minor}' / 'site-packages'
+    )
+    rencher_gres = Path(argv[1]) / 'share' / 'rencher'
     if not rencher_module.is_dir():
         print(f'ERROR: "{argv[1]}" is not valid ("{rencher_module}" does not exist)' + USAGE_MSG)
         return
@@ -120,7 +122,7 @@ def freeze(argv: list[str]):
         },
         executables=[
             Executable(
-                base='gui',
+                base='console',
                 script=build_dir,
                 target_name='rencher',
                 icon=icon_path,

@@ -5,18 +5,19 @@ import shutil
 import subprocess
 import sys
 import traceback
+from pathlib import Path
 from types import TracebackType
 
 
 def launch() -> None:
-    sys.path.insert(0, '@python_dir@')
-    sys.path.append('@venv_dir@')
+    sys.excepthook = handle_global_exception
+    gres_path = Path()
 
     # check if running from meson
     if meson_root := os.environ.get('MESON_BUILD_ROOT', None):
+        sys.path.insert(0, '@python_dir@')
         sys.path.insert(1, meson_root)
-
-    sys.excepthook = handle_global_exception
+        sys.path.append('@venv_dir@')
 
     if getattr(sys, 'frozen', False):
         executable_folder = os.path.dirname(sys.executable)
@@ -38,9 +39,12 @@ def launch() -> None:
         os.environ['GI_TYPELIB_PATH'] = os.path.join(executable_folder, 'lib/girepository-1.0')
         os.environ['GSETTINGS_SCHEMA_DIR'] = os.path.join(executable_folder, 'share/glib-2.0/schemas')
 
+        gres_path = os.path.join(os.path.dirname(sys.executable), 'share', '@app_id@.gresource')
+    else:
+        gres_path = os.path.join('@pkgdata_dir@', '@app_id@.gresource')
+
     from gi.repository import Gio
 
-    gres_path = os.path.join('@pkgdata_dir@', '@app_id@.gresource')
     res = Gio.resource_load(gres_path)
     res._register()
 
