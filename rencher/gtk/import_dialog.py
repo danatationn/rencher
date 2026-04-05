@@ -148,7 +148,7 @@ class RencherImport(Adw.PreferencesDialog):
         location_stem = os.path.splitext(os.path.basename(location))[0]
         is_mod = self.mod_switch.get_active()
         modded_game: GameEntry = self.game_combo.get_selected_item()  # type: ignore
-        archive: zipfile.ZipFile | rarfile.RarFile
+        archive: zipfile.ZipFile | rarfile.RarFile | None = None
 
         data_dir = RencherConfig().get_data_dir()
         game_dir = os.path.join(data_dir, 'games')

@@ -114,6 +114,8 @@ class GameEntry(GObject.Object):
                     setattr(self, prop, format_date(value))
                 elif prop == 'playtime':
                     setattr(self, prop, format_playtime(value))
+                elif prop == 'version':
+                    setattr(self, prop, '.'.join(str(i) for i in value))
                 elif value:
                     setattr(self, prop, value)
                 else:
