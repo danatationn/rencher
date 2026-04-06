@@ -40,7 +40,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ~/.cache/uv
-          key: uv-${{ runner.os }}-${{ hashFiles('uv.lock') }}
+          key: uv-${{ runner.os }}
 
       - name: Setup environment
         run: |
@@ -56,12 +56,7 @@ jobs:
               .flatpak-builder
           key: flatpak-${{ runner.os }}-49
 
-      - name: hey
-        run: |
-          echo ${{ hashFiles('uv.lock') }}
-
       - name: Package Flatpak
-        if: false
         run: |
           flatpak remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo --system
           flatpak install org.gnome.Sdk//49 org.gnome.Platform//49 --system -y --no-related
@@ -69,7 +64,6 @@ jobs:
           flatpak build-bundle ~/.local/share/flatpak/repo build/Rencher.flatpak com.github.danatationn.rencher
 
       - name: Upload Flatpak artifact
-        if: false
         uses: actions/upload-artifact@v4
         with:
           name: Rencher-Linux-Flatpak
@@ -111,7 +105,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ${{ steps.uv-cache.outputs.path }}
-          key: uv-${{ runner.os }}-${{ hashFiles('uv.lock') }}
+          key: uv-${{ runner.os }}
 
       - name: Setup Environment
         run: |
