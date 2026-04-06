@@ -3,29 +3,27 @@ import logging
 import subprocess
 import threading
 import time
-from pathlib import Path
 from typing import TYPE_CHECKING
 
-from gi.repository import Adw, GLib, GObject, Gtk
-from pypresence import AioPresence
+from gi.repository import Adw, GLib, Gtk
+from pypresence.presence import AioPresence
 
 from rencher.gtk.codename_dialog import RencherCodename
 from rencher.gtk.filemonitor import RencherFileMonitor
 from rencher.gtk.game_entry import GameEntry
-from rencher.gtk.import_dialog import RencherImport
-from rencher.gtk.library import RencherLibrary
-from rencher.gtk.options_dialog import RencherOptions
-from rencher.gtk.settings_dialog import RencherSettings
+from rencher.gtk.import_dialog import ImportDialog
+from rencher.gtk.library import Library
+from rencher.gtk.options_dialog import OptionsDialog
+from rencher.gtk.settings_dialog import SettingsDialog
 from rencher.gtk.tasks import PiePaintable, TasksPopover
 from rencher.gtk.utils import open_file_manager
-from rencher.renpy.game import Game
 
 if TYPE_CHECKING:
-    from rencher.gtk.application import RencherApplication
+    from rencher.gtk.application import MainApplication
 
 @Gtk.Template.from_resource('/com/github/danatationn/rencher/ui/window.ui')
-class RencherWindow(Adw.ApplicationWindow):
-    __gtype_name__: str = 'RencherWindow'
+class MainWindow(Adw.ApplicationWindow):
+    __gtype_name__: str = 'MainWindow'
 
     # variables
     rows: dict[GameEntry, Gtk.ListBoxRow]
@@ -47,13 +45,13 @@ class RencherWindow(Adw.ApplicationWindow):
     rpc: AioPresence
 
     # classes
-    app: 'RencherApplication'
-    settings_dialog: RencherSettings
-    import_dialog: RencherImport
-    options_dialog: RencherOptions
+    app: 'MainApplication'
+    settings_dialog: SettingsDialog
+    import_dialog: ImportDialog
+    options_dialog: OptionsDialog
     codename_dialog: RencherCodename
     filemonitor: RencherFileMonitor
-    library: RencherLibrary
+    library: Library
     tasks_popover: TasksPopover
     pie: PiePaintable
     pie_image: Gtk.Image
@@ -88,7 +86,7 @@ class RencherWindow(Adw.ApplicationWindow):
         self.ascending_order = False
 
         self.app = self.get_application()  # pyright: ignore[reportAttributeAccessIssue]
-        self.library = RencherLibrary(self)
+        self.library = Library(self)
         self.library.connect('game-added', self._on_game_added)
         self.library.connect('game-changed', self._on_game_changed)
         self.library.connect('game-removed', self._on_game_removed)
@@ -105,9 +103,9 @@ class RencherWindow(Adw.ApplicationWindow):
         self.current_game_entry.bind_property('rpath', self.rpath_row, 'subtitle')
         self.current_game_entry.bind_property('codename', self.codename_row, 'subtitle')
 
-        self.import_dialog = RencherImport(self)
-        self.options_dialog = RencherOptions(self)
-        self.settings_dialog = RencherSettings(self)
+        self.import_dialog = ImportDialog(self)
+        self.options_dialog = OptionsDialog(self)
+        self.settings_dialog = SettingsDialog(self)
         self.codename_dialog = RencherCodename(self)
 
         self.pie = PiePaintable()

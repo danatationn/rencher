@@ -13,11 +13,11 @@ from rencher.renpy.game import Game
 from rencher.renpy.paths import config_path, get_py_files
 
 if TYPE_CHECKING:
-    from rencher.gtk.window import RencherWindow
+    from rencher.gtk.window import MainWindow
 
 @Gtk.Template.from_resource('/com/github/danatationn/rencher/ui/options.ui')
-class RencherOptions(Adw.PreferencesDialog):
-    __gtype_name__: str = 'RencherOptions'
+class OptionsDialog(Adw.PreferencesDialog):
+    __gtype_name__: str = 'OptionsDialog'
 
     nickname_entry: Adw.EntryRow = Gtk.Template.Child()
     location_row: Adw.ActionRow = Gtk.Template.Child()
@@ -36,10 +36,10 @@ class RencherOptions(Adw.PreferencesDialog):
     game: Game
     rencher_config: ConfigParser
 
-    def __init__(self, window: 'RencherWindow'):
+    def __init__(self, window: 'MainWindow'):
         super().__init__()
 
-        self.window: RencherWindow = window
+        self.window: MainWindow = window
         self.switches_list = [
             (self.overwrite_skip_splash_scr_switch, self.skip_splash_scr_switch, 'skip_splash_scr'),
             (self.overwrite_skip_main_menu_switch, self.skip_main_menu_switch, 'skip_main_menu'),

@@ -48,9 +48,9 @@ def launch() -> None:
     res = Gio.resource_load(gres_path)
     res._register()
 
-    from rencher.gtk.application import RencherApplication  # noqa: E402
+    from rencher.gtk.application import MainApplication  # noqa: E402
 
-    app = RencherApplication()
+    app = MainApplication()
 
     try:
         app.run(sys.argv)

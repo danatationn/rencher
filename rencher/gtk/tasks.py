@@ -12,7 +12,7 @@ from gi.repository import Adw, Gdk, GLib, GObject, Graphene, Gtk
 from rencher.renpy.paths import tmp_path
 
 if TYPE_CHECKING:
-    from rencher.gtk.window import RencherWindow
+    from rencher.gtk.window import MainWindow
 
 
 class TaskTypeEnum(Enum):
@@ -123,7 +123,7 @@ class TasksPopover(Gtk.Popover):
         'task-removed': (GObject.SignalFlags.RUN_FIRST, None, (float,)),
     }
 
-    window: 'RencherWindow'
+    window: 'MainWindow'
     tasks: dict[float, TaskClass]
     rows: dict[float, TasksRow]
     stack: Gtk.Stack = Gtk.Template.Child()
@@ -131,7 +131,7 @@ class TasksPopover(Gtk.Popover):
     empty_status_page: Adw.StatusPage = Gtk.Template.Child()
     list_box: Gtk.ListBox = Gtk.Template.Child()
 
-    def __init__(self, window: 'RencherWindow', *args, **kwargs):
+    def __init__(self, window: 'MainWindow', *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.tasks = {}
         self.rows = {}

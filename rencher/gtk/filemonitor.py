@@ -18,7 +18,7 @@ from watchdog.events import (
 )
 from watchdog.observers import Observer
 
-from rencher.gtk.library import RencherLibrary
+from rencher.gtk.library import Library
 from rencher.renpy.config import RencherConfig
 from rencher.renpy.paths import config_path, local_path
 
@@ -32,9 +32,9 @@ class RencherFileMonitor(FileSystemEventHandler):
     data_dir: str
     pending_changes: defaultdict[object, dict[str, float | str]]
     pause_rpaths: list[str]
-    library: RencherLibrary
+    library: Library
 
-    def __init__(self, library: RencherLibrary):
+    def __init__(self, library: Library):
         super().__init__()
         self.monitor_data_dir()
         self.library = library

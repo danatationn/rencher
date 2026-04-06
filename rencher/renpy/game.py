@@ -178,7 +178,7 @@ class Game:
         self.config.read()  # just to be SURE
 
         args = [self.get_python_path()]
-        env = os.environ
+        env: dict[str, str] = {}
         py_path = os.path.join(self.apath, self.get_executable())
 
         if self.config['overwritten']['skip_splash_scr'] == 'true':
@@ -207,16 +207,20 @@ class Game:
 
             args.extend(['--savedir', save_dir])
 
-        if env.get('FLATPAK_ID'):
+        if os.environ.get('FLATPAK_ID'):
             args.insert(0, 'flatpak-spawn')
             args.insert(1, '--host')
+            # flatpak ignores the env parameter in Popen()
+            for key, value in env.items():
+                args.insert(2, f'--env={key}={value}')
 
         config_dict = {}
         for item in self.config['overwritten']:
             config_dict[item] = self.config['overwritten'][item]
+        logging.info(f'Running "{os.path.basename(self.rpath)}"...')
         logging.debug(f'config: {config_dict}')
         logging.debug(f'args: {args}')
-        return subprocess.Popen(args, env=env)
+        return subprocess.Popen(args, env=os.environ | env)
 
     def setup(self) -> None:
         """

@@ -1,7 +1,7 @@
 using Gtk 4.0;
 using Adw 1;
 
-template $RencherWindow : Adw.ApplicationWindow {
+template $MainWindow : Adw.ApplicationWindow {
 	title: "Rencher";
 	default-width: 800;
 	default-height: 600;
@@ -189,6 +189,7 @@ template $RencherWindow : Adw.ApplicationWindow {
 										//}
 										Adw.ActionRow rpath_row {
 											title: _("Folder Location");
+											subtitle-selectable: true;
 
 											[suffix]
 											Button {
@@ -203,10 +204,12 @@ template $RencherWindow : Adw.ApplicationWindow {
 										}
 										Adw.ActionRow version_row {
 											title: _("Engine Version");
+											subtitle-selectable: true;
 											styles ["property"]
 										}
 										Adw.ActionRow codename_row {
 											title: _("Codename");
+											subtitle-selectable: true;
 											styles ["property"]
 										}
 									}

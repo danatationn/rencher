@@ -13,9 +13,6 @@ it strives to be as simple as possible, while being as beautiful as possible
 <p>
 	<img src="data/screenshots/Screenshot From 2025-11-02 17-47-53.png" alt="Screenshot of Rencher's UI showing off the main window" width="384px"/>
 	<img src="data/screenshots/Screenshot From 2025-11-02 17-48-27.png" alt="Screenshot of Rencher's UI showing off the import menu" width="384px"/>
-
-[//]: # (	<img src="data/screenshots/Screenshot From 2025-11-02 17-48-37.png" alt="Screenshot of Rencher's UI showing off the settings menu" width="384px"/>)
-[//]: # (	<img src="data/screenshots/Screenshot From 2025-11-02 17-48-08.png" alt="Screenshot of Rencher's UI showing off the tasks popover" width="384px"/>)
 </p>
 
 ## download!
@@ -64,7 +61,7 @@ it strives to be as simple as possible, while being as beautiful as possible
             mingw-w64-ucrt-x86_64-cmake\
             mingw-w64-ucrt-x86_64-gcc\
             mingw-w64-ucrt-x86_64-python-cx-freeze\
-            mingw-w64-ucrt-x86_64-nsis\`
+            mingw-w64-ucrt-x86_64-nsis`
 	4. `git clone https://github.com/danatationn/rencher`
 	5. `cd rencher`
 	6. `uv sync`

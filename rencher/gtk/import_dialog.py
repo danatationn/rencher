@@ -1,7 +1,6 @@
 import glob
 import logging
 import os
-import os.path
 import shutil
 import threading
 import time
@@ -26,12 +25,12 @@ from rencher.renpy.paths import (
 )
 
 if TYPE_CHECKING:
-    from rencher.gtk.window import RencherWindow
+    from rencher.gtk.window import MainWindow
 
 
 @Gtk.Template.from_resource('/com/github/danatationn/rencher/ui/import.ui')
-class RencherImport(Adw.PreferencesDialog):
-    __gtype_name__ = 'RencherImport'
+class ImportDialog(Adw.PreferencesDialog):
+    __gtype_name__: str = 'ImportDialog'
 
     title_entry: Adw.EntryRow = Gtk.Template.Child()
     location_entry: Adw.EntryRow = Gtk.Template.Child()
@@ -49,7 +48,7 @@ class RencherImport(Adw.PreferencesDialog):
     archive_location: str = ''
     folder_location: str = ''
 
-    def __init__(self, window: 'RencherWindow', *args, **kwargs):
+    def __init__(self, window: 'MainWindow', *args, **kwargs):
         super().__init__(*args, **kwargs)
 
         self.window = window
@@ -250,9 +249,10 @@ class RencherImport(Adw.PreferencesDialog):
 
         if is_mod:
             rpa_path = get_rpa_path(rpath)
-            if rpa_path == rpath:
-                new_rpa_path = os.path.join(rpath, 'game')
-                rpa_files = get_rpa_files(rpath)
+            apath = get_absolute_path(rpath)
+            if os.path.dirname(rpa_path) == apath:
+                new_rpa_path = os.path.join(apath, 'game')
+                rpa_files = get_rpa_files(apath)
                 if not os.path.exists(new_rpa_path):
                     os.makedirs(new_rpa_path, exist_ok=True)
                 for path in rpa_files:

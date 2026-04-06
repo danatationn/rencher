@@ -1,11 +1,13 @@
 import logging
 import os
 import threading
+from collections.abc import Callable
 from configparser import ConfigParser
 from typing import override
 
 import gi
 import requests
+from rich.logging import RichHandler
 
 import rencher
 from rencher.renpy.config import RencherConfig
@@ -17,13 +19,13 @@ from gi.repository import Adw, Gdk, Gio, GLib, Gtk  # noqa: E402
 Adw.init()
 
 from rencher.gtk.filemonitor import RencherFileMonitor  # noqa: E402
-from rencher.gtk.window import RencherWindow  # noqa: E402
+from rencher.gtk.window import MainWindow  # noqa: E402
 from rencher.renpy.paths import local_path  # noqa: E402
 
 
-class RencherApplication(Gtk.Application):
+class MainApplication(Gtk.Application):
     config: ConfigParser
-    window: RencherWindow
+    window: MainWindow
     file_monitor: RencherFileMonitor
 
 
@@ -37,29 +39,28 @@ class RencherApplication(Gtk.Application):
         self.add_main_option('verbose', ord('v'), GLib.OptionFlags.NONE, GLib.OptionArg.NONE, 'Enable verbose output')
         self.add_main_option('version', ord('V'), GLib.OptionFlags.NONE, GLib.OptionArg.NONE, 'Prints version')
 
-        logger = logging.getLogger()
-        logger.setLevel(logging.DEBUG)
-        formatter = logging.Formatter('[%(levelname)s\t%(asctime)s.%(msecs)-3d %(module)s] %(message)s',
-                                   datefmt='%H:%M:%S')
-
         os.makedirs(local_path, exist_ok=True)
+
+        rich_handler = RichHandler()
+        rich_handler.setLevel(logging.INFO)
+        rich_handler.set_name('rich_handler')
+        rich_handler.setFormatter(logging.Formatter('%(message)s'))
+
         file_handler = logging.FileHandler(os.path.join(local_path, 'log.txt'), mode='w')
         file_handler.setLevel(logging.DEBUG)
-        file_handler.setFormatter(formatter)
-        logger.addHandler(file_handler)
+        file_handler.setFormatter(logging.Formatter('%(levelname)s:%(asctime)s:%(module)s %(message)s'))
 
-        console_handler = logging.StreamHandler()
-        console_handler.setLevel(logging.INFO)
-        console_handler.setFormatter(formatter)
-        console_handler.name = 'console_handler'
-        logger.addHandler(console_handler)
+        logging.basicConfig(
+            level=logging.DEBUG,
+            handlers=[rich_handler, file_handler],
+        )
 
         watchdog_logger = logging.getLogger('watchdog')
         watchdog_logger.propagate = False
         urllib3_logger = logging.getLogger('urllib3')
         urllib3_logger.setLevel(logging.WARNING)
 
-        actions: list[ tuple[str, object, list[str]]] = [
+        actions: list[tuple[str, Callable[[Gio.SimpleAction, GLib.Variant | None], None], list[str]]] = [
             ('show-import', self.on_show_import, ['<Primary>plus']),
             ('show-preferences', self.on_show_preferences, ['<Primary>comma']),
             ('show-shortcuts', self.on_show_shortcuts, ['<Primary>question']),
@@ -78,14 +79,11 @@ class RencherApplication(Gtk.Application):
     def do_command_line(self, command_line):
         options = command_line.get_options_dict()
 
-        if options.contains('verbose'):
-            logging.getHandlerByName('console_handler').setLevel(logging.DEBUG)
+        if options.contains('verbose') and (handler := logging.getHandlerByName('rich_handler')):
+            handler.setLevel(logging.DEBUG)
         if options.contains('version'):
             print(rencher.__version__)
             return 0
-        # if options.contains('data-dir'):
-        #     data_dir = options.lookup_value('data-dir').get_string()
-        #     logging.info(f'Setting data directory at {os.path.abspath(data_dir)}')
 
         self.activate()
         return 0
@@ -95,7 +93,7 @@ class RencherApplication(Gtk.Application):
         Gtk.Application.do_activate(self)
 
         self.config = RencherConfig()
-        self.window = RencherWindow(application=self)
+        self.window = MainWindow(application=self)
         self.window.present()
 
         if self.config['settings']['suppress_updates'] != 'true':
@@ -111,7 +109,7 @@ class RencherApplication(Gtk.Application):
 
     def on_show_shortcuts(self, *_):
         builder = Gtk.Builder.new_from_resource('/com/github/danatationn/rencher/ui/shortcuts.ui')
-        dialog = builder.get_object('RencherShortcuts')
+        dialog: Adw.ShortcutsDialog = builder.get_object('RencherShortcuts')
         dialog.present(self.window)
 
     def on_quit(self, *_):
@@ -133,10 +131,9 @@ class RencherApplication(Gtk.Application):
             designers=['danatationn', 'vl1'],
         )
         dialog.set_release_notes("""<ul>
-            <li> Faster library game loading </li>
-            <li> Fixed crash when starting Rencher for the first time </li>
-            <li> Build system overhaul </li>
-            <li> Added Discord RPC support </li>
+            <li> Fixed bugs related to Discord RPC </li>
+            <li> Fixed a bug related to importing </li>
+            <li> Fixed Flatpak not passing environment variables </li>
         </ul>""")
 
         dialog.present(self.window)

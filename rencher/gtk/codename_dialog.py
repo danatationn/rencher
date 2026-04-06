@@ -7,10 +7,10 @@ from gi.repository import Adw, Gtk
 from rencher.renpy.game import Game
 
 if TYPE_CHECKING:
-    from rencher.gtk.window import RencherWindow
+    from rencher.gtk.window import MainWindow
 
 class RencherCodename(Adw.AlertDialog):
-    window: 'RencherWindow'
+    window: 'MainWindow'
     game: Game
     codename_list_box: Gtk.ListBox
 

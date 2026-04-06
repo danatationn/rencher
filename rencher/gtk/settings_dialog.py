@@ -13,13 +13,13 @@ from rencher.renpy.config import RencherConfig
 from rencher.renpy.paths import local_path
 
 if TYPE_CHECKING:
-    from rencher.gtk.window import RencherWindow
+    from rencher.gtk.window import MainWindow
 
 @Gtk.Template.from_resource('/com/github/danatationn/rencher/ui/settings.ui')
-class RencherSettings(Adw.PreferencesDialog):
-    __gtype_name__: str = 'RencherSettings'
+class SettingsDialog(Adw.PreferencesDialog):
+    __gtype_name__: str = 'SettingsDialog'
 
-    window: 'RencherWindow'
+    window: 'MainWindow'
     config: RencherConfig
 
     data_dir_entry: Adw.EntryRow = Gtk.Template.Child()
@@ -32,7 +32,7 @@ class RencherSettings(Adw.PreferencesDialog):
     discord_rpc_switch: Adw.SwitchRow = Gtk.Template.Child()
     switches_list: list[tuple[Adw.SwitchRow, str]]
 
-    def __init__(self, window: 'RencherWindow', *args, **kwargs):
+    def __init__(self, window: 'MainWindow', *args, **kwargs):
         super().__init__(*args, **kwargs)
 
         self.switches_list = [

@@ -11,11 +11,11 @@ from rencher.renpy.config import RencherConfig
 from rencher.renpy.game import GameInvalidError, GameNoExecutableError
 
 if TYPE_CHECKING:
-    from rencher.gtk.window import RencherWindow
+    from rencher.gtk.window import MainWindow
 
 
-class RencherLibrary(GObject.Object):
-    window: 'RencherWindow'
+class Library(GObject.Object):
+    window: 'MainWindow'
     store: Gio.ListStore
 
     __gsignals__: dict[str, tuple[GObject.SignalFlags, None, tuple[object]]] = {
@@ -24,7 +24,7 @@ class RencherLibrary(GObject.Object):
         'game-changed': (GObject.SignalFlags.RUN_FIRST, None, (GameEntry,)),
     }
 
-    def __init__(self, window: 'RencherWindow'):
+    def __init__(self, window: 'MainWindow'):
         super().__init__()
         self.window = window
         self.store = Gio.ListStore(item_type=GameEntry)
@@ -67,7 +67,7 @@ class RencherLibrary(GObject.Object):
             self.change_game(rpath)
             return
         else:
-            logging.debug(f'+{rpath}')
+            logging.debug(f'added "{os.path.basename(rpath)}"')
 
         try:
             game_item = GameEntry(rpath=rpath)
@@ -80,7 +80,7 @@ class RencherLibrary(GObject.Object):
             self.emit('game-added', game_item)
 
     def remove_game(self, rpath: str) -> None:
-        logging.debug(f'-{rpath}')
+        logging.debug(f'removed "{os.path.basename(rpath)}"')
         result = self.find(rpath)
         if result:
             i, item = result
@@ -88,7 +88,7 @@ class RencherLibrary(GObject.Object):
             self.emit('game-removed', item)
 
     def change_game(self, rpath: str) -> None:
-        logging.debug(f'~{rpath}')
+        logging.debug(f'changed "{os.path.basename(rpath)}"')
         result = self.find(rpath)
         if result:
             i, game_item = result
