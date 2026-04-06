@@ -19,7 +19,7 @@ it strives to be as simple as possible, while being as beautiful as possible
 </p>
 
 ## download!
-### [Windows](https://github.com/danatationn/Rencher/releases/latest/download/RencherInstaller.exe) - [Linux](https://github.com/danatationn/Rencher/releases/latest/download/Rencher-x86_64.AppImage)
+### [Windows](https://github.com/danatationn/Rencher/releases/latest/download/RencherInstaller.exe) - [Linux](https://github.com/danatationn/Rencher/releases/latest/download/Rencher.flatpak)
 
 ## tips
 * you can turn the update toasts in the settings
@@ -27,7 +27,7 @@ it strives to be as simple as possible, while being as beautiful as possible
 * if you're importing an already set up DDLC mod, then just import it normally
 
 ## possible upcoming features
-- [ ] Discord RPC
+- [x] Discord RPC
 - [ ] asset viewer (unrpa + unrpyc)
 - [ ] store (vndb, itch.io, the old DDMC mod list thing)
 - [ ] more...
@@ -35,7 +35,7 @@ it strives to be as simple as possible, while being as beautiful as possible
 ## testing / building
 ### Linux
 1. `uv sync`
-2. `meson setup build -Dprefix=$(pwd)/build/root`
+2. `meson setup build --prefix $(pwd)/build/root`
 3. `ninja -C install`
 
 <details> <summary> Flatpak </summary>
@@ -50,29 +50,25 @@ it strives to be as simple as possible, while being as beautiful as possible
 </details>
 
 ### Windows
-> [!NOTE]
-> uv is not used as we want to install the pip packages system-wide
-
 * setting up the environment
 	1. install [msys2](https://www.msys2.org/)
 	2. launch msys2 ucrt64
 	3. `pacman -Sy mingw-w64-ucrt-x86_64-python\
             mingw-w64-ucrt-x86_64-python-pip\
-            mingw-w64-ucrt-x86_64-nsis\
+            mingw-w64-ucrt-x86_64-uv\
+            mingw-w64-ucrt-x86_64-meson\
             mingw-w64-ucrt-x86_64-gtk4\
+            mingw-w64-ucrt-x86_64-gobject-introspection\
             mingw-w64-ucrt-x86_64-libadwaita\
+            mingw-w64-ucrt-x86_64-blueprint-compiler\
             mingw-w64-ucrt-x86_64-cmake\
             mingw-w64-ucrt-x86_64-gcc\
-            mingw-w64-ucrt-x86_64-blueprint-compiler\
-            mingw-w64-ucrt-x86_64-meson\
-            mingw-w64-ucrt-x86_64-gobject-introspection\
-            mingw-w64-ucrt-x86_64-ntldd\
             mingw-w64-ucrt-x86_64-python-cx-freeze\
-			mingw-w64-ucrt-x86_64-git`
+            mingw-w64-ucrt-x86_64-nsis\`
 	4. `git clone https://github.com/danatationn/rencher`
 	5. `cd rencher`
-	6. `pip install -r requirements.txt --break-system-packages`
-	7. `meson setup build -Dprefix=$(pwd)/build/root`
+	6. `uv sync`
+	7. `meson setup build --prefix $(pwd)/build/root`
 	8. `ninja -C install`
 
 * freezing (python to exe)

@@ -56,7 +56,12 @@ jobs:
               .flatpak-builder
           key: flatpak-${{ runner.os }}-49
 
+      - name: hey
+        run: |
+          echo ${{ hashFiles('uv.lock') }}
+
       - name: Package Flatpak
+        if: false
         run: |
           flatpak remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo --system
           flatpak install org.gnome.Sdk//49 org.gnome.Platform//49 --system -y --no-related
@@ -64,6 +69,7 @@ jobs:
           flatpak build-bundle ~/.local/share/flatpak/repo build/Rencher.flatpak com.github.danatationn.rencher
 
       - name: Upload Flatpak artifact
+        if: false
         uses: actions/upload-artifact@v4
         with:
           name: Rencher-Linux-Flatpak
@@ -95,7 +101,6 @@ jobs:
             mingw-w64-ucrt-x86_64-meson
             mingw-w64-ucrt-x86_64-uv
             mingw-w64-ucrt-x86_64-gobject-introspection
-            mingw-w64-ucrt-x86_64-ntldd
             mingw-w64-ucrt-x86_64-python-cx-freeze
 
       - name: Get uv cache path
