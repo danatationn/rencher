@@ -1,6 +1,9 @@
 name: Rencher
 on: [push, workflow_dispatch]
 
+permissions:
+  contents: read
+
 jobs:
   linux-job:
     name: Linux
@@ -32,36 +35,39 @@ jobs:
             meson \
             nodejs
           pip install uv --break-system-packages
+
+      - name: Cache uv
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/uv
+          key: uv-${{ runner.os }}-${{ hashFiles('uv.lock') }}
+
       - name: Setup environment
         run: |
           uv sync
           meson setup build -Dprefix=$(pwd)/build/root
           ninja -C build install
+
       - name: Cache Flatpak runtimes
         uses: actions/cache@v4
         with:
-          path: /var/lib/flatpak
+          path: |
+              /var/lib/flatpak
+              .flatpak-builder
           key: flatpak-${{ runner.os }}-49
+
       - name: Package Flatpak
         run: |
           flatpak remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo --system
           flatpak install org.gnome.Sdk//49 org.gnome.Platform//49 --system -y --no-related
           flatpak-builder --install --user build/flatpak com.github.danatationn.rencher.yml
           flatpak build-bundle ~/.local/share/flatpak/repo build/Rencher.flatpak com.github.danatationn.rencher
+
       - name: Upload Flatpak artifact
         uses: actions/upload-artifact@v4
         with:
           name: Rencher-Linux-Flatpak
           path: build/Rencher.flatpak
-      - name: Make AppImage
-        if: false
-        run: |
-          wget https://github.com/niess/python-appimage/releases/download/python3.14/python3.14.0-cp314-cp314t-manylinux2014_x86_64.AppImage
-          chmod +x python3.14.0-cp314-cp314t-manylinux2014_x86_64.AppImage
-          ./python3.14.0-cp314-cp314t-manylinux2014_x86_64.AppImage --appimage-extract
-          wget -c "https://raw.githubusercontent.com/linuxdeploy/linuxdeploy-plugin-gtk/master/linuxdeploy-plugin-gtk.sh"
-          wget -c "https://github.com/linuxdeploy/linuxdeploy/releases/download/continuous/linuxdeploy-x86_64.AppImage"
-          chmod +x linuxdeploy-x86_64.AppImage linuxdeploy-plugin-gtk.sh
 
   windows-job:
     name: Windows
@@ -92,6 +98,12 @@ jobs:
             mingw-w64-ucrt-x86_64-ntldd
             mingw-w64-ucrt-x86_64-python-cx-freeze
 
+      - name: Cache uv
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/uv
+          key: uv-${{ runner.os }}-${{ hashFiles('uv.lock') }}
+
       - name: Setup Environment
         run: |
           uv sync
@@ -112,12 +124,10 @@ jobs:
           path: build/${{ steps.freeze.outputs.FREEZE_DIR }}
 
       - name: Build NSIS installer
-        # if: false
         run: ninja -C build makensis
 
       - name: Upload NSIS installer artifact
         uses: actions/upload-artifact@v4
-        # if: false
         with:
           name: Rencher-Windows-Installer
           path: build/RencherInstaller.exe
