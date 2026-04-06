@@ -98,10 +98,14 @@ jobs:
             mingw-w64-ucrt-x86_64-ntldd
             mingw-w64-ucrt-x86_64-python-cx-freeze
 
+      - name: Get uv cache path
+        id: uv-cache
+        run: echo "path=$(uv cache dir)" >> $GITHUB_OUTPUT
+
       - name: Cache uv
         uses: actions/cache@v4
         with:
-          path: ~/.cache/uv
+          path: {{ steps.uv-cache.outputs.path }}
           key: uv-${{ runner.os }}-${{ hashFiles('uv.lock') }}
 
       - name: Setup Environment
