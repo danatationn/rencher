@@ -1,3 +1,4 @@
+### DESKTOP FILE ###
 desktop = configure_file(
 	input: app_id + '.desktop.in',
 	output: app_id + '.desktop',
@@ -7,6 +8,7 @@ desktop = configure_file(
 	install_mode: 'rwxr-xr-x'
 )
 
+### UI FILES ###
 blueprint = custom_target('blueprint',
 	input: files(
 		'ui/import.blp',
@@ -23,16 +25,31 @@ blueprint = custom_target('blueprint',
 	command: [find_program('blueprint-compiler'), 'batch-compile', '@OUTPUT@', '@CURRENT_SOURCE_DIR@', '@INPUT@'],
 )
 
-icon_conf = configure_file(
-	input: 'assets/rencher-icon.svg',
-	output: conf.get('app_id') + '.svg',
-	copy: true
-)
-install_data(
-	icon_conf,
-	install_dir: join_paths(get_option('datadir'), 'icons/hicolor/scalable/apps'),
-)
+### ICONS ###
+icons = [
+	['16x16', 'assets/rencher-icon16.png'],
+	['32x32', 'assets/rencher-icon32.png'],
+	['64x64', 'assets/rencher-icon64.png'],
+	['128x128', 'assets/rencher-icon128.png'],
+	['256x256', 'assets/rencher-icon256.png'],
+	['512x512', 'assets/rencher-icon512.png'],
+]
+icon_name = '@0@.png'.format(conf.get('app_id'))
 
+foreach icon : icons
+	install_data(
+		icon[1],
+		install_dir: join_paths(
+			get_option('datadir'),
+			'icons/hicolor',
+			icon[0],
+			'apps'
+		),
+		rename: icon_name
+	)
+endforeach
+
+### GRESOURCE ###
 gnome.compile_resources(app_id,
 	configure_file(
 		input: app_id + '.gresource.xml.in',

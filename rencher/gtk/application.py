@@ -30,7 +30,7 @@ class RencherApplication(Gtk.Application):
     def __init__(self, *args, **kwargs):
         super().__init__(
             *args, **kwargs,
-            application_id='com.github.danatationn.Rencher',
+            application_id='com.github.danatationn.rencher',
             flags=Gio.ApplicationFlags.HANDLES_COMMAND_LINE | Gio.ApplicationFlags.NON_UNIQUE,
         )
 
@@ -110,7 +110,7 @@ class RencherApplication(Gtk.Application):
         self.window.settings_dialog.present(self.window)
 
     def on_show_shortcuts(self, *_):
-        builder = Gtk.Builder.new_from_resource('/com/github/danatationn/Rencher/ui/shortcuts.ui')
+        builder = Gtk.Builder.new_from_resource('/com/github/danatationn/rencher/ui/shortcuts.ui')
         dialog = builder.get_object('RencherShortcuts')
         dialog.present(self.window)
 
@@ -119,7 +119,7 @@ class RencherApplication(Gtk.Application):
 
     def on_show_about(self, *_):
         dialog = Adw.AboutDialog(
-            application_icon='rencher-icon',
+            application_icon='com.github.danatationn.rencher',
             application_name='Rencher',
             developer_name='danatationn',
             version=rencher.__version__,
@@ -136,6 +136,7 @@ class RencherApplication(Gtk.Application):
             <li> Faster library game loading </li>
             <li> Fixed crash when starting Rencher for the first time </li>
             <li> Build system overhaul </li>
+            <li> Added Discord RPC support </li>
         </ul>""")
 
         dialog.present(self.window)

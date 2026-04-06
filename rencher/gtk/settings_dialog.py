@@ -15,7 +15,7 @@ from rencher.renpy.paths import local_path
 if TYPE_CHECKING:
     from rencher.gtk.window import RencherWindow
 
-@Gtk.Template.from_resource('/com/github/danatationn/Rencher/ui/settings.ui')
+@Gtk.Template.from_resource('/com/github/danatationn/rencher/ui/settings.ui')
 class RencherSettings(Adw.PreferencesDialog):
     __gtype_name__: str = 'RencherSettings'
 

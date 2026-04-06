@@ -29,7 +29,7 @@ if TYPE_CHECKING:
     from rencher.gtk.window import RencherWindow
 
 
-@Gtk.Template.from_resource('/com/github/danatationn/Rencher/ui/import.ui')
+@Gtk.Template.from_resource('/com/github/danatationn/rencher/ui/import.ui')
 class RencherImport(Adw.PreferencesDialog):
     __gtype_name__ = 'RencherImport'
 
