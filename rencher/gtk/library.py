@@ -4,7 +4,7 @@ import os.path
 from pathlib import Path
 from typing import TYPE_CHECKING
 
-from gi.repository import Gio, GLib, GObject, Gtk
+from gi.repository import Gio, GObject, Gtk
 
 from rencher.gtk.game_entry import GameEntry
 from rencher.renpy.config import RencherConfig
@@ -67,7 +67,7 @@ class Library(GObject.Object):
             self.change_game(rpath)
             return
         else:
-            logging.debug(f'added "{os.path.basename(rpath)}"')
+            logging.debug(f'Added: "{os.path.basename(rpath)}"')
 
         try:
             game_item = GameEntry(rpath=rpath)
@@ -80,7 +80,7 @@ class Library(GObject.Object):
             self.emit('game-added', game_item)
 
     def remove_game(self, rpath: str) -> None:
-        logging.debug(f'removed "{os.path.basename(rpath)}"')
+        logging.debug(f'Removed: "{os.path.basename(rpath)}"')
         result = self.find(rpath)
         if result:
             i, item = result
@@ -88,7 +88,7 @@ class Library(GObject.Object):
             self.emit('game-removed', item)
 
     def change_game(self, rpath: str) -> None:
-        logging.debug(f'changed "{os.path.basename(rpath)}"')
+        logging.debug(f'Changed: "{os.path.basename(rpath)}"')
         result = self.find(rpath)
         if result:
             i, game_item = result

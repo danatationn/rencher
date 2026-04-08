@@ -32,6 +32,7 @@ namespaces = false
 reportMissingModuleSource = false
 reportUnusedCallResult = false
 reportAny = false
+reportExplicitAny = false
 reportUnknownMemberType = false
 reportMissingParameterType = false
 reportUnknownParameterType = false

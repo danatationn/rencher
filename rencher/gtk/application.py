@@ -1,3 +1,4 @@
+import asyncio
 import logging
 import os
 import threading
@@ -10,6 +11,7 @@ import requests
 from rich.logging import RichHandler
 
 import rencher
+from rencher.gtk.rpc import RPC
 from rencher.renpy.config import RencherConfig
 
 gi.require_version('Gtk', '4.0')
@@ -28,6 +30,7 @@ class MainApplication(Gtk.Application):
     window: MainWindow
     file_monitor: RencherFileMonitor
 
+    rpc: RPC
 
     def __init__(self, *args, **kwargs):
         super().__init__(
@@ -75,6 +78,9 @@ class MainApplication(Gtk.Application):
             if accels:
                 self.set_accels_for_action(f'app.{name}', accels)
 
+        self.rpc = RPC(1485229562123124818)
+        self.rpc.start()
+
     @override
     def do_command_line(self, command_line):
         options = command_line.get_options_dict()
@@ -111,6 +117,11 @@ class MainApplication(Gtk.Application):
         builder = Gtk.Builder.new_from_resource('/com/github/danatationn/rencher/ui/shortcuts.ui')
         dialog: Adw.ShortcutsDialog = builder.get_object('RencherShortcuts')
         dialog.present(self.window)
+
+    @override
+    def do_shutdown(self) -> None:
+        self.rpc.stop()
+        Gtk.Application.do_shutdown(self)
 
     def on_quit(self, *_):
         self.quit()

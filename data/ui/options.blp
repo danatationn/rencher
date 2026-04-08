@@ -48,6 +48,7 @@ template $OptionsDialog: Adw.PreferencesDialog {
 
 			Adw.ExpanderRow {
 				title: _("Overwrite Discord RPC");
+				subtitle: _("If this game already has RPC, you might want to disable this");
 				expanded: bind overwrite_discord_rpc_switch.active;
 
 				[action]

@@ -1,12 +1,10 @@
 import asyncio
 import logging
 import subprocess
-import threading
 import time
 from typing import TYPE_CHECKING
 
 from gi.repository import Adw, GLib, Gtk
-from pypresence.presence import AioPresence
 
 from rencher.gtk.codename_dialog import RencherCodename
 from rencher.gtk.filemonitor import RencherFileMonitor
@@ -39,10 +37,6 @@ class MainWindow(Adw.ApplicationWindow):
     filter_text: str = ''
     combo_index: int = 0
     ascending_order: bool
-
-    _rpc_loop: asyncio.AbstractEventLoop
-    _rpc_thread: threading.Thread
-    rpc: AioPresence
 
     # classes
     app: 'MainApplication'
@@ -116,17 +110,11 @@ class MainWindow(Adw.ApplicationWindow):
         GLib.idle_add(self.library.load_games)
         GLib.timeout_add(250, self.check_process)
 
-        self._rpc_loop = asyncio.new_event_loop()
-        self.rpc = AioPresence(1485229562123124818, loop=self._rpc_loop)
-        self._rpc_thread = threading.Thread(target=self._rpc_loop.run_forever, daemon=True)
-        self._rpc_thread.start()
-        asyncio.run_coroutine_threadsafe(self._rpc_connect(), self._rpc_loop)
-
     def _on_game_added(self, _, entry: GameEntry) -> None:
         row = Adw.ButtonRow(title=entry.name)
         self.rows[entry] = row
         self.games[row] = entry
-        self.library_list_box.append(row)
+        GLib.idle_add(self.library_list_box.append, row)
         self.split_view.set_show_sidebar(True)
         if not self.library_list_box.get_selected_row():
             self.library_view_stack.set_visible_child_name('game-select')
@@ -138,13 +126,13 @@ class MainWindow(Adw.ApplicationWindow):
         entry.refresh(entry.game)
 
         if row := self.rows.get(entry, None):
-            row.set_title(entry.name)  # pyright: ignore[reportAttributeAccessIssue]
+            GLib.idle_add(row.set_title, entry.name)  # pyright: ignore[reportAttributeAccessIssue]
 
     def _on_game_removed(self, _, entry: GameEntry) -> None:
         row = self.rows.pop(entry, None)
         if row:
             self.games.pop(row, None)
-            self.library_list_box.remove(row)
+            GLib.idle_add(self.library_list_box.remove, row)
 
         if len(self.library.store) == 0:
             self.library_view_stack.set_visible_child_name('empty')
@@ -158,15 +146,6 @@ class MainWindow(Adw.ApplicationWindow):
             self.pie.set_fraction(fraction)
         else:
             self.pie_progress_button.set_icon_name('test-pass')
-
-    async def _rpc_connect(self):
-        try:
-            await self.rpc.connect()
-        except Exception as e:
-            logging.error(f'RPC failed to connect! ({e})')
-
-    def _rpc_call(self, coro) -> None:
-        asyncio.run_coroutine_threadsafe(coro, self._rpc_loop)
 
     @Gtk.Template.Callback()
     def on_import_clicked(self, *_) -> None:  # type: ignore
@@ -257,7 +236,9 @@ class MainWindow(Adw.ApplicationWindow):
             self.play_button.get_style_context().add_class('suggested-action')
             self.options_button.set_sensitive(True)
             self.is_terminating = False
-            self._rpc_call(self.rpc.clear())
+
+            if self.running is not None:
+                self.app.rpc.clear()
 
             if self.game_process is None or self.running is None or self.running.game is None:
                 return True
@@ -276,7 +257,7 @@ class MainWindow(Adw.ApplicationWindow):
             else:
                 self.play_button.set_label('Stop')
                 if self.running and self.running.game and self.running.game.config['overwritten']['discord_rpc'] == 'true':
-                    self._rpc_call(self.rpc.update(state=self.running.game.name))
+                    self.app.rpc.update(state=self.running.game.name)
             self.play_button.get_style_context().remove_class('suggested-action')
             self.play_button.get_style_context().add_class('destructive-action')
             self.options_button.set_sensitive(False)
