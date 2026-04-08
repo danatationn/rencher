@@ -51,6 +51,7 @@ class MainWindow(Adw.ApplicationWindow):
     tasks_popover: TasksPopover
     pie: PiePaintable
     pie_image: Gtk.Image
+    error_dialog: Adw.AlertDialog | None
 
     # templates
     toast_overlay: Adw.ToastOverlay = Gtk.Template.Child()
@@ -112,6 +113,7 @@ class MainWindow(Adw.ApplicationWindow):
         self.pie_progress_button.set_popover(self.tasks_popover)
         self.log_buf = self.log_text_view.get_buffer()
         self.log_buf.connect('changed', lambda b: self.log_row.set_sensitive(b.get_char_count() > 0))
+        self.error_dialog = None
 
         GLib.idle_add(self.library.load_games)
         GLib.timeout_add(250, self.check_process)
@@ -175,9 +177,8 @@ class MainWindow(Adw.ApplicationWindow):
         if _widget.get_style_context().has_class('suggested-action'):
             self.game_process = entry.game.run()
             self.log_buf.set_text('')
-            for stream in (self.game_process.stdout, self.game_process.stderr):
-                if stream:
-                    threading.Thread(target=self._read_stream, args=(stream,), daemon=True).start()
+            threading.Thread(target=self._read_stream, args=(self.game_process.stdout, False), daemon=True).start()
+            threading.Thread(target=self._read_stream, args=(self.game_process.stderr, True), daemon=True).start()
             self.running = entry
             self.process_time = time.time()
             self.check_process()  # so the button changes instantly
@@ -188,13 +189,38 @@ class MainWindow(Adw.ApplicationWindow):
                 self.is_terminating = True
                 self.game_process.terminate()
 
-    def _read_stream(self, stream: IO[bytes]) -> None:
+    def _read_stream(self, stream: IO[bytes], stderr: bool) -> None:
+        error_shown = False
         for line in stream:
+            if stderr and not error_shown:
+                error_shown = True
             GLib.idle_add(self._on_log_line, line.decode(errors='replace'))
+
+        if error_shown:
+            if not self.error_dialog or not self.error_dialog.get_mapped():
+                self.error_dialog = Adw.AlertDialog(
+                    heading='Something went wrong!',
+                    body='A game has errors. Check the logs for more details.',
+                    default_response='show',
+                    close_response='cancel',
+                )
+                self.error_dialog.add_response('show', 'Show Logs')
+                self.error_dialog.add_response('cancel', 'Cancel')
+                self.error_dialog.connect('response', self._on_error_dialog_response)
+                GLib.idle_add(self.error_dialog.present, self)
 
     def _on_log_line(self, line: str) -> None:
         self.log_buf.insert(self.log_buf.get_end_iter(), line)
         self.log_text_view.scroll_to_iter(self.log_buf.get_end_iter(), 0, False, 0, 0)
+
+    def _on_error_dialog_response(self, _, id: str):
+        if id == 'show':
+            GLib.idle_add(self.log_row.set_expanded, True)
+            GLib.idle_add(self.log_text_view.grab_focus)
+
+    def _scroll_to_log(self) -> None:
+        adj = self.log_text_view.get_parent().get_vadjustment()
+        adj.set_value(adj.get_upper() - adj.get_page_size())
 
     @Gtk.Template.Callback()
     def on_dir_clicked(self, _widget: Gtk.Button) -> None:

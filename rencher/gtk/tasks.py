@@ -9,8 +9,6 @@ from typing import TYPE_CHECKING
 import cairo
 from gi.repository import Adw, Gdk, GLib, GObject, Graphene, Gtk
 
-from rencher.renpy.paths import tmp_path
-
 if TYPE_CHECKING:
     from rencher.gtk.window import MainWindow
 
