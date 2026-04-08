@@ -114,7 +114,7 @@ def freeze(argv: list[str]):
                 'build_base': dest_dir,
             },
             'build_exe': {
-                'packages': ['requests', 'configparser', 'watchdog', 'rarfile', 'cairo'],
+                'packages': ['requests', 'configparser', 'watchdog', 'rarfile', 'cairo', 'rich'],
                 'optimize': 2,
                 'include_files': include_files,
                 'include_msvcr': True,

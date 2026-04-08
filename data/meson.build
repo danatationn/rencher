@@ -29,10 +29,10 @@ blueprint = custom_target('blueprint',
 icons = [
 	['16x16', 'assets/rencher-icon16.png'],
 	['32x32', 'assets/rencher-icon32.png'],
+	['48x48', 'assets/rencher-icon48.png'],
 	['64x64', 'assets/rencher-icon64.png'],
 	['128x128', 'assets/rencher-icon128.png'],
 	['256x256', 'assets/rencher-icon256.png'],
-	['512x512', 'assets/rencher-icon512.png'],
 ]
 icon_name = '@0@.png'.format(conf.get('app_id'))
 
