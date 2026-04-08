@@ -1,7 +1,7 @@
 # Rencher
 *.ui
 *.gresource
-*.AppImage
+*.flatpak
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
@@ -30,6 +30,9 @@ share/python-wheels/
 .installed.cfg
 *.egg
 MANIFEST
+.flatpak-builder
+.ruff_cache
+build-flatpak/
 
 # Translations
 *.mo

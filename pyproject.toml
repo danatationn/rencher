@@ -1,7 +1,7 @@
 [project]
 name = "Rencher"
 version = "1.2.2"
-description = "A Ren'Py game manager, made with DDLC mods in mind"
+description = "Play and mod Ren'Py games"
 requires-python = ">=3.12"
 dependencies = [
     "pycairo==1.27.0; sys.platform == 'linux'",

@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<component type="desktop-application">
+	<id>com.github.danatationn.rencher</id>
+	<name>Rencher</name>
+	<launchable type="desktop-id">com.github.danatationn.rencher.desktop</launchable>
+
+	<developer>danatationn</developer>
+	<update_contact>lemontasteicetea@proton.me</update_contact>
+	<url type="homepage">http://www.github.com/danatationn/rencher</url>
+
+	<metadata_license>CC0-1.0</metadata_license>
+	<project_license>GPL-3.0-or-later</project_license>
+
+	<summary>Play and mod Ren'Py games</summary>
+	<description>
+		<p>
+		Rencher is a game manager for Ren'Py, designed around DDLC mods.
+		It has support for Ren'Py 7 DDLC mods, and also fixes many bugs when trying to launch mods on Linux.
+		</p>
+		<p>Main features:</p>
+		<ul>
+			<li>Clean UI made with GTK4 and Adwaita</li>
+			<li>Asynchronous importing and deleting</li>
+			<li>Discord RPC</li>
+			<li>The ability to skip the splash screen and/or main menu</li>
+			<li>Self contained game saves</li>
+		</ul>
+	</description>
+
+	<screenshots>
+	<screenshot type="default">
+	    <caption>The main view</caption>
+	    <image>https://github.com/danatationn/rencher/raw/main/data/screenshots/Screenshot%20From%202025-11-02%2017-47-53.png</image>
+	</screenshot>
+	<screenshot>
+	    <caption>The Import dialog</caption>
+	    <image>https://github.com/danatationn/rencher/raw/main/data/screenshots/Screenshot%20From%202025-11-02%2017-48-27.png</image>
+	</screenshot>
+	</screenshots>
+
+	<content_rating type="oars-1.1" />
+	
+	<provides>
+		<binary>rencher</binary>
+	</provides>
+</component>

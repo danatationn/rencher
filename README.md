@@ -1,13 +1,22 @@
-# Rencher - yet another mod manager
+# Rencher - Play and mod Ren'Py games
 <p align="center">
 	<img src="data/assets/rencher-logo.png" width="400px"/>
 <p/>
 
-Rencher is a Ren'Py game manager, made with DDLC mods in mind
-<br/>
-it strives to be as simple as possible, while being as beautiful as possible
+<p>
+	Rencher is a game manager for Ren'Py, designed around DDLC mods.
+	It has support for Ren'Py 7 DDLC mods, and also fixes many bugs when trying to launch mods on Linux.
+</p>
+Main features:
+<ul>
+	<li>Clean UI made with GTK4 and Adwaita</li>
+	<li>Asynchronous importing and deleting</li>
+	<li>Discord RPC</li>
+	<li>The ability to skip the splash screen and/or main menu</li>
+	<li>Self contained game saves</li>
+</ul>
 
-[link to the trello board](https://trello.com/b/CGaqf0xx/rencher)
+[Link to the Trello board](https://trello.com/b/CGaqf0xx/rencher)
 <br/>
 
 <p>
@@ -15,21 +24,16 @@ it strives to be as simple as possible, while being as beautiful as possible
 	<img src="data/screenshots/Screenshot From 2025-11-02 17-48-27.png" alt="Screenshot of Rencher's UI showing off the import menu" width="384px"/>
 </p>
 
-## download!
+## Download!
 ### [Windows](https://github.com/danatationn/Rencher/releases/latest/download/RencherInstaller.exe) - [Linux](https://github.com/danatationn/Rencher/releases/latest/download/Rencher.flatpak)
 
-## tips
-* you can turn the update toasts in the settings
-* you can also delete the .zip files after importing. also in the settings
-* if you're importing an already set up DDLC mod, then just import it normally
-
-## possible upcoming features
+## Possible upcoming features
 - [x] Discord RPC
-- [ ] asset viewer (unrpa + unrpyc)
-- [ ] store (vndb, itch.io, the old DDMC mod list thing)
-- [ ] more...
+- [ ] Asset Viewer (unrpa + unrpyc)
+- [ ] Store (vndb, itch.io, the old DDMC mod list thing)
+- [ ] More...
 
-## testing / building
+## Testing / Building
 ### Linux
 1. `uv sync`
 2. `meson setup build --prefix $(pwd)/build/root`
@@ -47,9 +51,9 @@ it strives to be as simple as possible, while being as beautiful as possible
 </details>
 
 ### Windows
-* setting up the environment
-	1. install [msys2](https://www.msys2.org/)
-	2. launch msys2 ucrt64
+* Setting up the environment
+	1. Install [MSYS2](https://www.msys2.org/)
+	2. Launch MSYS2 UCRT64
 	3. `pacman -Sy mingw-w64-ucrt-x86_64-python\
             mingw-w64-ucrt-x86_64-python-pip\
             mingw-w64-ucrt-x86_64-uv\
@@ -68,26 +72,26 @@ it strives to be as simple as possible, while being as beautiful as possible
 	7. `meson setup build --prefix $(pwd)/build/root`
 	8. `ninja -C install`
 
-* freezing (python to exe)
+* Freezing (Python to EXE)
 
 	`ninja -C build freeze`
 
-* making the installer
+* Making the installer
 
 	`ninja -C build makensis`
 
 ### Universal
 
-* running rencher within meson
+* Running Rencher within Meson
 
 	`ninja -C build run` or `ninja -C build dev` if you want debug logs
 
-## credits and license
+## Credits and License
 
-[Nicotine+](https://github.com/nicotine-plus/nicotine-plus) was used as reference for what i should do regarding pygobject and packaging
+[Nicotine+](https://github.com/nicotine-plus/nicotine-plus) was used as reference for what I should do regarding PyGObject and packaging
 <br>
-logo made by [vl1](https://vl1.neocities.org/). check him out!
+Logo made by [vl1](https://vl1.neocities.org/). check him out!
 <br>
-this project is under the [GPL-3](https://github.com/danatationn/rencher?tab=GPL-3.0-1-ov-file)
+This project is under the [GPL-3](https://github.com/danatationn/rencher?tab=GPL-3.0-1-ov-file)
 
-#### © 2025 danatationn
+#### © 2026 danatationn
