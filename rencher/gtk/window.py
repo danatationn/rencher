@@ -120,7 +120,7 @@ class MainWindow(Adw.ApplicationWindow):
             self.library_view_stack.set_visible_child_name('game-select')
 
     def _on_game_changed(self, _, entry: GameEntry) -> None:
-        if self.current_game_entry.rpath == entry.rpath:
+        if self.current_game_entry == entry:
             self.current_game_entry.refresh(entry.game)
 
         entry.refresh(entry.game)

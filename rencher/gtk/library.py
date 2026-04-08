@@ -66,8 +66,6 @@ class Library(GObject.Object):
         if self.find(rpath):
             self.change_game(rpath)
             return
-        else:
-            logging.debug(f'Added: "{os.path.basename(rpath)}"')
 
         try:
             game_item = GameEntry(rpath=rpath)
@@ -78,20 +76,21 @@ class Library(GObject.Object):
         else:
             self.store.append(game_item)
             self.emit('game-added', game_item)
+        logging.debug(f'Added: "{os.path.basename(rpath)}"')
 
     def remove_game(self, rpath: str) -> None:
-        logging.debug(f'Removed: "{os.path.basename(rpath)}"')
         result = self.find(rpath)
         if result:
             i, item = result
             self.store.remove(i)
             self.emit('game-removed', item)
+        logging.debug(f'Removed: "{os.path.basename(rpath)}"')
 
     def change_game(self, rpath: str) -> None:
-        logging.debug(f'Changed: "{os.path.basename(rpath)}"')
         result = self.find(rpath)
         if result:
             i, game_item = result
             game_item.refresh(game_item.game)
             self.store.items_changed(i, 1, 1)
             self.emit('game-changed', game_item)
+        logging.debug(f'Changed: "{os.path.basename(rpath)}"')

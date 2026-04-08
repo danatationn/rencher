@@ -1,4 +1,5 @@
 import subprocess
+from typing import override
 
 from gi.repository import GLib, GObject
 
@@ -70,6 +71,17 @@ class GameEntry(GObject.Object):
         if game:
             self.game = game
             self.refresh(self.game)
+
+    @override
+    def __eq__(self, other: object):
+        if isinstance(other, GameEntry):
+            return self.rpath == other.rpath
+        else:
+            return False
+
+    @override
+    def __hash__(self):
+        return hash(self.rpath)
 
     # def __getstate__(self) -> dict:
     #     return {
