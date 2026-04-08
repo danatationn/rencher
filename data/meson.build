@@ -1,3 +1,11 @@
+### METAINFO ###
+if host_machine.system() == 'linux'
+	install_data(
+	'com.github.danatationn.rencher.metainfo.xml',
+		install_dir: get_option('datadir') / 'metainfo'
+	)
+endif
+
 ### DESKTOP FILE ###
 desktop = configure_file(
 	input: app_id + '.desktop.in',

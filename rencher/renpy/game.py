@@ -220,7 +220,7 @@ class Game:
         logging.info(f'Running "{os.path.basename(self.rpath)}"...')
         logging.debug(f'config: {config_dict}')
         logging.debug(f'args: {args}')
-        return subprocess.Popen(args, env=os.environ | env)
+        return subprocess.Popen(args, env=os.environ | env, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
     def setup(self) -> None:
         """

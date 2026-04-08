@@ -2,7 +2,7 @@ project('rencher', version: '1.2.2')
 
 name = 'Rencher'
 app_id = 'com.github.danatationn.rencher'
-description = 'A Ren\'Py mod manager, made with DDLC mods in mind'
+description = 'Play and mod Ren\'Py games'
 
 pkgdata_dir = join_paths(
 	get_option('prefix'),
@@ -45,11 +45,6 @@ subdir('data')
 subdir('bin')
 install_subdir(meson.project_name(), install_dir: python_install.get_install_dir())
 if host_machine.system() == 'linux'
-	install_data(
-	'data/com.github.danatationn.rencher.metainfo.xml',
-		install_dir: get_option('datadir') / 'metainfo'
-	)
-
     gnome.post_install(
     	gtk_update_icon_cache: true,
     	update_desktop_database: true,

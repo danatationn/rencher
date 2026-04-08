@@ -184,9 +184,6 @@ template $MainWindow : Adw.ApplicationWindow {
 										selection-mode: none;
 										styles ["boxed-list"]
 
-										//Adw.ExpanderRow log_row {
-										//	title: _("Log");
-										//}
 										Adw.ActionRow rpath_row {
 											title: _("Folder Location");
 											subtitle-selectable: true;
@@ -211,6 +208,31 @@ template $MainWindow : Adw.ApplicationWindow {
 											title: _("Codename");
 											subtitle-selectable: true;
 											styles ["property"]
+										}
+										Adw.ExpanderRow log_row {
+											title: _("Logs");
+											sensitive: false;
+
+										    ScrolledWindow {
+										        hscrollbar-policy: never;
+										        height-request: 200;
+										        margin-top: 6;
+										        margin-bottom: 6;
+										        margin-start: 12;
+										        margin-end: 12;
+
+										        TextView log_text_view {
+													left-margin: 6;
+													top-margin: 6;
+													right-margin: 6;
+										            editable: false;
+										            cursor-visible: false;
+										            wrap-mode: word_char;
+										            monospace: true;
+
+										            styles ["card"]
+										        }
+										    }
 										}
 									}
 

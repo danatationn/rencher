@@ -127,6 +127,9 @@ class MainApplication(Gtk.Application):
         self.quit()
 
     def on_show_about(self, *_):
+        log_path = os.path.join(local_path, 'log.txt')
+        with open(log_path) as f:
+            debug_info = f.read()
         dialog = Adw.AboutDialog(
             application_icon='com.github.danatationn.rencher',
             application_name='Rencher',
@@ -140,12 +143,16 @@ class MainApplication(Gtk.Application):
             license_type=Gtk.License.GPL_3_0_ONLY,
             developers=['danatationn'],
             designers=['danatationn', 'vl1'],
+            debug_info=debug_info,
+            debug_info_filename='log.txt',
+            release_notes="""<ul>
+                <li> Fixed bugs related to Discord RPC </li>
+                <li> Fixed a bug related to importing </li>
+                <li> Fixed Flatpak not passing environment variables </li>
+                <li> Added logs in About Dialog</li>
+            </ul>""",
+            release_notes_version=rencher.__version__,
         )
-        dialog.set_release_notes("""<ul>
-            <li> Fixed bugs related to Discord RPC </li>
-            <li> Fixed a bug related to importing </li>
-            <li> Fixed Flatpak not passing environment variables </li>
-        </ul>""")
 
         dialog.present(self.window)
 
