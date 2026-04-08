@@ -144,7 +144,7 @@ class RencherConfig(ConfigParser):
                 'skip_splash_scr': 'false',
                 'skip_main_menu': 'false',
                 'forced_save_dir': 'false',
-                'discord_rpc': 'true',
+                'discord_rpc': 'false',
                 'windowficate_filenames': 'true',
             },
         }

@@ -5,8 +5,6 @@ from pathlib import Path
 
 local_path = Path()
 config_path = Path()
-tmp_path: str = os.path.abspath(os.path.join(__file__, '..', '..'))
-home_path: str = os.path.expanduser('~')
 
 if platform.system() == 'Linux':
     data_home = Path(os.environ.get('XDG_DATA_HOME', Path.home() / '.local' / 'share'))
