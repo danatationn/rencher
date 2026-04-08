@@ -149,7 +149,8 @@ class MainApplication(Gtk.Application):
                 <li> Fixed bugs related to Discord RPC </li>
                 <li> Fixed a bug related to importing </li>
                 <li> Fixed Flatpak not passing environment variables </li>
-                <li> Added logs in About Dialog</li>
+                <li> Added logs in About Dialog </li>
+                <li> Added game logs in the main view </li>
             </ul>""",
             release_notes_version=rencher.__version__,
         )
