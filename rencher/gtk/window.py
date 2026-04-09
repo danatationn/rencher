@@ -20,6 +20,7 @@ from rencher.gtk.utils import open_file_manager
 if TYPE_CHECKING:
     from rencher.gtk.application import MainApplication
 
+
 @Gtk.Template.from_resource('/com/github/danatationn/rencher/ui/window.ui')
 class MainWindow(Adw.ApplicationWindow):
     __gtype_name__: str = 'MainWindow'
@@ -176,6 +177,7 @@ class MainWindow(Adw.ApplicationWindow):
 
         if _widget.get_style_context().has_class('suggested-action'):
             self.game_process = entry.game.run()
+            self.log_row.set_expanded(False)
             self.log_buf.set_text('')
             threading.Thread(target=self._read_stream, args=(self.game_process.stdout, False), daemon=True).start()
             threading.Thread(target=self._read_stream, args=(self.game_process.stderr, True), daemon=True).start()
@@ -236,7 +238,7 @@ class MainWindow(Adw.ApplicationWindow):
         if row:
             self.library_view_stack.set_visible_child_name('selected')
         # else:
-            # self.library_view_stack.set_visible_child_name('game-select')
+        # self.library_view_stack.set_visible_child_name('game-select')
 
         if entry := self.games.get(row, None):
             self.current_game_entry.refresh(entry.game)
@@ -304,7 +306,11 @@ class MainWindow(Adw.ApplicationWindow):
                 self.play_button.set_label('Stopping')
             else:
                 self.play_button.set_label('Stop')
-                if self.running and self.running.game and self.running.game.config['overwritten']['discord_rpc'] == 'true':
+                if (
+                    self.running
+                    and self.running.game
+                    and self.running.game.config['overwritten']['discord_rpc'] == 'true'
+                ):
                     self.app.rpc.update(state=self.running.game.name)
             self.play_button.get_style_context().remove_class('suggested-action')
             self.play_button.get_style_context().add_class('destructive-action')

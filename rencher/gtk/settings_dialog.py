@@ -143,7 +143,7 @@ class SettingsDialog(Adw.PreferencesDialog):
                     total_work += 1
 
             task_date = time.time()
-            GLib.idle_add(self.window.tasks_popover.new_task, task_date, 'le everything', TaskTypeEnum.DELETE, None,
+            GLib.idle_add(self.window.tasks_popover.new_task, task_date, 'everything', TaskTypeEnum.DELETE, None,
                           total_work)
 
             for _, dirs, _ in os.walk(games_dir):

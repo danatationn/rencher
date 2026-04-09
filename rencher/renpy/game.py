@@ -38,7 +38,7 @@ class Game:
                 name = os.path.basename(rpath)
                 raise GameInvalidError(f'{name} is not a valid game! ({rpath})')
 
-        config_path = os.path.join(self.apath, 'game/rencher.ini')
+        config_path = os.path.join(self.apath, 'game', 'rencher.ini')
         self.config = GameConfig(config_path)
 
     @override
@@ -198,7 +198,7 @@ class Game:
             args.extend(['-EO', py_path])
 
         if self.config['overwritten']['forced_save_dir'] == 'true':
-            save_dir = os.path.join(self.apath, 'game/saves')
+            save_dir = os.path.join(self.apath, 'game', 'saves')
 
             # save_slot = self.config['options'].getint('save_slot')
             # if 1 < save_slot <= 10:

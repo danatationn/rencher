@@ -67,22 +67,9 @@ def freeze(argv: list[str]):
         print(f'ERROR: "{argv[1]}" is not valid ("{rencher_module}" does not exist)' + USAGE_MSG)
         return
 
-    include_files.extend(find_files('*', rencher_module, 'lib', recursive=True))
-    include_files.extend(find_files('*', rencher_gres, 'share'))
-
-    include_files.extend(find_files('gdbus.exe', lib_dir, 'lib/'))
-
-    include_files.extend(find_files('*.conf', '/etc/fonts/', 'share/fonts/', True))
-    include_files.extend(find_files('libgtk-4*', lib_dir, 'lib/'))
-    include_files.extend(find_files('libadwaita-1*', lib_dir, 'lib/'))
-    include_files.extend(find_files('gschemas.compiled', base_prefix / 'share/glib-2.0/schemas/'))
-    include_files.extend(find_files('pixbuf-loaders.cache', base_prefix / 'lib/gdk-pixbuf-2.0/2.10.0/'))
-
-    for prefix in TYPELIB_PREFIXES:
-        include_files.extend(find_files(f'{prefix}*.typelib', base_prefix / 'lib/girepository-1.0/'))
-
-    loaders_dir = base_prefix / 'lib/gdk-pixbuf-2.0/2.10.0/'
+    loaders_dir = base_prefix / 'lib' / 'gdk-pixbuf-2.0' / '2.10.0'
     pixbuf_path = loaders_dir / 'loaders.cache'
+    adw_icon_dir = base_prefix / 'share' / 'icons' / 'Adwaita'
 
     tmp_dir = Path(tempfile.mkdtemp())
     tmp_pixbuf_path = tmp_dir / 'loaders.cache'
@@ -91,8 +78,19 @@ def freeze(argv: list[str]):
         temp_f.write(data.replace('lib\\\\gdk-pixbuf-2.0\\\\2.10.0\\\\loaders', 'lib'))
     include_files.extend(find_files('loaders.cache', tmp_dir, 'lib'))
     include_files.extend(find_files(f'*.{lib_ext}*', loaders_dir / 'loaders', 'lib'))
+    include_files.extend(find_files('*', rencher_module, 'lib', recursive=True))
+    include_files.extend(find_files('*', rencher_gres, 'share'))
+    include_files.extend(find_files('gdbus.exe', lib_dir, 'lib/'))
+    include_files.extend(find_files('*.conf', '/etc/fonts/', 'share/fonts/', True))
+    include_files.extend(find_files('libgtk-4*', lib_dir, 'lib/'))
+    include_files.extend(find_files('libadwaita-1*', lib_dir, 'lib/'))
+    include_files.extend(find_files('gschemas.compiled', base_prefix / 'share' / 'glib-2.0' / 'schemas/'))
+    include_files.extend(find_files('pixbuf-loaders.cache', base_prefix / 'lib' / 'gdk-pixbuf-2.0' / '2.10.0'))
 
-    build_dir = Path(argv[1], 'bin/rencher')
+    for prefix in TYPELIB_PREFIXES:
+        include_files.extend(find_files(f'{prefix}*.typelib', base_prefix / 'lib' / 'girepository-1.0'))
+
+    build_dir = Path(argv[1], 'bin', 'rencher')
     if len(argv) > 2:
         dest_dir = Path(argv[2])
     else:

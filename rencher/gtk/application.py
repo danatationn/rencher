@@ -34,7 +34,8 @@ class MainApplication(Gtk.Application):
 
     def __init__(self, *args, **kwargs):
         super().__init__(
-            *args, **kwargs,
+            *args,
+            **kwargs,
             application_id='com.github.danatationn.rencher',
             flags=Gio.ApplicationFlags.HANDLES_COMMAND_LINE | Gio.ApplicationFlags.NON_UNIQUE,
         )
@@ -146,11 +147,9 @@ class MainApplication(Gtk.Application):
             debug_info=debug_info,
             debug_info_filename='log.txt',
             release_notes="""<ul>
-                <li> Fixed bugs related to Discord RPC </li>
-                <li> Fixed a bug related to importing </li>
-                <li> Fixed Flatpak not passing environment variables </li>
-                <li> Added logs in About Dialog </li>
-                <li> Added game logs in the main view </li>
+                <li> Fixed Logs row not collapsing after starting a new game </li>
+                <li> Fixed "Delete Files on Import" not working with archives </li>
+                <li> Disabled changing your data directory temporarily due to some issues :) <li>
             </ul>""",
             release_notes_version=rencher.__version__,
         )
@@ -181,15 +180,13 @@ class MainApplication(Gtk.Application):
                 logging.info(download_url)
                 toast.set_title(f'A new update is available! (v{version_str})')
                 toast.set_button_label('Download')
-                toast.connect('button-clicked', lambda *_: (
-                    Gtk.show_uri(self.window, download_url, Gdk.CURRENT_TIME)
-                ))
+                toast.connect('button-clicked', lambda *_: Gtk.show_uri(self.window, download_url, Gdk.CURRENT_TIME))
 
                 GLib.idle_add(self.window.toast_overlay.add_toast, toast)
             elif upstream_version == rencher_version:
-                toast.set_title(f'You\'re up to date! (v{rencher.__version__})')
+                toast.set_title(f"You're up to date! (v{rencher.__version__})")
             else:
-                toast.set_title(f'You\'re bleeding-edge! (v{rencher.__version__})')
+                toast.set_title(f"You're bleeding-edge! (v{rencher.__version__})")
 
             if show_up_to_date_toast:
                 GLib.idle_add(self.window.toast_overlay.add_toast, toast)

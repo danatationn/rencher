@@ -57,7 +57,7 @@ class RencherFileMonitor(FileSystemEventHandler):
         self.observer.schedule(self, config_path)
         self.observer.schedule(self, self.data_dir, recursive=True)
         self.observer.start()
-        logging.debug(f'Watching "{self.data_dir}/" for changes')
+        logging.debug(f'Watching "{self.data_dir}" for changes')
 
     def queue_event(self, event: FileSystemEvent) -> None:
         # these are all the subsequent events from a directory event or whatever.

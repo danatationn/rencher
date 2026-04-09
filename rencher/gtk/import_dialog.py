@@ -164,10 +164,12 @@ class ImportDialog(Adw.PreferencesDialog):
                 else:
                     archive = rarfile.RarFile(location)
             except (rarfile.BadRarFile, rarfile.NotRarFile, zipfile.BadZipFile):
-                self.window.toast_overlay.add_toast(Adw.Toast(
-                    title='The archive supplied is invalid!',
-                    timeout=5,
-                ))
+                self.window.toast_overlay.add_toast(
+                    Adw.Toast(
+                        title='The archive supplied is invalid!',
+                        timeout=5,
+                    )
+                )
                 return
             else:
                 files = archive.namelist()
@@ -179,10 +181,12 @@ class ImportDialog(Adw.PreferencesDialog):
             return
 
         if not is_mod and not validate_game_files(files):
-            self.window.toast_overlay.add_toast(Adw.Toast(
-                title='The game supplied is invalid!',
-                timeout=5,
-            ))
+            self.window.toast_overlay.add_toast(
+                Adw.Toast(
+                    title='The game supplied is invalid!',
+                    timeout=5,
+                )
+            )
             return
 
         count = 2
@@ -192,10 +196,12 @@ class ImportDialog(Adw.PreferencesDialog):
         while rpath is None or not os.path.exists(rpath):
             if time.perf_counter() - start > 1:
                 # this will never happen unless you're a freak
-                self.window.toast_overlay.add_toast(Adw.Toast(
-                    title='Couldn\'t come up with a name',
-                    timeout=5,
-                ))
+                self.window.toast_overlay.add_toast(
+                    Adw.Toast(
+                        title="Couldn't come up with a name",
+                        timeout=5,
+                    )
+                )
                 return
 
             possible_paths = [
@@ -303,7 +309,7 @@ class ImportDialog(Adw.PreferencesDialog):
                     game_codenames.remove(modded_game.codename)
                     game.config.set('info', 'codename', game_codenames[0])
                 except ValueError:
-                    logging.warn('Couldn\'t determine codename')
+                    logging.warn("Couldn't determine codename")
                     pass
             game.config.write()
 
@@ -319,11 +325,14 @@ class ImportDialog(Adw.PreferencesDialog):
             logging.info(f'Importing done in {time.perf_counter() - start:.2f}s')
             if RencherConfig()['settings']['delete_on_import'] == 'true':
                 try:
+                    # if archive is still open windows will whine and scream and not let you
+                    if archive:
+                        archive.close()
                     os.unlink(location)
                 except PermissionError:
-                    logging.error('Couldn\'t delete archive! File left untouched')
+                    logging.error("Couldn't delete archive! File left untouched")
                 except Exception as e:
-                    logging.error(f'Couldn\'t delete archive! {e}')
+                    logging.error(f"Couldn't delete archive! {e}")
                 else:
                     logging.info(f'Archive "{location_stem}" deleted!')
 
