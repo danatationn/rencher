@@ -53,14 +53,15 @@ class Library(GObject.Object):
         data_dir = RencherConfig().get_data_dir()
         games_dir = Path(data_dir) / 'games'
         games_dir.mkdir(exist_ok=True, parents=True)
-        self.store.remove_all()
+        for item in list(self.store):
+            if isinstance(item, GameEntry):
+                self.remove_game(item.rpath)
 
         loop = asyncio.new_event_loop()
         asyncio.set_event_loop(loop)
         for d in games_dir.iterdir():
             rpath = os.path.join(games_dir, d)
             loop.run_in_executor(None, self.add_game, rpath)
-            # self.add_game(rpath)
 
     def add_game(self, rpath: str) -> None:
         if self.find(rpath):

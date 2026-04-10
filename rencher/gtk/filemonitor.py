@@ -145,7 +145,7 @@ class RencherFileMonitor(FileSystemEventHandler):
     @override
     def on_closed(self, event: FileClosedEvent | DirDeletedEvent | FileDeletedEvent) -> None:
         # edited
-        if event.src_path == config_path:
+        if config_path.samefile(event.src_path):
             if RencherConfig().get_data_dir() != self.data_dir:
                 self.monitor_data_dir()
         else:

@@ -149,7 +149,7 @@ class MainApplication(Gtk.Application):
             release_notes="""<ul>
                 <li> Fixed Logs row not collapsing after starting a new game </li>
                 <li> Fixed "Delete Files on Import" not working with archives </li>
-                <li> Disabled changing your data directory temporarily due to some issues :) <li>
+                <li> Disabled changing your data directory temporarily due to some issues :) </li>
             </ul>""",
             release_notes_version=rencher.__version__,
         )
