@@ -113,9 +113,7 @@ class Game:
 
     def get_exec_path(self) -> Path | None:
         for canditate in self._exec_candidates():
-            logging.debug(canditate)
             if canditate.is_file():
-                logging.debug(f'its {canditate}')
                 return canditate
         return None
 
@@ -176,31 +174,32 @@ class Game:
         """
             launches the game with the specified options
         """
-        self.setup()
         self.config.read()  # just to be SURE
 
         exec_path = self.get_exec_path()
+        if not exec_path:
+            return  # TODO
         args: list[str] = [str(exec_path)]
 
-        # if you call the file directly and it has windows line endings on unix, it will break and not run it
-        # this bypasses that
-        if exec_path and exec_path.suffix in ['.sh', '.bash']:
-            args.insert(0, 'bash')
-        elif exec_path and exec_path.suffix == '.py':
+        # bash can't run files with crlf line endings. convert to lf
+        if exec_path.suffix == '.sh':
+            temp_path = exec_path.with_suffix('.tmp')
+            has_crlf: bool = False
+            with open(exec_path, 'rb') as f_in, open(temp_path, 'wb') as f_out:
+                if f_in.readline().endswith(b'\r\n'):
+                    logging.debug(f'"{self.rpath}" has crlf line endings. Converting')
+                    has_crlf = True
+                    f_in.seek(0)
+                    for line in f_in:
+                        f_out.write(line.replace(b'\r\n', b'\n'))
+            if has_crlf:
+                temp_path.replace(exec_path)
+        # python can however
+        elif exec_path.suffix == '.py':
             args.insert(0, sys.executable)
-        # TODO if args[0] == '':
 
+        self.setup()
         env: dict[str, str] = {}
-
-        # check for line endings
-        # with open(args[0], 'rb') as f:
-        #     first_line = f.readline()
-        #     if first_line.endswith(b'\r\n') and platform.system() != 'Windows':
-        #         logging.debug('Windows line endings detected. Converting launch script...')
-        #         f.seek(0)
-        #         bytes = f.read()
-        #         with open(args[0], 'wb') as f:
-        #             f.write(bytes.replace(b'\r\n', b'\n'))
 
         if self.config['overwritten']['skip_splash_scr'] == 'true':
             env['RENPY_SKIP_SPLASHSCREEN'] = '1'
@@ -266,13 +265,13 @@ class Game:
         if platform.system() != 'Linux':
             return
 
-        logging.debug('Doing setup...')
-
         for candidate in self._exec_candidates():
             if not candidate.is_file():
                 continue
-            mode = os.stat(candidate).st_mode
-            os.chmod(candidate, mode | 0o111)
+            if not os.access(candidate, os.X_OK) and platform.system() != 'Windows':
+                logging.debug(f'Making "{candidate}" executable')
+                mode = os.stat(candidate).st_mode
+                os.chmod(candidate, mode | 0o111)
 
             if candidate.parent == self.apath:
                 # we're not in lib. where we want to actually do stuff
@@ -282,12 +281,15 @@ class Game:
             librenpython_path = candidate.parent/'librenpython.so'
             if libs_path.is_dir() and librenpython_path.is_file():
                 shutil.rmtree(libs_path)
-                logging.debug(f'Patched {candidate.parent.name}!')
+                logging.debug(f'Patched {candidate.parent.name}')
 
     def cleanup(self, playtime: float) -> None:
         self.config.read()
-        self.config['info']['playtime'] = str(playtime)
-        self.config['info']['last_played'] = str(int(time.time()))
+        total = self.config.get_value('playtime') or 0.0
+        assert(isinstance(total, float))
+        self.config['info']['playtime'] = str(playtime + total)
+        self.config['info']['last_played'] = str(time.time())
+        self.config.set('info', 'last_played', str(time.time()))
         self.config.write()
 
     @property

@@ -96,23 +96,28 @@ class MainWindow(Adw.ApplicationWindow):
         entry.refresh()
 
     def _on_game_removed(self, _library: Library, entry: GameEntry) -> None:
-        row = self.rows.pop(entry, None)
-        if row:
-            was_selected = row == self.library_list_box.get_selected_row()
-            next_row = row.get_next_sibling() or row.get_prev_sibling()
+        if row := self.rows.pop(entry, None):
+            del self.games[row]
 
-            self.games.pop(row, None)
-            GLib.idle_add(self.library_list_box.remove, row)
+            def _do_remove() -> bool:
+                was_selected = row == self.library_list_box.get_selected_row()
+                next_row = row.get_next_sibling() or row.get_prev_sibling()
 
-            if was_selected and next_row:
-                GLib.idle_add(self.library_list_box.select_row, next_row)
+                self.library_list_box.remove(row)
+
+                if was_selected and next_row and isinstance(next_row, GameRow):
+                    self.library_list_box.select_row(next_row)
+
+                return GLib.SOURCE_REMOVE
+
+            GLib.idle_add(_do_remove)
 
         if len(self.library.store) == 0:
             self.library_view_stack.set_visible_child_name('empty')
             self.split_view.set_show_sidebar(False)
 
-        if self.game_views.get(entry, None):
-            self.game_views.pop(entry)
+        if view := self.game_views.pop(entry, None):
+            self.library_view_stack.remove(view)
 
     def _on_task_started(self, _library: Library, task: RencherTask, entry: GameEntry | None) -> None:
         if entry:
@@ -146,7 +151,6 @@ class MainWindow(Adw.ApplicationWindow):
                 self.rows[entry] = row
                 self.games[row] = entry
 
-        # only this one works
         self.library_list_box.invalidate_sort()
 
     def _on_message(self, _task: RencherTask, text: str) -> None:
@@ -166,7 +170,7 @@ class MainWindow(Adw.ApplicationWindow):
                 view = self.game_views.get(entry, None)
 
                 if not view:
-                    view = GameDetailView(entry, self.app.rpc, row)
+                    view = GameDetailView(entry, self.app.rpc, row, self.library)
                     self.game_views[entry] = view
                     self.library_view_stack.add_named(view, entry.rpath)
 
@@ -212,8 +216,8 @@ class MainWindow(Adw.ApplicationWindow):
         # entry is currently importing . so whatevsif not entry_one or not entry_two:
         if one.has_task or two.has_task:
             if self.combo_index == SortComboEnum.NAME:
-                one_value = one.btn.get_title()
-                two_value = two.btn.get_title()
+                one_value = one.btn.get_title().lower()
+                two_value = two.btn.get_title().lower()
             else:
                 return 0
         elif not entry_one or not entry_one.game or not entry_two or not entry_two.game:

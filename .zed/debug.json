@@ -1,0 +1,13 @@
+[
+  {
+    "label": "Rencher",
+    "adapter": "Debugpy",
+    "request": "launch",
+    "program": "$ZED_WORKTREE_ROOT/build/rencher",
+    "args": ["--verbose"],
+    "cwd": "$ZED_WORKTREE_ROOT",
+    "env": {
+      "MESON_BUILD_ROOT": "$ZED_WORKTREE_ROOT/build"
+    }
+  }
+]

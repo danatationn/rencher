@@ -155,6 +155,8 @@ class GameEntry(GObject.Object):
         return self._game.config.get_value('nickname') != ''
     @property
     def process(self) -> subprocess.Popen[bytes] | None:
+        if self._process and self._process.poll() is not None:
+            self._process = None
         return self._process
     @property
     def config(self) -> GameConfig:

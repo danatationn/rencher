@@ -1,5 +1,7 @@
 import logging
 import os.path
+import subprocess
+import time
 from pathlib import Path
 from typing import TYPE_CHECKING
 
@@ -13,36 +15,54 @@ from rencher.renpy.game import Game, GameInvalidError, GameNoExecutableError
 if TYPE_CHECKING:
     from rencher.gtk.window import MainWindow
 
+CHECK_PROCESS_MS: int = 250
+
 
 class Library(GObject.Object):
     window: 'MainWindow'
     store: Gio.ListStore
+    processes: dict[GameEntry, tuple[subprocess.Popen[bytes], float]]  # time
+    _terminating_processes: list[subprocess.Popen[bytes]]
 
     # signal name: flags, return types, arg types
     __gsignals__: dict[str, tuple[GObject.SignalFlags, None, tuple[type, ...]]] = {
-        'game-added': (GObject.SignalFlags.RUN_FIRST, None, (GameEntry,)),
-        'game-removed': (GObject.SignalFlags.RUN_FIRST, None, (GameEntry,)),
-        'game-changed': (GObject.SignalFlags.RUN_FIRST, None, (GameEntry,)),
-        'task-started': (GObject.SignalFlags.RUN_FIRST, None, (RencherTask, object)),
-        'task-finished': (GObject.SignalFlags.RUN_FIRST, None, (RencherTask, object)),
-        'message': (GObject.SignalFlags.RUN_FIRST, None, (str,)),
+        'game-added':       (GObject.SignalFlags.RUN_FIRST, None, (GameEntry,)),
+        'game-removed':     (GObject.SignalFlags.RUN_FIRST, None, (GameEntry,)),
+        'game-changed':     (GObject.SignalFlags.RUN_FIRST, None, (GameEntry,)),
+        # object = subprocess.Popen[bytes]
+        'game-launched':    (GObject.SignalFlags.RUN_FIRST, None, (GameEntry, object)),
+        # object, object = subprocess.Popen[bytes] | None, Error | None
+        'game-closed':      (GObject.SignalFlags.RUN_FIRST, None, (GameEntry, object, object)),
+        'task-started':     (GObject.SignalFlags.RUN_FIRST, None, (RencherTask, object)),
+        # object = Error | None
+        'task-finished':    (GObject.SignalFlags.RUN_FIRST, None, (RencherTask, object)),
+        'message':          (GObject.SignalFlags.RUN_FIRST, None, (str,)),
     }
 
     def __init__(self, window: 'MainWindow'):
         super().__init__()
         self.window = window
         self.store = Gio.ListStore(item_type=GameEntry)
+        self.processes = {}
+        self._terminating_processes = []
 
         action_group = Gio.SimpleActionGroup.new()
-        # s = apath
+        # s = rpath
         delete_action = Gio.SimpleAction.new_stateful('delete-game', GLib.VariantType.new('s'), GLib.Variant('d', 0.0))
-        delete_action.connect('activate', self.delete_game)
+        delete_action.connect('activate', self._delete_game)
         # sss = rpath, nickname, game rpath
         import_action = Gio.SimpleAction.new_stateful('import-game', GLib.VariantType('(sss)'), GLib.Variant('d', 0.0))
-        import_action.connect('activate', self.import_game)
+        import_action.connect('activate', self._import_game)
+        # s = rpath
+        run_action = Gio.SimpleAction.new('run-game', GLib.VariantType.new('s'))
+        run_action.connect('activate', self._run_game)
+        stop_action = Gio.SimpleAction.new('stop-game', GLib.VariantType.new('s'))
+        stop_action.connect('activate', self._close_game)
 
         action_group.add_action(delete_action)
         action_group.add_action(import_action)
+        action_group.add_action(run_action)
+        action_group.add_action(stop_action)
 
         self.window.insert_action_group('library', action_group)
 
@@ -107,7 +127,7 @@ class Library(GObject.Object):
             self.emit('game-changed', game_item)
         logging.debug(f'Changed: "{os.path.basename(rpath)}"')
 
-    def delete_game(self, _action: Gio.SimpleAction, parameter: GLib.Variant) -> None:
+    def _delete_game(self, _action: Gio.SimpleAction, parameter: GLib.Variant) -> None:
         rpath = parameter.get_string()
         task = DeleteGameTask(rpath)
         if result := self.find(rpath):
@@ -126,7 +146,7 @@ class Library(GObject.Object):
         task.connect('notify::finished', _on_finished)
         task.start()
 
-    def import_game(self, _action: Gio.SimpleAction, parameter: GLib.Variant) -> None:
+    def _import_game(self, _action: Gio.SimpleAction, parameter: GLib.Variant) -> None:
         file_path = parameter.get_child_value(0).get_string()
         nickname = parameter.get_child_value(1).get_string()
         nickname = nickname if nickname != '' else None
@@ -149,3 +169,73 @@ class Library(GObject.Object):
         task.connect('message', self._msg)
         task.connect('notify::finished', _on_finished)
         task.start()
+
+    def _run_game(self, _action: Gio.SimpleAction, param: GLib.Variant) -> None:
+        rpath = param.get_string()
+        if not (result := self.find(rpath)):
+            logging.error(f'No game found at "{rpath}"')
+            return
+        entry = result[1]
+        if entry in self.processes:
+            logging.error(f'Game "{rpath}" is already running')
+            return
+
+        logging.info(f'Launching "{rpath}"...')
+
+        try:
+            process = entry.run()
+        except Exception as e:
+            self.emit('game-closed', entry, None, e)
+            return
+        else:
+            self.processes[entry] = ((process, time.time()))
+            self.emit('game-launched', entry, process)
+
+        def _watch_process() -> bool:
+            if process in self._terminating_processes:
+                return GLib.SOURCE_REMOVE
+            if process.poll() is not None:
+                self._cleanup_game(entry)
+                return GLib.SOURCE_REMOVE
+            return GLib.SOURCE_CONTINUE
+
+        GLib.timeout_add(CHECK_PROCESS_MS, _watch_process)
+
+    def _close_game(self, _action: Gio.SimpleAction, param: GLib.Variant) -> None:
+        rpath = param.get_string()
+        if not (result := self.find(rpath)):
+            logging.error(f'No game found at "{rpath}"')
+            return
+        entry = result[1]
+        if entry not in self.processes:
+            return
+
+        logging.info(f'Closing "{rpath}"...')
+
+        process = self.processes[entry][0]
+        if process.poll() is not None:
+            self._cleanup_game(entry)
+        else:
+            process.terminate()
+
+            if process not in self._terminating_processes:
+                self._terminating_processes.append(process)
+
+                def _wait_to_term() -> bool:
+                    if process.poll() is not None:
+                        self._cleanup_game(entry)
+                        return GLib.SOURCE_REMOVE
+                    return GLib.SOURCE_CONTINUE
+
+                GLib.timeout_add(CHECK_PROCESS_MS, _wait_to_term)
+
+    def is_running(self, rpath: str) -> bool:
+        return rpath in self.processes
+
+    def _cleanup_game(self, entry: GameEntry) -> None:
+        process, start = self.processes[entry]
+        del self.processes[entry]
+
+        entry.game.cleanup(time.time() - start)
+
+        self.emit('game-closed', entry, process, None)
