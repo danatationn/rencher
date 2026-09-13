@@ -19,18 +19,19 @@
     <file compressed="true">icons/scalable/apps/rencher-icon-symbolic.svg</file>
     <file compressed="true">icons/scalable/actions/xbox-controller-symbolic.svg</file>
     <file compressed="true">icons/scalable/actions/cogged-wheel-symbolic.svg</file>
-    <file compressed="true">icons/scalable/actions/view-sort-ascending-symbolic.svg</file>
+    <file compressed="true">icons/scalable/actions/object-flip-vertical-symbolic.svg</file>
     <file compressed="true">icons/scalable/actions/list-add-symbolic.svg</file>
     <file compressed="true">icons/scalable/actions/loupe-large-symbolic.svg</file>
     <file compressed="true">icons/scalable/actions/folder-open-symbolic.svg</file>
     <file compressed="true">icons/scalable/actions/external-link-symbolic.svg</file>
     <file compressed="true">icons/scalable/actions/file-cabinet-symbolic.svg</file>
-    <file compressed="true">icons/scalable/actions/library-symbolic.svg</file>
     <file compressed="true">icons/scalable/actions/document-edit-symbolic.svg</file>
     <file compressed="true">icons/scalable/actions/menu-large-symbolic.svg</file>
-    <file compressed="true">icons/scalable/actions/test-pass-symbolic.svg</file>
-    <file compressed="true">icons/scalable/actions/list-large-symbolic.svg</file>
-    <file compressed="true">icons/scalable/actions/stop-large-symbolic.svg</file>
-    <file compressed="true">icons/scalable/actions/cross-large-symbolic.svg</file>
+    <file compressed="true">icons/scalable/actions/harddisk-symbolic.svg</file>
+    <file compressed="true">icons/scalable/actions/branch-symbolic.svg</file>
+    <file compressed="true">icons/scalable/actions/logs-symbolic.svg</file>
+    <file compressed="true">icons/scalable/actions/hourglass-symbolic.svg</file>
+    <file compressed="true">icons/scalable/actions/folder-visiting-symbolic.svg</file>
+    <file compressed="true">icons/scalable/actions/paper-symbolic.svg</file>
   </gresource>
 </gresources>

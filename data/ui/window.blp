@@ -1,139 +1,153 @@
 using Gtk 4.0;
 using Adw 1;
 
-template $MainWindow : Adw.ApplicationWindow {
-	title: "Rencher";
-	default-width: 800;
-	default-height: 600;
+template $MainWindow: Adw.Window {
+  Adw.Breakpoint {}
 
-	content: Adw.ToolbarView {
-		top-bar-style: raised;
+  Adw.ToastOverlay toast_overlay {
+    Adw.NavigationSplitView {
+      content: Adw.NavigationPage {
+        child: Adw.ToolbarView {
+          content: Adw.ViewStack library_view_stack {
+            Adw.ViewStackPage empty_view {
+              child: Adw.StatusPage {
+                child: Button {
+                  halign: center;
+                  label: _("Import");
+                  clicked => $on_import_clicked();
 
-		[top]
-		HeaderBar {
-		    [start]
-		    Button {
-				icon-name: "list-add-symbolic";
-				clicked => $on_import_clicked();
-				tooltip-text: _("Import");
-		    }
-		    [start]
-		    ToggleButton library_search_button {
-		        icon-name: "loupe-large-symbolic";
-		        sensitive: bind split_view.show-sidebar;
-		        tooltip-text: _("Search");
-				toggled => $on_search_toggled();
-		    }
+                  styles [
+                    "pill",
+                    "suggested-action",
+                  ]
+                };
 
-			[end]
-		    MenuButton {
-		        icon-name: "menu-large-symbolic";
-		        menu-model: hamburger_menu;
-		    }
-	    }
+                description: _("Add a visual novel by clicking the Import button");
+                icon-name: "xbox-controller-symbolic";
+                title: _("No Games Installed");
+              };
 
-		content: Overlay window_overlay {
-			Adw.ToastOverlay toast_overlay {
-				child: Adw.OverlaySplitView split_view {
-					show-sidebar: false;
+              name: "empty";
+            }
 
-					sidebar: Box {
-						Box {
-							styles ["view"]
+            Adw.ViewStackPage game_select_view {
+              child: Adw.StatusPage {
+                description: _("Select a game from the sidebar to get started");
+                icon-name: "rencher-icon-symbolic";
+                title: _("Welcome to Rencher!");
+              };
 
-							orientation: vertical;
+              name: "game-select";
+            }
+          };
 
-							SearchBar {
-								search-mode-enabled: bind library_search_button.active;
-								Box {
-									SearchEntry library_search_entry {
-										placeholder-text: _("Search");
-										search-changed => $on_search_changed();
-									}
-								}
-							}
-							ScrolledWindow {
-								hscrollbar-policy: never;
-								ListBox library_list_box {
-									show-separators: true;
-									vexpand: true;
+          [top]
+          Adw.HeaderBar {}
+        };
 
-									row-selected => $on_game_selected();
-								}
-							}
-							Box {
-								// make this float !!!!
+        title: "Rencher";
+      };
 
-								styles ["linked"]
+      sidebar: Adw.NavigationPage {
+        // title: _("Library");
+        child: Adw.ToolbarView {
+          content: ScrolledWindow {
+            ListBox library_list_box {
+              styles [
+                "navigation-sidebar",
+              ]
 
-								margin-bottom: 8;
-								margin-start: 8;
-								margin-end: 8;
-								margin-top: 8;
+              row-selected => $on_game_selected();
+            }
+          };
 
-								DropDown {
-									model: StringList {
-										strings: ["Name", "Last Played", "Playtime", "Added On"];
-									};
-									hexpand: true;
+          [top]
+          Adw.HeaderBar {
+            [start]
+            Button {
+              icon-name: "list-add-symbolic";
+              clicked => $on_import_clicked();
+            }
 
-									notify::selected => $on_combo_changed();
-								}
-								ToggleButton ascending_order_button {
-									icon-name: "view-sort-ascending";
-									tooltip-text: _("Reverse Sorting");
+            [end]
+            MenuButton {
+              icon-name: "menu-large-symbolic";
+              menu-model: hamburger_menu;
+            }
 
-									toggled => $on_order_changed();
-								}
-							}
-						}
-					};
+            [end]
+            Button {
+              icon-name: "view-refresh-symbolic";
+              action-name: "app.refresh-games";
+            }
 
-				    content: Adw.ViewStack library_view_stack {
-						Adw.ViewStackPage empty_view {
-							name: 'empty';
+            [end]
+            ToggleButton library_search_button {
+              icon-name: "system-search-symbolic";
+              toggled => $on_search_toggled();
+            }
+          }
 
-						    child: Adw.StatusPage {
-								icon-name: "xbox-controller-symbolic";
-								title: _("No Games Installed");
-								description: _("Add a visual novel by clicking the Import button");
-								child: Gtk.Button {
-									halign: center;
-									label: _("Import");
-									clicked => $on_import_clicked();
+          [top]
+          SearchBar {
+            search-mode-enabled: bind library_search_button.active;
 
-									styles ["pill", "suggested-action"]
-								};
-							};
-				        }
+            child: Box {
+              orientation: vertical;
+              spacing: 6;
 
-						Adw.ViewStackPage game_select_view {
-							name: 'game-select';
+              SearchEntry library_search_entry {
+                placeholder-text: "Search games...";
+                search-changed => $on_search_changed();
+              }
 
-							child: Adw.StatusPage {
-								title: _("Welcome to Rencher!");
-								description: _("Select a game from the sidebar to get started");
-								icon-name: "rencher-icon-symbolic";
-							};
-						}
-					};
-				};
-			}
-			[overlay]
-			ProgressBar window_progress_bar {
-				styles ["osd"]
-				visible: false;
-				can-focus: false;
+              Box {
+                spacing: 6;
 
-				valign: start;
-			}
-		};
-    };
+                DropDown {
+                  hexpand: true;
+
+                  model: StringList {
+                    strings: [
+                      "Name",
+                      "Last Played",
+                      "Playtime",
+                      "Added On",
+                    ];
+                  };
+
+                  notify::selected => $on_combo_changed();
+                }
+
+                ToggleButton ascending_order_button {
+                  icon-name: "object-flip-vertical-symbolic";
+                  toggled => $on_order_changed();
+                }
+              }
+            };
+          }
+        };
+      };
+    }
+  }
+
+  default-height: 600;
+  default-width: 800;
 }
 
 menu hamburger_menu {
-	item (_("Preferences"), "app.show-preferences")
-	item (_("Refresh Games"), "app.refresh-games")
-	item (_("Keyboard Shortcuts"), "app.show-shortcuts")
-	item (_("About Rencher"), "app.show-about")
+  item {
+    action: "app.show-preferences";
+    label: "Preferences";
+  }
+
+  item {
+    action: "app.show-shortcuts";
+    label: "Keyboard Shortcuts";
+  }
+
+  item {
+    action: "app.show-about";
+    label: "About Rencher";
+  }
 }

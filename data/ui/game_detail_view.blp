@@ -2,176 +2,173 @@ using Gtk 4.0;
 using Adw 1;
 
 template $GameDetailView: Box {
-	orientation: vertical;
+  orientation: vertical;
 
-	Adw.StatusPage title_status_page {
-		title: "Title";
-		valign: start;
-		halign: center;
+  Adw.StatusPage title_status_page {
+    child: Box {
+      margin-end: 6;
+      margin-start: 6;
+      orientation: vertical;
+      spacing: 18;
+      width-request: 500;
 
-		child: Box {
-			spacing: 16;
-			orientation: vertical;
-			width-request: 500;
+      Box {
+        halign: center;
+        orientation: horizontal;
+        spacing: 6;
 
-			Box {
-				orientation: horizontal;
-				halign: center;
-				spacing: 8;
+        Button play_button {
+          label: _("Play");
+          clicked => $on_play_clicked();
 
-				Button play_button {
-					styles [
-						"pill",
-						"suggested-action",
-					]
+          styles [
+            "pill",
+            "suggested-action",
+          ]
+        }
 
-					label: _("Play");
-					clicked => $on_play_clicked();
-				}
+        Button options_button {
+          icon-name: "cogged-wheel-symbolic";
+          valign: center;
+          clicked => $on_options_clicked();
 
-				Button options_button {
-					styles [
-						"circular",
-					]
+          styles [
+            "circular",
+          ]
+        }
+      }
 
-					valign: center;
-					icon-name: "cogged-wheel-symbolic";
-					clicked => $on_options_clicked();
-				}
-			}
+      ListBox {
+        selection-mode: none;
 
-			ListBox {
-				selection-mode: none;
+        Adw.ActionRow last_played_row {
+          title: _("Last Played");
 
-				styles [
-					"boxed-list",
-				]
+          styles [
+            "property",
+          ]
+        }
 
-				Adw.ActionRow last_played_row {
-					title: _("Last Played");
+        Adw.ActionRow playtime_row {
+          title: _("Playtime");
+          // icon-name: "hourglass-symbolic";
 
-					styles [
-						"property",
-					]
-				}
+          styles [
+            "property",
+          ]
+        }
 
-				Adw.ActionRow playtime_row {
-					title: _("Playtime");
+        Adw.ActionRow added_on_row {
+          title: _("Added On");
 
-					styles [
-						"property",
-					]
-				}
+          styles [
+            "property",
+          ]
+        }
 
-				Adw.ActionRow added_on_row {
-					title: _("Added On");
+        styles [
+          "boxed-list",
+        ]
+      }
 
-					styles [
-						"property",
-					]
-				}
-			}
+      ListBox {
+        selection-mode: none;
 
-			ListBox {
-				selection-mode: none;
+        Adw.ActionRow rpath_row {
+          subtitle-selectable: true;
+          title: _("Folder Location");
+          // icon-name: "folder-visiting-symbolic";
 
-				styles [
-					"boxed-list",
-				]
+          [suffix]
+          Button {
+            // icon-name: "external-link-symbolic";
+            valign: center;
+            clicked => $on_dir_clicked();
 
-				Adw.ActionRow rpath_row {
-					title: _("Folder Location");
-					subtitle-selectable: true;
+            styles [
+              "flat",
+            ]
+          }
 
-					[suffix]
-					Button {
-						icon-name: "external-link-symbolic";
+          styles [
+            "property",
+          ]
+        }
 
-						styles [
-							"flat",
-						]
+        Adw.ActionRow version_row {
+          subtitle-selectable: true;
+          title: _("Engine Version");
+          // icon-name: "branch-symbolic";
 
-						valign: center;
-						clicked => $on_dir_clicked();
-					}
+          [suffix]
+          Image {
+            height-request: 34;
+            icon-name: "info-outline-symbolic";
+            tooltip-text: _("Refers to what version of Ren'Py was used to make the game; not the version of the game itself.");
+            valign: center;
+            width-request: 34;
+          }
 
-					styles [
-						"property",
-					]
-				}
+          styles [
+            "property",
+          ]
+        }
 
-				Adw.ActionRow version_row {
-					title: _("Engine Version");
-					subtitle-selectable: true;
+        Adw.ActionRow codename_row {
+          subtitle-selectable: true;
+          title: _("Codename");
 
-					styles [
-						"property",
-					]
+          [suffix]
+          Image {
+            height-request: 34;
+            icon-name: "info-outline-symbolic";
+            tooltip-text: _("Refers to what the game is called internally.");
+            valign: center;
+            width-request: 34;
+          }
 
-					[suffix]
-					Image {
-    					tooltip-text: _("Refers to what version of Ren'Py was used to make the game; not the version of the game itself.");
-					    valign: center;
-					    icon-name: "info-outline-symbolic";
-						width-request: 34;
-						height-request: 34;
-					}
-				}
+          styles [
+            "property",
+          ]
+        }
 
-				Adw.ActionRow codename_row {
-					title: _("Codename");
-					subtitle-selectable: true;
+        Adw.ExpanderRow log_row {
+          sensitive: false;
+          title: _("Logs");
+          // icon-name: "logs-symbolic";
 
-					styles [
-						"property",
-					]
+          ScrolledWindow {
+            height-request: 200;
+            hscrollbar-policy: never;
+            margin-bottom: 6;
+            margin-end: 12;
+            margin-start: 12;
+            margin-top: 6;
 
-					[suffix]
-					Image {
-    					tooltip-text: _("Refers to what the game is called internally.");
-					    valign: center;
-					    icon-name: "info-outline-symbolic";
-						width-request: 34;
-						height-request: 34;
-					}
-				}
+            TextView log_text_view {
+              cursor-visible: false;
+              editable: false;
+              left-margin: 6;
+              monospace: true;
+              right-margin: 6;
+              top-margin: 6;
+              wrap-mode: word_char;
 
-				Adw.ExpanderRow log_row {
-					title: _("Logs");
-					sensitive: false;
+              styles [
+                "card",
+              ]
+            }
+          }
+        }
 
-					ScrolledWindow {
-						hscrollbar-policy: never;
-						height-request: 200;
-						margin-top: 6;
-						margin-bottom: 6;
-						margin-start: 12;
-						margin-end: 12;
+        styles [
+          "boxed-list",
+        ]
+      }
+    };
 
-						TextView log_text_view {
-							left-margin: 6;
-							top-margin: 6;
-							right-margin: 6;
-							editable: false;
-							cursor-visible: false;
-							wrap-mode: word_char;
-							monospace: true;
-
-							styles [
-								"card",
-							]
-						}
-					}
-				}
-			}
-
-			// ListBox {
-			// 	selection-mode: none;
-			// 	styles ["boxed-list"]
-			// 	Adw.ExpanderRow {
-			// 		title: _("Screenshots");
-			// 	}
-			// }
-		};
-	}
+    halign: center;
+    title: "Title";
+    valign: start;
+  }
 }

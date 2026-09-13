@@ -2,85 +2,86 @@ using Gtk 4.0;
 using Adw 1;
 
 template $ImportDialog: Adw.Dialog {
-	title: _("Import");
-	content-width: 600;
-	// TODO make it stretch . when the banner comes down it squishes the content .
-	// i've had this issue in the past
-	// follows-content-size: true;
+  title: _("Import");
+  follows-content-size: true;
+  width-request: 600;
 
-	child: Adw.ToolbarView {
-		top-bar-style: raised;
+  child: WindowHandle {
+    hexpand: true;
+    vexpand: true;
 
-		[top]
-		Adw.HeaderBar {}
+    Adw.ToolbarView {
+      [top]
+      Adw.HeaderBar {}
 
-		[top]
-		Adw.Banner validation_banner {}
+      [top]
+      Adw.Banner validation_banner {}
 
-		content: Adw.PreferencesPage {
-			Adw.PreferencesGroup {
-				Adw.EntryRow title_entry {
-					title: _("Title");
-				}
+      content: Adw.PreferencesPage {
+        Adw.PreferencesGroup {
+          Adw.EntryRow title_entry {
+            title: _("Title");
+          }
 
-				Adw.ActionRow type_combo {
-					title: _("Type");
-					Adw.ToggleGroup {
-    					notify::active => $on_type_changed();
-					    Adw.Toggle {
-							icon-name: "file-cabinet-symbolic";
-							label: _("Archive");
-						}
-						Adw.Toggle {
-						    icon-name: "folder-open-symbolic";
-						    label: _("Folder");
-						}
+          Adw.ActionRow type_combo {
+            title: _("Type");
 
-						valign: center;
-					}
-				}
+            Adw.ToggleGroup {
+              valign: center;
+              notify::active => $on_type_changed();
 
-				Adw.EntryRow location_entry {
-					title: _("Archive Location");
-					changed => $on_location_changed();
+              Adw.Toggle {
+                icon-name: "file-cabinet-symbolic";
+                label: _("Archive");
+              }
 
-					[suffix]
-					Button location_picker {
-						icon-name: "file-cabinet-symbolic";
+              Adw.Toggle {
+                icon-name: "folder-open-symbolic";
+                label: _("Folder");
+              }
+            }
+          }
 
-						styles [
-							"flat",
-						]
+          Adw.EntryRow location_entry {
+            title: _("Archive Location");
+            changed => $on_location_changed();
 
-						valign: center;
-						clicked => $on_picker_clicked();
-					}
-				}
-			}
+            [suffix]
+            Button location_picker {
+              icon-name: "file-cabinet-symbolic";
+              valign: center;
+              clicked => $on_picker_clicked();
 
-			Adw.PreferencesGroup {
-				Adw.ComboRow game_combo {
-				    title: _("Target Game");
-					enable-search: true;
+              styles [
+                "flat",
+              ]
+            }
+          }
+        }
 
-					Image {
-    					valign: center;
-                        width-request: 34;
-                        height-request: 34;
-					    icon-name: "info-outline-symbolic";
-						tooltip-text: _("This replaces the original game's files, if using the right mod for the right game. You'll use this mostly with DDLC.");
-					}
-				}
-			}
+        Adw.PreferencesGroup {
+          Adw.ComboRow game_combo {
+            enable-search: true;
+            title: _("Target Game");
 
-			Adw.PreferencesGroup {
-				Adw.ButtonRow import_button {
-					title: _("Import");
-					sensitive: false;
-					activated => $on_import_clicked();
-					// action-name: "library.import-game";
-				}
-			}
-		};
-	};
+            Image {
+              height-request: 34;
+              icon-name: "info-outline-symbolic";
+              tooltip-text: _("This replaces the original game's files, if using the right mod for the right game. You'll use this mostly with DDLC.");
+              valign: center;
+              width-request: 34;
+            }
+          }
+        }
+
+        Adw.PreferencesGroup {
+          Adw.ButtonRow import_button {
+            sensitive: false;
+            title: _("Import");
+            activated => $on_import_clicked();
+          }
+        }
+      };
+    }
+  };
 }

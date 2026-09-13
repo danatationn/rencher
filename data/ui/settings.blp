@@ -1,86 +1,103 @@
 using Gtk 4.0;
 using Adw 1;
 
-template $SettingsDialog : Adw.PreferencesDialog {
-	title: _("Settings");
+template $SettingsDialog: Adw.PreferencesDialog {
+  title: _("Settings");
 
-	Adw.PreferencesPage {
-		Adw.PreferencesGroup {
-			title: _("Data Preferences");
+  Adw.PreferencesPage {
+    Adw.PreferencesGroup {
+      title: _("Data Preferences");
 
-			Adw.EntryRow data_dir_entry {
-				title: _("Data Directory");
-				// sensitive: false; // :)
+      Adw.EntryRow data_dir_entry {
+        title: _("Data Directory");
 
-				[suffix]
-				Button {
-					icon-name: "external-link-symbolic";
-					styles ["flat"]
-					valign: center;
+        [suffix]
+        Button {
+          icon-name: "external-link-symbolic";
+          valign: center;
+          clicked => $on_dir_clicked();
 
-					clicked => $on_dir_clicked();
-				}
-				Button {
-					styles ["flat"]
-					valign: center;
-					icon-name: "folder-open-symbolic";
+          styles [
+            "flat",
+          ]
+        }
 
-					clicked => $on_picker_clicked();
-				}
-			}
-			Adw.ButtonRow {
-				title: _("Reset Data Directory");
-				activated => $on_reset_data_dir();
-			}
-			Adw.ButtonRow {
-				// i can't be arsed right now
-				styles ["destructive-action"]
+        Button {
+          icon-name: "folder-open-symbolic";
+          valign: center;
+          clicked => $on_picker_clicked();
 
-				title: _("Delete All Games");
-				activated => $on_delete_games();
-				sensitive: false;
-			}
-		}
-		Adw.PreferencesGroup {
-			title: _("Online Features");
-			Adw.SwitchRow download_binaries_switch {
-				visible: false; // #soon
-				title: _("Download Missing Ren'Py Binaries");
-			}
-			Adw.SwitchRow discord_rpc_switch {
-				title: _("Enable Discord RPC");
-			}
-			Adw.SwitchRow updates_switch {
-				title: _("Suppress Update Notifications");
-			}
-			Adw.ButtonRow {
-				title: _("Check for Updates");
-				activated => $on_check_updates();
-			}
-		}
-		Adw.PreferencesGroup {
-			title: _("Import Preferences");
-			Adw.SwitchRow windowficate_switch {
-				title: _("Restrict Filenames");
-			}
-			Adw.SwitchRow delete_import_switch {
-				title: _("Delete Files On Import");
-			}
-		}
+          styles [
+            "flat",
+          ]
+        }
+      }
 
-		Adw.PreferencesGroup {
-			title: _("Config Defaults");
-			description: _("These might break some games. Here be dragons!");
+      Adw.ButtonRow {
+        title: _("Reset Data Directory");
+        activated => $on_reset_data_dir();
+      }
 
-			Adw.SwitchRow skip_splash_scr_switch {
-				title: _("Skip Splash Screen");
-			}
-			Adw.SwitchRow skip_main_menu_switch {
-				title: _("Skip Main Menu");
-			}
-			Adw.SwitchRow forced_save_dir_switch {
-				title: _("Contained Game Saves");
-			}
-		}
-	}
+      Adw.ButtonRow {
+        sensitive: false;
+        title: _("Delete All Games");
+        activated => $on_delete_games();
+
+        styles [
+          "destructive-action",
+        ]
+      }
+    }
+
+    Adw.PreferencesGroup {
+      title: _("Online Features");
+
+      Adw.SwitchRow download_binaries_switch {
+        title: _("Download Missing Ren'Py Binaries");
+        visible: false;
+      }
+
+      Adw.SwitchRow discord_rpc_switch {
+        title: _("Enable Discord RPC");
+      }
+
+      Adw.SwitchRow updates_switch {
+        title: _("Suppress Update Notifications");
+      }
+
+      Adw.ButtonRow {
+        title: _("Check for Updates");
+        activated => $on_check_updates();
+      }
+    }
+
+    Adw.PreferencesGroup {
+      title: _("Import Preferences");
+
+      Adw.SwitchRow windowficate_switch {
+        title: _("Restrict Filenames");
+      }
+
+      Adw.SwitchRow delete_import_switch {
+        title: _("Delete Files On Import");
+      }
+    }
+
+    Adw.PreferencesGroup {
+      description: _("These might break some games. Here be dragons!");
+      title: _("Config Defaults");
+
+      Adw.SwitchRow skip_splash_scr_switch {
+        title: _("Skip Splash Screen");
+      }
+
+      Adw.SwitchRow skip_main_menu_switch {
+        title: _("Skip Main Menu");
+      }
+
+      Adw.SwitchRow forced_save_dir_switch {
+        title: _("Contained Game Saves");
+      }
+    }
+  }
 }

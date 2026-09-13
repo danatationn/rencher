@@ -2,28 +2,32 @@ using Gtk 4.0;
 using Adw 1;
 
 Adw.ShortcutsDialog RencherShortcuts {
-	Adw.ShortcutsSection {
-		title: _("Application Shortcuts");
+  Adw.ShortcutsSection {
+    title: _("Application Shortcuts");
 
-		Adw.ShortcutsItem {
-			title: _("Import Games");
-			action-name: "app.show-import";
-		}
-		Adw.ShortcutsItem {
-			title: _("Refresh Games");
-			action-name: "app.refresh-games";
-		}
-		Adw.ShortcutsItem {
-			title: _("Open Preferences");
-			action-name: "app.show-preferences";
-		}
-		Adw.ShortcutsItem {
-			title: _("Open Shortcuts");
-			action-name: "app.show-shortcuts";
-		}
-		Adw.ShortcutsItem {
-			title: _("Quit Rencher");
-			action-name: "app.quit";
-		}
-	}
+    Adw.ShortcutsItem {
+      action-name: "app.show-import";
+      title: _("Import Games");
+    }
+
+    Adw.ShortcutsItem {
+      action-name: "app.refresh-games";
+      title: _("Refresh Games");
+    }
+
+    Adw.ShortcutsItem {
+      action-name: "app.show-preferences";
+      title: _("Open Preferences");
+    }
+
+    Adw.ShortcutsItem {
+      action-name: "app.show-shortcuts";
+      title: _("Open Shortcuts");
+    }
+
+    Adw.ShortcutsItem {
+      action-name: "app.quit";
+      title: _("Quit Rencher");
+    }
+  }
 }

@@ -24,7 +24,7 @@ class SortComboEnum(Enum):
     ADDED_ON = 3
 
 @Gtk.Template.from_resource('/com/github/danatationn/rencher/ui/window.ui')
-class MainWindow(Adw.ApplicationWindow):
+class MainWindow(Adw.Window):
     __gtype_name__: str = 'MainWindow'
 
     # variables
@@ -47,8 +47,7 @@ class MainWindow(Adw.ApplicationWindow):
 
     # templates
     toast_overlay: Adw.ToastOverlay = gtk_template_child()
-    window_progress_bar: Gtk.ProgressBar = gtk_template_child()
-    split_view: Adw.OverlaySplitView = gtk_template_child()
+    # split_view: Adw.NavigationSplitView = gtk_template_child()
     library_list_box: Gtk.ListBox = gtk_template_child()
     library_view_stack: Adw.ViewStack = gtk_template_child()
     library_search_entry: Gtk.SearchEntry = gtk_template_child()
@@ -87,7 +86,7 @@ class MainWindow(Adw.ApplicationWindow):
         self.rows[entry] = row
         self.games[row] = entry
         GLib.idle_add(self.library_list_box.append, row)
-        self.split_view.set_show_sidebar(True)
+        # self.split_view.set_show_sidebar(True)
         if not self.library_list_box.get_selected_row():
             self.library_view_stack.set_visible_child_name('game-select')
         self.library_list_box.invalidate_sort()
@@ -114,7 +113,7 @@ class MainWindow(Adw.ApplicationWindow):
 
         if len(self.library.store) == 0:
             self.library_view_stack.set_visible_child_name('empty')
-            self.split_view.set_show_sidebar(False)
+            # self.split_view.set_show_sidebar(False)
 
         if view := self.game_views.pop(entry, None):
             self.library_view_stack.remove(view)
@@ -203,6 +202,8 @@ class MainWindow(Adw.ApplicationWindow):
             return True
         elif self.filter_text.lower() in widget.btn.get_title().lower():
             return True
+        # elif widget.entry and self.filter_text.lower() in widget.entry.rpath.lower():
+            # return True
         else:
             return False
 

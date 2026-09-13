@@ -17,7 +17,7 @@ class GameRow(Gtk.ListBoxRow):
             raise ValueError('entry or fallback_name are required')
 
         self.entry = entry
-        self.btn = Adw.ButtonRow()
+        self.btn = Adw.ButtonRow(halign=Gtk.Align.START, can_target=False)
         self._bindings = []
 
         if entry:

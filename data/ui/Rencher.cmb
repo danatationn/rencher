@@ -1,0 +1,11 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<!DOCTYPE cambalache-project SYSTEM "cambalache-project.dtd">
+<!-- Created with Cambalache 1.0.3 -->
+<cambalache-project version="1.0.0" target_tk="gtk-4.0" depends="libadwaita-1">
+  <ui template-class="GameDetailView" filename="game_detail_view.blp" sha256="1f5b056f80deaa32d2278aefca9ca5f79e9ad4ffc1baa74ad8937fff5a790bc5"/>
+  <ui template-class="ImportDialog" filename="import.blp" sha256="c90b59b4bd75f556990cf881ebe2995d4bb29d735efb29d44e6ab89c414d5b96"/>
+  <ui template-class="OptionsDialog" filename="options.blp" sha256="16a9db25a96ffe97ec976a4da3351ef5385ae8ed1c87b0e362cc9559064adb95"/>
+  <ui template-class="SettingsDialog" filename="settings.blp" sha256="d3dddf30a25776803ecb75b10ddfebf6aabad2378a4fc3ecb18c1437be991646"/>
+  <ui filename="shortcuts.blp" sha256="c537a89d37f91153808df24b6e4ac5fd7042a7ebf4ce5a66791bcf20cd9f0208"/>
+  <ui template-class="MainWindow" filename="window.blp" sha256="06549ee9b8c84345d2666befbb49441658f46f8ad696161e656667ead8a3f7c3"/>
+</cambalache-project>

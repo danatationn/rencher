@@ -2,130 +2,134 @@ using Gtk 4.0;
 using Adw 1;
 
 template $OptionsDialog: Adw.PreferencesDialog {
-	title: _("Options");
+  title: _("Options");
 
-	Adw.PreferencesPage {
-		Adw.PreferencesGroup {
-			title: _("Info");
+  Adw.PreferencesPage {
+    Adw.PreferencesGroup {
+      title: _("Info");
 
-			Adw.EntryRow nickname_entry {
-				title: _("Title");
-			}
-			Adw.ActionRow location_row {
-				styles ["property"]
-				title: _("Location");
-				subtitle-selectable: true;
+      Adw.EntryRow nickname_entry {
+        title: _("Title");
+      }
 
-				[suffix]
-                Button {
-                    icon-name: "external-link-symbolic";
-                    styles ["flat"]
-                    valign: center;
+      Adw.ActionRow location_row {
+        subtitle-selectable: true;
+        title: _("Location");
 
-                    clicked => $on_dir_clicked();
-                }
-			}
-			Adw.ComboRow codename_combo {
-				title: _("Executable");
-			}
-			Adw.ButtonRow clear_info_button {
-				styles ["destructive-action"]
-				title: _("Clear Stats");
+        [suffix]
+        Button {
+          icon-name: "external-link-symbolic";
+          valign: center;
+          clicked => $on_dir_clicked();
 
-				activated => $on_clear_info();
-			}
-			Adw.ButtonRow delete_game_button {
-				styles ["destructive-action"]
-				title: _("Delete Game");
+          styles [
+            "flat",
+          ]
+        }
 
-				activated => $on_delete_game();
-			}
-		}
+        styles [
+          "property",
+        ]
+      }
 
-		Adw.PreferencesGroup {
-			title: _("Config Settings");
-			description: _("These might break some games. Here be dragons!");
+      Adw.ComboRow codename_combo {
+        title: _("Executable");
+      }
 
-			Adw.ExpanderRow {
-				title: _("Overwrite Discord RPC");
-				subtitle: _("If this game already has RPC, you might want to disable this");
-				expanded: bind overwrite_discord_rpc_switch.active;
+      Adw.ButtonRow clear_info_button {
+        title: _("Clear Stats");
+        activated => $on_clear_info();
 
-				[action]
-				Switch overwrite_discord_rpc_switch {
-					halign: end;
-					valign: center;
-					state-set => $on_switch_changed();
-				}
+        styles [
+          "destructive-action",
+        ]
+      }
 
-				Adw.SwitchRow discord_rpc_switch {
-					title: _("Enable Discord RPC");
-					sensitive: bind overwrite_discord_rpc_switch.active;
+      Adw.ButtonRow delete_game_button {
+        title: _("Delete Game");
+        activated => $on_delete_game();
 
-					activate => $on_switch_changed();
-				}
+        styles [
+          "destructive-action",
+        ]
+      }
+    }
 
-			}
+    Adw.PreferencesGroup {
+      description: _("These might break some games. Here be dragons!");
+      title: _("Config Settings");
 
-			Adw.ExpanderRow {
-				title: _("Overwrite Skip Splash Screen");
-				expanded: bind overwrite_skip_splash_scr_switch.active;
+      Adw.ExpanderRow {
+        expanded: bind overwrite_discord_rpc_switch.active;
+        subtitle: _("If this game already has RPC, you might want to disable this");
+        title: _("Overwrite Discord RPC");
 
-				[action]
-				Switch overwrite_skip_splash_scr_switch {
-					halign: end;
-					valign: center;
+        [action]
+        Switch overwrite_discord_rpc_switch {
+          halign: end;
+          valign: center;
+          state-set => $on_switch_changed();
+        }
 
-					state-set => $on_switch_changed();
-				}
+        Adw.SwitchRow discord_rpc_switch {
+          sensitive: bind overwrite_discord_rpc_switch.active;
+          title: _("Enable Discord RPC");
+          activate => $on_switch_changed();
+        }
+      }
 
-				Adw.SwitchRow skip_splash_scr_switch {
-					title: _("Skip Splash Screen");
-					sensitive: bind overwrite_skip_splash_scr_switch.active;
+      Adw.ExpanderRow {
+        expanded: bind overwrite_skip_splash_scr_switch.active;
+        title: _("Overwrite Skip Splash Screen");
 
-					activate => $on_switch_changed();
-				}
-			}
-			Adw.ExpanderRow {
-				title: _("Overwrite Skip Main Menu");
-				expanded: bind overwrite_skip_main_menu_switch.active;
+        [action]
+        Switch overwrite_skip_splash_scr_switch {
+          halign: end;
+          valign: center;
+          state-set => $on_switch_changed();
+        }
 
-				[action]
-				Switch overwrite_skip_main_menu_switch {
-					halign: end;
-					valign: center;
+        Adw.SwitchRow skip_splash_scr_switch {
+          sensitive: bind overwrite_skip_splash_scr_switch.active;
+          title: _("Skip Splash Screen");
+          activate => $on_switch_changed();
+        }
+      }
 
-					state-set => $on_switch_changed();
-				}
+      Adw.ExpanderRow {
+        expanded: bind overwrite_skip_main_menu_switch.active;
+        title: _("Overwrite Skip Main Menu");
 
-				Adw.SwitchRow skip_main_menu_switch {
-					title: _("Skip Main Menu");
-					sensitive: bind overwrite_skip_main_menu_switch.active;
-				}
-			}
-			Adw.ExpanderRow {
-				title: _("Overwrite Contained Game Saves");
-				expanded: bind overwrite_forced_save_dir_switch.active;
+        [action]
+        Switch overwrite_skip_main_menu_switch {
+          halign: end;
+          valign: center;
+          state-set => $on_switch_changed();
+        }
 
-				[action]
-				Switch overwrite_forced_save_dir_switch {
-					halign: end;
-					valign: center;
+        Adw.SwitchRow skip_main_menu_switch {
+          sensitive: bind overwrite_skip_main_menu_switch.active;
+          title: _("Skip Main Menu");
+        }
+      }
 
-					state-set => $on_switch_changed();
-				}
+      Adw.ExpanderRow {
+        expanded: bind overwrite_forced_save_dir_switch.active;
+        title: _("Overwrite Contained Game Saves");
 
-				Adw.SwitchRow forced_save_dir_switch {
-					title: _("Contained Game Saves");
-					sensitive: bind overwrite_forced_save_dir_switch.active;
+        [action]
+        Switch overwrite_forced_save_dir_switch {
+          halign: end;
+          valign: center;
+          state-set => $on_switch_changed();
+        }
 
-					activate => $on_switch_changed();}
-			}
-			//Adw.SpinRow options_save_slot {
-			//	title: _("Save Slot");
-				//sensitive: bind options_forced_save_dir.active;
-			//	sensitive: false;
-			//}
-		}
-	}
+        Adw.SwitchRow forced_save_dir_switch {
+          sensitive: bind overwrite_forced_save_dir_switch.active;
+          title: _("Contained Game Saves");
+          activate => $on_switch_changed();
+        }
+      }
+    }
+  }
 }

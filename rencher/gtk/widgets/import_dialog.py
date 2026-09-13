@@ -118,6 +118,7 @@ class ImportDialog(Adw.Dialog):
 
         if location_text == '':
             self.import_button.set_sensitive(False)
+            self.validation_banner.set_revealed(False)
             return
 
         if not Path(path).exists():
