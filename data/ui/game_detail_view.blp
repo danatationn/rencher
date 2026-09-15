@@ -4,171 +4,172 @@ using Adw 1;
 template $GameDetailView: Box {
   orientation: vertical;
 
-  Adw.StatusPage title_status_page {
-    child: Box {
-      margin-end: 6;
-      margin-start: 6;
-      orientation: vertical;
-      spacing: 18;
-      width-request: 500;
+  Adw.Clamp {
+    maximum-size: 600;
 
-      Box {
-        halign: center;
-        orientation: horizontal;
-        spacing: 6;
+    Adw.StatusPage title_status_page {
+      title: "Title";
 
-        Button play_button {
-          label: _("Play");
-          clicked => $on_play_clicked();
+      child: Box {
+        margin-end: 6;
+        margin-start: 6;
+        orientation: vertical;
+        spacing: 18;
 
-          styles [
-            "pill",
-            "suggested-action",
-          ]
-        }
+        Box {
+          halign: center;
+          orientation: horizontal;
+          spacing: 6;
 
-        Button options_button {
-          icon-name: "cogged-wheel-symbolic";
-          valign: center;
-          clicked => $on_options_clicked();
-
-          styles [
-            "circular",
-          ]
-        }
-      }
-
-      ListBox {
-        selection-mode: none;
-
-        Adw.ActionRow last_played_row {
-          title: _("Last Played");
-
-          styles [
-            "property",
-          ]
-        }
-
-        Adw.ActionRow playtime_row {
-          title: _("Playtime");
-          // icon-name: "hourglass-symbolic";
-
-          styles [
-            "property",
-          ]
-        }
-
-        Adw.ActionRow added_on_row {
-          title: _("Added On");
-
-          styles [
-            "property",
-          ]
-        }
-
-        styles [
-          "boxed-list",
-        ]
-      }
-
-      ListBox {
-        selection-mode: none;
-
-        Adw.ActionRow rpath_row {
-          subtitle-selectable: true;
-          title: _("Folder Location");
-          // icon-name: "folder-visiting-symbolic";
-
-          [suffix]
-          Button {
-            // icon-name: "external-link-symbolic";
-            valign: center;
-            clicked => $on_dir_clicked();
+          Button play_button {
+            label: _("Play");
+            clicked => $on_play_clicked();
 
             styles [
-              "flat",
+              "pill",
+              "suggested-action",
+            ]
+          }
+
+          Button options_button {
+            icon-name: "cogged-wheel-symbolic";
+            valign: center;
+            clicked => $on_options_clicked();
+
+            styles [
+              "circular",
+            ]
+          }
+        }
+
+        ListBox {
+          selection-mode: none;
+
+          Adw.ActionRow last_played_row {
+            title: _("Last Played");
+
+            styles [
+              "property",
+            ]
+          }
+
+          Adw.ActionRow playtime_row {
+            title: _("Playtime");
+            // icon-name: "hourglass-symbolic";
+
+            styles [
+              "property",
+            ]
+          }
+
+          Adw.ActionRow added_on_row {
+            title: _("Added On");
+
+            styles [
+              "property",
             ]
           }
 
           styles [
-            "property",
+            "boxed-list",
           ]
         }
 
-        Adw.ActionRow version_row {
-          subtitle-selectable: true;
-          title: _("Engine Version");
-          // icon-name: "branch-symbolic";
+        ListBox {
+          selection-mode: none;
 
-          [suffix]
-          Image {
-            height-request: 34;
-            icon-name: "info-outline-symbolic";
-            tooltip-text: _("Refers to what version of Ren'Py was used to make the game; not the version of the game itself.");
-            valign: center;
-            width-request: 34;
-          }
+          Adw.ActionRow rpath_row {
+            subtitle-selectable: true;
+            title: _("Folder Location");
+            // icon-name: "folder-visiting-symbolic";
 
-          styles [
-            "property",
-          ]
-        }
-
-        Adw.ActionRow codename_row {
-          subtitle-selectable: true;
-          title: _("Codename");
-
-          [suffix]
-          Image {
-            height-request: 34;
-            icon-name: "info-outline-symbolic";
-            tooltip-text: _("Refers to what the game is called internally.");
-            valign: center;
-            width-request: 34;
-          }
-
-          styles [
-            "property",
-          ]
-        }
-
-        Adw.ExpanderRow log_row {
-          sensitive: false;
-          title: _("Logs");
-          // icon-name: "logs-symbolic";
-
-          ScrolledWindow {
-            height-request: 200;
-            hscrollbar-policy: never;
-            margin-bottom: 6;
-            margin-end: 12;
-            margin-start: 12;
-            margin-top: 6;
-
-            TextView log_text_view {
-              cursor-visible: false;
-              editable: false;
-              left-margin: 6;
-              monospace: true;
-              right-margin: 6;
-              top-margin: 6;
-              wrap-mode: word_char;
+            [suffix]
+            Button {
+              // icon-name: "external-link-symbolic";
+              valign: center;
+              clicked => $on_dir_clicked();
 
               styles [
-                "card",
+                "flat",
               ]
             }
+
+            styles [
+              "property",
+            ]
           }
+
+          Adw.ActionRow version_row {
+            subtitle-selectable: true;
+            title: _("Engine Version");
+            // icon-name: "branch-symbolic";
+
+            [suffix]
+            Image {
+              height-request: 34;
+              icon-name: "info-outline-symbolic";
+              tooltip-text: _("Refers to what version of Ren'Py was used to make the game; not the version of the game itself.");
+              valign: center;
+              width-request: 34;
+            }
+
+            styles [
+              "property",
+            ]
+          }
+
+          Adw.ActionRow codename_row {
+            subtitle-selectable: true;
+            title: _("Codename");
+
+            [suffix]
+            Image {
+              height-request: 34;
+              icon-name: "info-outline-symbolic";
+              tooltip-text: _("Refers to what the game is called internally.");
+              valign: center;
+              width-request: 34;
+            }
+
+            styles [
+              "property",
+            ]
+          }
+
+          Adw.ExpanderRow log_row {
+            sensitive: false;
+            title: _("Logs");
+            // icon-name: "logs-symbolic";
+
+            ScrolledWindow {
+              height-request: 200;
+              hscrollbar-policy: never;
+              margin-bottom: 6;
+              margin-end: 12;
+              margin-start: 12;
+              margin-top: 6;
+
+              TextView log_text_view {
+                cursor-visible: false;
+                editable: false;
+                left-margin: 6;
+                monospace: true;
+                right-margin: 6;
+                top-margin: 6;
+                wrap-mode: word_char;
+
+                styles [
+                  "card",
+                ]
+              }
+            }
+          }
+
+          styles [
+            "boxed-list",
+          ]
         }
-
-        styles [
-          "boxed-list",
-        ]
-      }
-    };
-
-    halign: center;
-    title: "Title";
-    valign: start;
+      };
+    }
   }
 }

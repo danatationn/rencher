@@ -2,10 +2,18 @@ using Gtk 4.0;
 using Adw 1;
 
 template $MainWindow: Adw.Window {
-  Adw.Breakpoint {}
+  Adw.Breakpoint {
+    condition ("max-width: 540sp")
+
+    setters {
+      split_view.collapsed: true;
+    }
+  }
 
   Adw.ToastOverlay toast_overlay {
-    Adw.NavigationSplitView {
+    Adw.NavigationSplitView split_view {
+      show-content: true;
+
       content: Adw.NavigationPage {
         child: Adw.ToolbarView {
           content: Adw.ViewStack library_view_stack {
@@ -49,7 +57,8 @@ template $MainWindow: Adw.Window {
       };
 
       sidebar: Adw.NavigationPage {
-        // title: _("Library");
+        title: _("Library");
+
         child: Adw.ToolbarView {
           content: ScrolledWindow {
             ListBox library_list_box {
@@ -63,10 +72,19 @@ template $MainWindow: Adw.Window {
 
           [top]
           Adw.HeaderBar {
+            show-title: false;
+
             [start]
             Button {
               icon-name: "list-add-symbolic";
               clicked => $on_import_clicked();
+            }
+
+            [end]
+            Button {
+              icon-name: "go-next-symbolic";
+              visible: bind split_view.collapsed;
+              clicked => $on_hide_sidebar();
             }
 
             [end]
@@ -97,7 +115,7 @@ template $MainWindow: Adw.Window {
               spacing: 6;
 
               SearchEntry library_search_entry {
-                placeholder-text: "Search games...";
+                placeholder-text: "Search games by their name";
                 search-changed => $on_search_changed();
               }
 

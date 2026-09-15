@@ -1,5 +1,5 @@
-from enum import Enum
 import logging
+from enum import Enum
 from typing import TYPE_CHECKING
 
 from gi.repository import Adw, GLib, Gtk
@@ -47,7 +47,7 @@ class MainWindow(Adw.Window):
 
     # templates
     toast_overlay: Adw.ToastOverlay = gtk_template_child()
-    # split_view: Adw.NavigationSplitView = gtk_template_child()
+    split_view: Adw.NavigationSplitView = gtk_template_child()
     library_list_box: Gtk.ListBox = gtk_template_child()
     library_view_stack: Adw.ViewStack = gtk_template_child()
     library_search_entry: Gtk.SearchEntry = gtk_template_child()
@@ -176,6 +176,10 @@ class MainWindow(Adw.Window):
                 self.library_view_stack.set_visible_child_name(entry.rpath)
         else:
             self.library_view_stack.set_visible_child_name('game-select')
+
+    @gtk_template_callback
+    def on_hide_sidebar(self, _widget: Gtk.Button) -> None:
+        self.split_view.set_show_content(True)
 
     @gtk_template_callback
     def on_search_changed(self, _widget: Gtk.SearchEntry):

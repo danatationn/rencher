@@ -33,5 +33,6 @@
     <file compressed="true">icons/scalable/actions/hourglass-symbolic.svg</file>
     <file compressed="true">icons/scalable/actions/folder-visiting-symbolic.svg</file>
     <file compressed="true">icons/scalable/actions/paper-symbolic.svg</file>
+    <file compressed="true">icons/scalable/actions/left-symbolic.svg</file>
   </gresource>
 </gresources>
