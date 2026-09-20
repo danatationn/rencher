@@ -1,5 +1,6 @@
 import os.path
 import platform
+import sys
 import threading
 from pathlib import Path
 from typing import TYPE_CHECKING, override
@@ -28,6 +29,7 @@ class SettingsDialog(Adw.PreferencesDialog):
     forced_save_dir_switch: Adw.SwitchRow = gtk_template_child()
     windowficate_switch: Adw.SwitchRow = gtk_template_child()
     discord_rpc_switch: Adw.SwitchRow = gtk_template_child()
+    reduce_motion_switch: Adw.SwitchRow = gtk_template_child()
     switches_list: list[tuple[Adw.SwitchRow, str]]
 
     def __init__(self, window: 'MainWindow', *args, **kwargs):
@@ -41,11 +43,14 @@ class SettingsDialog(Adw.PreferencesDialog):
             (self.forced_save_dir_switch, 'forced_save_dir'),
             (self.windowficate_switch, 'windowficate_filenames'),
             (self.discord_rpc_switch, 'discord_rpc'),
+            (self.reduce_motion_switch, 'reduce_motion'),
         ]
 
         self.window = window
-        if platform.system() == 'Windows':
+
+        if sys.platform in ('win32', 'msys'):
             self.windowficate_switch.set_visible(False)  # force it on
+            self.reduce_motion_switch.set_visible(True)
 
     def on_show(self):
         self.config = RencherConfig()
@@ -79,6 +84,8 @@ class SettingsDialog(Adw.PreferencesDialog):
         if self.config['settings']['data_dir'] != old_data_dir:
             self.window.library.load_games()
 
+        self.set_reduced_motion(self.reduce_motion_switch)
+
     @gtk_template_callback
     def on_picker_clicked(self, _widget: Gtk.Button):
         dialog = Gtk.FileDialog()
@@ -103,6 +110,40 @@ class SettingsDialog(Adw.PreferencesDialog):
         thread = threading.Thread(target=lambda: self.window.app.check_version(show_up_to_date_toast=True))
         thread.start()
         self.close()
+
+    def set_reduced_motion(self, switch: Adw.SwitchRow | None = None) -> None:
+        """
+        gtk animations on windows are REALLY laggy.
+        disable them by default, and let users reenable them if they want to
+        """
+        if sys.platform not in ('win32', 'msys'):
+            return
+
+        if switch:
+            value = switch.get_active()
+        else:
+            self.config = RencherConfig()
+            value = self.config.get('settings', 'reduce_motion')
+
+        if value:
+            Gtk.Settings.get_default().set_property('gtk-enable-animations', False)
+        else:
+            import ctypes
+
+            SPI_GETCLIENTAREAANIMATION = 0x1042
+            animations_enabled = ctypes.wintypes.BOOL()
+
+            success = ctypes.windll.user32.SystemParametersInfoW(
+                SPI_GETCLIENTAREAANIMATION,
+                0,
+                ctypes.byref(animations_enabled),
+                0,
+            )
+
+            if success and not animations_enabled.value:
+                Gtk.Settings.get_default().set_property('gtk-enable-animations', False)
+            else:
+                Gtk.Settings.get_default().set_property('gtk-enable-animations', True)
 
     @gtk_template_callback
     def on_reset_data_dir(self, _widget: Adw.ButtonRow):  # type: ignore

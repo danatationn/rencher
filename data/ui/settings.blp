@@ -52,11 +52,6 @@ template $SettingsDialog: Adw.PreferencesDialog {
     Adw.PreferencesGroup {
       title: _("Online Features");
 
-      Adw.SwitchRow download_binaries_switch {
-        title: _("Download Missing Ren'Py Binaries");
-        visible: false;
-      }
-
       Adw.SwitchRow discord_rpc_switch {
         title: _("Enable Discord RPC");
       }
@@ -74,12 +69,23 @@ template $SettingsDialog: Adw.PreferencesDialog {
     Adw.PreferencesGroup {
       title: _("Import Preferences");
 
-      Adw.SwitchRow windowficate_switch {
-        title: _("Restrict Filenames");
-      }
-
       Adw.SwitchRow delete_import_switch {
         title: _("Delete Files On Import");
+      }
+    }
+
+    Adw.PreferencesGroup {
+      title: _("Compatibility");
+
+      Adw.SwitchRow reduce_motion_switch {
+        title: _("Force Reduce Motion");
+        subtitle: _("Disable animations to reduce lag on Windows");
+        visible: false;
+      }
+
+      Adw.SwitchRow windowficate_switch {
+        title: _("Restrict Filenames");
+        subtitle: _("Restrict filenames to Windows-compatible characters");
       }
     }
 

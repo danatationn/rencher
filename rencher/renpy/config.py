@@ -2,6 +2,7 @@ import os.path
 from collections.abc import Iterable
 from configparser import ConfigParser
 from pathlib import Path
+import sys
 from typing import TYPE_CHECKING, override
 
 from rencher.renpy.paths import config_path, local_path
@@ -147,6 +148,7 @@ class RencherConfig(ConfigParser):
                 'forced_save_dir': 'false',
                 'discord_rpc': 'false',
                 'windowficate_filenames': 'true',
+                'reduce_motion': 'false' if sys.platform != 'win32' else 'true',
             },
         }
 

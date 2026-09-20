@@ -80,6 +80,7 @@ class MainWindow(Adw.Window):
         self.error_dialog = None
 
         GLib.idle_add(self.library.load_games)
+        GLib.idle_add(self.settings_dialog.set_reduced_motion)
 
     def _on_game_added(self, _library: Library, entry: GameEntry) -> None:
         row = GameRow(entry)

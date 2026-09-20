@@ -5,13 +5,16 @@ import shutil
 import subprocess
 import sys
 import traceback
-from pathlib import Path
 from types import TracebackType
 
 
 def launch() -> None:
     sys.excepthook = handle_global_exception
-    gres_path = Path()
+    gres_path: str
+
+    # some windows machines display square black borders when not using cairo
+    if sys.platform in ('win32', 'msys'):
+        os.environ['GSK_RENDERER'] = 'cairo'
 
     # check if running from meson
     if meson_root := os.environ.get('MESON_BUILD_ROOT', None):
@@ -19,12 +22,9 @@ def launch() -> None:
         sys.path.insert(1, meson_root)
         sys.path.append('@venv_dir@')
 
+    # check if running from an executable
     if getattr(sys, 'frozen', False):
         executable_folder = os.path.dirname(sys.executable)
-
-        # some windows machines display square black borders when not using cairo
-        if platform.system() == 'Windows':
-            os.environ['GSK_RENDERER'] = 'cairo'
 
         os.environ['GTK_EXE_PREFIX'] = executable_folder
         os.environ['GTK_DATA_PREFIX'] = executable_folder
@@ -55,7 +55,7 @@ def launch() -> None:
     try:
         app.run(sys.argv)
     except KeyboardInterrupt:
-        ...
+        pass
     except Exception as err:
         if err.__traceback__:
             handle_global_exception(type(err), err, err.__traceback__)
@@ -84,7 +84,7 @@ def handle_global_exception(exc_type: type[BaseException], exc_value: BaseExcept
 
 def show_err_dialog(text: str) -> None:
     # cx_freeze on windows already shows you an error with what went wrong
-    if platform.system() != 'Linux':
+    if platform.system() == 'Windows' and getattr(sys, 'frozen', False):
         return
 
     zenity_path = shutil.which('zenity')
