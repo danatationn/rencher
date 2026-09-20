@@ -105,12 +105,17 @@ template $GameDetailView: Box {
             // icon-name: "branch-symbolic";
 
             [suffix]
-            Image {
-              height-request: 34;
+            MenuButton {
               icon-name: "info-outline-symbolic";
-              tooltip-text: _("Refers to what version of Ren'Py was used to make the game; not the version of the game itself.");
               valign: center;
-              width-request: 34;
+
+              styles ["flat"]
+
+              popover: Popover {
+                Label {
+                  label: _("Refers to what version of Ren'Py was used to make the game; not the version of the game itself.");
+                }
+              };
             }
 
             styles [
@@ -123,12 +128,17 @@ template $GameDetailView: Box {
             title: _("Codename");
 
             [suffix]
-            Image {
-              height-request: 34;
+            MenuButton {
               icon-name: "info-outline-symbolic";
-              tooltip-text: _("Refers to what the game is called internally.");
               valign: center;
-              width-request: 34;
+
+              styles ["flat"]
+
+              popover: Popover {
+                Label {
+                  label: _("Refers to what the game is called internally.");
+                }
+              };
             }
 
             styles [

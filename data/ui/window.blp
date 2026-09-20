@@ -2,6 +2,10 @@ using Gtk 4.0;
 using Adw 1;
 
 template $MainWindow: Adw.Window {
+  default-height: 600;
+  default-width: 800;
+  height-request: 400;
+
   Adw.Breakpoint {
     condition ("max-width: 540sp")
 
@@ -14,62 +18,10 @@ template $MainWindow: Adw.Window {
     Adw.NavigationSplitView split_view {
       show-content: true;
 
-      content: Adw.NavigationPage {
-        child: Adw.ToolbarView {
-          content: Adw.ViewStack library_view_stack {
-            Adw.ViewStackPage empty_view {
-              child: Adw.StatusPage {
-                child: Button {
-                  halign: center;
-                  label: _("Import");
-                  clicked => $on_import_clicked();
-
-                  styles [
-                    "pill",
-                    "suggested-action",
-                  ]
-                };
-
-                description: _("Add a visual novel by clicking the Import button");
-                icon-name: "xbox-controller-symbolic";
-                title: _("No Games Installed");
-              };
-
-              name: "empty";
-            }
-
-            Adw.ViewStackPage game_select_view {
-              child: Adw.StatusPage {
-                description: _("Select a game from the sidebar to get started");
-                icon-name: "rencher-icon-symbolic";
-                title: _("Welcome to Rencher!");
-              };
-
-              name: "game-select";
-            }
-          };
-
-          [top]
-          Adw.HeaderBar {}
-        };
-
-        title: "Rencher";
-      };
-
       sidebar: Adw.NavigationPage {
         title: _("Library");
 
         child: Adw.ToolbarView {
-          content: ScrolledWindow {
-            ListBox library_list_box {
-              styles [
-                "navigation-sidebar",
-              ]
-
-              row-selected => $on_game_selected();
-            }
-          };
-
           [top]
           Adw.HeaderBar {
             show-title: false;
@@ -103,6 +55,7 @@ template $MainWindow: Adw.Window {
             ToggleButton library_search_button {
               icon-name: "system-search-symbolic";
               toggled => $on_search_toggled();
+              sensitive: false;
             }
           }
 
@@ -144,13 +97,62 @@ template $MainWindow: Adw.Window {
               }
             };
           }
+
+          content: ScrolledWindow {
+            ListBox library_list_box {
+              styles [
+                "navigation-sidebar",
+              ]
+
+              row-selected => $on_game_selected();
+            }
+          };
+        };
+      };
+
+      content: Adw.NavigationPage {
+        title: "Rencher";
+
+        child: Adw.ToolbarView {
+          [top]
+          Adw.HeaderBar {}
+
+          content: Adw.ViewStack library_view_stack {
+            Adw.ViewStackPage empty_view {
+              name: "empty";
+
+              child: Adw.StatusPage {
+                description: _("Add a visual novel by clicking the Import button");
+                icon-name: "xbox-controller-symbolic";
+                title: _("No Games Installed");
+
+                child: Button {
+                  halign: center;
+                  label: _("Import");
+                  clicked => $on_import_clicked();
+
+                  styles [
+                    "pill",
+                    "suggested-action",
+                  ]
+                };
+              };
+            }
+
+            Adw.ViewStackPage game_select_view {
+              name: "game-select";
+
+              child: Adw.StatusPage {
+                description: _("Select a game from the sidebar to get started");
+                icon-name: "rencher-icon-symbolic";
+                title: _("Welcome to Rencher!");
+              };
+            }
+          };
         };
       };
     }
   }
-
-  default-height: 600;
-  default-width: 800;
 }
 
 menu hamburger_menu {

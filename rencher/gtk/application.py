@@ -1,10 +1,10 @@
 import importlib.metadata
 import logging
 import os
-import sys
 import threading
 from collections.abc import Callable
 from configparser import ConfigParser
+from gettext import gettext as _
 from typing import Any, NotRequired, TypedDict, cast, override
 
 import gi
@@ -102,9 +102,6 @@ class MainApplication(Adw.Application):
         self.window = MainWindow(application=self)
         self.window.present()
 
-        if os.environ.get('MESON_BUILD_ROOT', None):
-            self.window.add_css_class('devel')
-
         event_controller_key = Gtk.EventControllerKey.new()
         event_controller_key.set_propagation_phase(Gtk.PropagationPhase.CAPTURE)
         event_controller_key.connect('key-pressed', self.on_key_pressed)
@@ -136,7 +133,6 @@ class MainApplication(Adw.Application):
         self.window.on_import_clicked()
 
     def on_refresh_games(self, _action: Gio.SimpleAction, _variant: GLib.Variant | None) -> None:
-        # TODO rencher crashes when you already have a game selected
         logging.info('Refreshing games')
         GLib.idle_add(self.window.library.load_games)
 
@@ -153,7 +149,7 @@ class MainApplication(Adw.Application):
     @override
     def do_shutdown(self) -> None:
         self.rpc.stop()
-        Gtk.Application.do_shutdown(self)
+        Adw.Application.do_shutdown(self)
 
     def on_quit(self, _action: Gio.SimpleAction, _variant: GLib.Variant | None) -> None:
         self.quit()
@@ -232,15 +228,15 @@ class MainApplication(Adw.Application):
 
                 logging.info(f'A new update is available! (v{version_str})')
                 logging.info(download_url)
-                toast.set_title(f'A new update is available! (v{version_str})')
-                toast.set_button_label('Download')
+                toast.set_title(_('A new update is available! (v{})').format(version_str))
+                toast.set_button_label(_('Download'))
                 toast.connect('button-clicked', lambda *_: Gtk.show_uri(self.window, download_url, Gdk.CURRENT_TIME))
 
                 GLib.idle_add(self.window.toast_overlay.add_toast, toast)
             elif upstream_version == local_version:
-                toast.set_title(f"You're up to date! (v{local_version_str})")
+                toast.set_title(_('You\'re up to date! (v{})').format(local_version_str))
             else:
-                toast.set_title(f"You're bleeding-edge! (v{local_version_str})")
+                toast.set_title(_('You\'re bleeding-edge! (v{})').format(local_version_str))
 
             if show_up_to_date_toast:
                 GLib.idle_add(self.window.toast_overlay.add_toast, toast)

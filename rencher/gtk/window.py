@@ -1,4 +1,4 @@
-import logging
+import os
 from enum import Enum
 from typing import TYPE_CHECKING
 
@@ -51,6 +51,7 @@ class MainWindow(Adw.Window):
     library_list_box: Gtk.ListBox = gtk_template_child()
     library_view_stack: Adw.ViewStack = gtk_template_child()
     library_search_entry: Gtk.SearchEntry = gtk_template_child()
+    library_search_button: Gtk.ToggleButton = gtk_template_child()
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -82,12 +83,16 @@ class MainWindow(Adw.Window):
         GLib.idle_add(self.library.load_games)
         GLib.idle_add(self.settings_dialog.set_reduced_motion)
 
+        # add devel style if running from meson
+        if os.environ.get('MESON_BUILD_ROOT', None):
+            self.add_css_class('devel')
+
     def _on_game_added(self, _library: Library, entry: GameEntry) -> None:
         row = GameRow(entry)
         self.rows[entry] = row
         self.games[row] = entry
         GLib.idle_add(self.library_list_box.append, row)
-        # self.split_view.set_show_sidebar(True)
+        self.library_search_button.set_sensitive(True)
         if not self.library_list_box.get_selected_row():
             self.library_view_stack.set_visible_child_name('game-select')
         self.library_list_box.invalidate_sort()
@@ -114,7 +119,7 @@ class MainWindow(Adw.Window):
 
         if len(self.library.store) == 0:
             self.library_view_stack.set_visible_child_name('empty')
-            # self.split_view.set_show_sidebar(False)
+            self.library_search_button.set_sensitive(False)
 
         if view := self.game_views.pop(entry, None):
             self.library_view_stack.remove(view)

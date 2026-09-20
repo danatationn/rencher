@@ -3,8 +3,7 @@ using Adw 1;
 
 template $ImportDialog: Adw.Dialog {
   title: _("Import");
-  follows-content-size: true;
-  width-request: 600;
+  content-width: 600;
 
   child: WindowHandle {
     hexpand: true;
@@ -14,71 +13,81 @@ template $ImportDialog: Adw.Dialog {
       [top]
       Adw.HeaderBar {}
 
-      [top]
-      Adw.Banner validation_banner {}
+      content: Overlay {
+        [overlay]
+        Adw.Banner validation_banner {
+          valign: start;
+          can-target: false;
+        }
 
-      content: Adw.PreferencesPage {
-        Adw.PreferencesGroup {
-          Adw.EntryRow title_entry {
-            title: _("Title");
-          }
+        Adw.PreferencesPage {
+          Adw.PreferencesGroup {
+            Adw.EntryRow title_entry {
+              title: _("Title");
+            }
 
-          Adw.ActionRow type_combo {
-            title: _("Type");
+            Adw.ActionRow type_combo {
+              title: _("Type");
 
-            Adw.ToggleGroup {
-              valign: center;
-              notify::active => $on_type_changed();
+              Adw.ToggleGroup {
+                valign: center;
+                notify::active => $on_type_changed();
 
-              Adw.Toggle {
+                Adw.Toggle {
+                  icon-name: "file-cabinet-symbolic";
+                  label: _("Archive");
+                }
+
+                Adw.Toggle {
+                  icon-name: "folder-open-symbolic";
+                  label: _("Folder");
+                }
+              }
+            }
+
+            Adw.EntryRow location_entry {
+              title: _("Archive Location");
+              changed => $on_location_changed();
+
+              [suffix]
+              Button location_picker {
                 icon-name: "file-cabinet-symbolic";
-                label: _("Archive");
+                valign: center;
+                clicked => $on_picker_clicked();
+
+                styles [
+                  "flat",
+                ]
               }
+            }
+          }
 
-              Adw.Toggle {
-                icon-name: "folder-open-symbolic";
-                label: _("Folder");
+          Adw.PreferencesGroup {
+            Adw.ComboRow game_combo {
+              enable-search: true;
+              title: _("Target Game");
+
+              MenuButton {
+                icon-name: "info-outline-symbolic";
+                valign: center;
+
+                styles ["flat"]
+
+                popover: Popover {
+                  Label {
+                    label: _("This replaces the original game's files, if using the right mod for the right game. You'll use this mostly with DDLC.");
+                  }
+                };
               }
             }
           }
 
-          Adw.EntryRow location_entry {
-            title: _("Archive Location");
-            changed => $on_location_changed();
-
-            [suffix]
-            Button location_picker {
-              icon-name: "file-cabinet-symbolic";
-              valign: center;
-              clicked => $on_picker_clicked();
-
-              styles [
-                "flat",
-              ]
+          Adw.PreferencesGroup {
+            Adw.ButtonRow import_button {
+              sensitive: false;
+              title: _("Import");
+              activated => $on_import_clicked();
             }
-          }
-        }
-
-        Adw.PreferencesGroup {
-          Adw.ComboRow game_combo {
-            enable-search: true;
-            title: _("Target Game");
-
-            Image {
-              height-request: 34;
-              icon-name: "info-outline-symbolic";
-              tooltip-text: _("This replaces the original game's files, if using the right mod for the right game. You'll use this mostly with DDLC.");
-              valign: center;
-              width-request: 34;
-            }
-          }
-        }
-
-        Adw.PreferencesGroup {
-          Adw.ButtonRow import_button {
-            sensitive: false;
-            title: _("Import");
-            activated => $on_import_clicked();
           }
         }
       };
