@@ -19,7 +19,7 @@ template $GameDetailView: Box {
         Box {
           halign: center;
           orientation: horizontal;
-          spacing: 6;
+          spacing: 12;
 
           Button play_button {
             label: _("Play");
@@ -85,7 +85,7 @@ template $GameDetailView: Box {
 
             [suffix]
             Button {
-              // icon-name: "external-link-symbolic";
+              icon-name: "external-link-symbolic";
               valign: center;
               clicked => $on_dir_clicked();
 

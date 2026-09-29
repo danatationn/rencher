@@ -14,7 +14,7 @@ class RencherCodename(Adw.AlertDialog):
     game: Game
     codename_list_box: Gtk.ListBox
 
-    def __init__(self, window):
+    def __init__(self, window: 'MainWindow'):
         super().__init__()
         self.window = window
 

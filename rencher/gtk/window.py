@@ -1,18 +1,21 @@
 import os
 from enum import Enum
+from gettext import gettext as _
 from typing import TYPE_CHECKING
 
 from gi.repository import Adw, GLib, Gtk
 
 from rencher.gtk.game_entry import GameEntry
 from rencher.gtk.library import Library
-from rencher.gtk.tasks import DeleteGameTask, RencherTask
+from rencher.gtk.tasks import DeleteGameTask, RencherTask, TaskError
 from rencher.gtk.utils import gtk_template_callback, gtk_template_child
 from rencher.gtk.widgets.codename_dialog import RencherCodename
 from rencher.gtk.widgets.game_detail_view import GameDetailView
 from rencher.gtk.widgets.game_row import GameRow
 from rencher.gtk.widgets.import_dialog import ImportDialog
 from rencher.gtk.widgets.settings_dialog import SettingsDialog
+from rencher.gtk.widgets.task_alert_dialog import TaskAlertDialog
+from rencher.gtk.widgets.traceback_dialog import TaskTracebackDialog
 
 if TYPE_CHECKING:
     from rencher.gtk.application import MainApplication
@@ -32,6 +35,7 @@ class MainWindow(Adw.Window):
     games: dict[GameRow, GameEntry]
     game_views: dict[GameEntry, GameDetailView]
     task_rows: dict[RencherTask, GameRow]
+    toasts: dict[GameRow, Adw.Toast]
 
     filter_text: str = ''
     combo_index: SortComboEnum = SortComboEnum.NAME
@@ -60,6 +64,7 @@ class MainWindow(Adw.Window):
         self.games = {}
         self.game_views = {}
         self.task_rows = {}
+        self.toasts = {}
 
         self.app = self.get_application()  # pyright: ignore[reportAttributeAccessIssue]
         self.library = Library(self)
@@ -91,82 +96,155 @@ class MainWindow(Adw.Window):
         row = GameRow(entry)
         self.rows[entry] = row
         self.games[row] = entry
+
         GLib.idle_add(self.library_list_box.append, row)
         self.library_search_button.set_sensitive(True)
+
         if not self.library_list_box.get_selected_row():
             self.library_view_stack.set_visible_child_name('game-select')
-        self.library_list_box.invalidate_sort()
+        # self.library_list_box.invalidate_sort()
 
     def _on_game_changed(self, _library: Library, entry: GameEntry) -> None:
-        entry.refresh()
+        entry.refresh()  # gamedetailview + the row binds entry properties. this updates every label
 
     def _on_game_removed(self, _library: Library, entry: GameEntry) -> None:
-        if row := self.rows.pop(entry, None):
-            del self.games[row]
+        row = self.rows.get(entry)
+        if not row:
+            return
+        if row.task and (row.task.error or row.task.warnings):
+            # if a game was deleted and there were errors, the user should at least know
+            return
 
-            def _do_remove() -> bool:
-                was_selected = row == self.library_list_box.get_selected_row()
-                next_row = row.get_next_sibling() or row.get_prev_sibling()
+        self._remove_row(row, entry)
 
-                self.library_list_box.remove(row)
+    def _remove_row(self, row: GameRow, entry: GameEntry | None) -> None:
+        if entry:
+            self.rows.pop(entry, None)
+            if view := self.game_views.pop(entry, None):
+                self.library_view_stack.remove(view)
+        self.games.pop(row, None)
 
-                if was_selected and next_row and isinstance(next_row, GameRow):
-                    self.library_list_box.select_row(next_row)
+        def _do_remove() -> bool:
+            """removes the row and then selects something else"""
+            self._select_adjacent_row(row)
+            self.library_list_box.remove(row)
 
-                return GLib.SOURCE_REMOVE
+            return GLib.SOURCE_REMOVE
 
-            GLib.idle_add(_do_remove)
+        GLib.idle_add(_do_remove)
 
         if len(self.library.store) == 0:
             self.library_view_stack.set_visible_child_name('empty')
             self.library_search_button.set_sensitive(False)
 
-        if view := self.game_views.pop(entry, None):
-            self.library_view_stack.remove(view)
-
     def _on_task_started(self, _library: Library, task: RencherTask, entry: GameEntry | None) -> None:
-        if entry:
+        if not entry:
+            # add the button to promise that a game is coming
+            row = GameRow(None, task.label)
+            self.library_list_box.append(row)
+            self.task_rows[task] = row
+        else:
+            # a game has been added
             if not (row := self.rows.get(entry)):
                 row = GameRow(entry)
                 self.rows[entry] = row
                 self.library_list_box.append(row)
-                self.task_rows[task] = row
-            if isinstance(task, DeleteGameTask):
-                was_selected = row == self.library_list_box.get_selected_row()
-                next_row = row.get_next_sibling() or row.get_prev_sibling()
-                if was_selected and next_row:
-                    GLib.idle_add(self.library_list_box.select_row, next_row)
-        else:
-            row = GameRow(None, task.label)
-            self.library_list_box.append(row)
             self.task_rows[task] = row
 
+            if isinstance(task, DeleteGameTask):
+                self._select_adjacent_row(row)
+
         row.set_task(task)
-        self.library_list_box.invalidate_sort()
+        # self.library_list_box.invalidate_sort()
 
     def _on_task_finished(self, _library: Library, task: RencherTask, entry: GameEntry | None) -> None:
-        row = self.task_rows.pop(task, None)
+        row = self.task_rows.get(task)
         if not row:
             return
 
-        if entry:
-            if not row.entry:  # it finished the task! yay
-                row.set_entry(entry)
-                row.set_task(None)
-                self.rows[entry] = row
-                self.games[row] = entry
+        if entry and not row.entry and not task.error:
+            # it finished the task! yay
+            row.set_entry(entry)
+            row.set_task(None)
+            self.rows[entry] = row
+            self.games[row] = entry
 
-        self.library_list_box.invalidate_sort()
+        # check exit status. if something went wrong then set up traceback dialog
+        if task.error or task.warnings:
+            toast = Adw.Toast(button_label=_('Details'), timeout=0)
+
+            if task.error:
+                toast.set_title(_('"{}" has failed!').format(task.label))
+            else:  # warnings
+                toast.set_title(_('"{}" has finished with warnings!').format(task.label))
+
+            toast.connect('button-clicked', lambda *_: self._show_task_dialog(row))
+
+            self.toasts[row] = toast
+            toast.connect('dismissed', lambda *_: self.toasts.pop(row, None))
+            self.toast_overlay.add_toast(toast)
+        else:
+            self.task_rows.pop(task, None)
+            if row.entry:
+                row.set_task(None)
+            else:
+                GLib.idle_add(self.library_list_box.remove, row)
+        # self.library_list_box.invalidate_sort()
 
     def _on_message(self, _task: RencherTask, text: str) -> None:
         toast = Adw.Toast.new(text)
         toast.set_timeout(3)
         self.toast_overlay.add_toast(toast)
 
+    def _select_adjacent_row(self, row: GameRow) -> None:
+        """selects either the next or previous row if either exist"""
+        was_selected = row == self.library_list_box.get_selected_row()
+        next_row = row.get_next_sibling() or row.get_prev_sibling()
+        if was_selected and next_row:
+            GLib.idle_add(self.library_list_box.select_row, next_row)
+
+    def _show_task_dialog(self, row: GameRow) -> None:
+        if (toast := self.toasts.get(row)):
+            toast.dismiss()
+
+        task = row.task
+        if not task:
+            return
+        if task.error and not isinstance(task.error, TaskError):
+            dialog = TaskTracebackDialog(task)
+        else:
+            dialog = TaskAlertDialog(task)
+
+        dialog.connect('closed', lambda *_: self._on_task_dialog_closed(row, task))
+        dialog.present(self)
+
+    def _on_task_dialog_closed(self, row: GameRow, task: RencherTask):
+        if row.task is not task:
+            # row has a new task i.e. a retry. don't remove it
+            return
+
+        del self.task_rows[task]
+
+        if row.entry and self.library.find(row.entry.rpath):
+            # game is still in library. don't remove
+            row.set_task(None)
+        else:
+            self._remove_row(row, row.entry)
+
     @gtk_template_callback
     def on_import_clicked(self, _button: Gtk.Button | None = None) -> None:
         self.import_dialog.do_show()
         self.import_dialog.present(self)
+
+    @gtk_template_callback
+    def on_row_activated(self, _widget: Gtk.ListBox, row: GameRow | None) -> None:
+        if row and row.task and (row.task.error or row.task.warnings):
+            if row in self.toasts:
+                toast = self.toasts.get(row)
+                assert(isinstance(toast, Adw.Toast))
+                toast.dismiss()
+                # del self.toasts[row]
+            self._show_task_dialog(row)
 
     @gtk_template_callback
     def on_game_selected(self, _widget: Gtk.ListBox, row: GameRow | None) -> None:
@@ -210,7 +288,7 @@ class MainWindow(Adw.Window):
     def filter_func(self, widget: GameRow) -> bool:
         if not self.filter_text:
             return True
-        elif self.filter_text.lower() in widget.btn.get_title().lower():
+        elif self.filter_text.lower() in widget.button_row.get_title().lower():
             return True
         # elif widget.entry and self.filter_text.lower() in widget.entry.rpath.lower():
             # return True
@@ -225,10 +303,10 @@ class MainWindow(Adw.Window):
         two_value: str | int | float
 
         # entry is currently importing . so whatevsif not entry_one or not entry_two:
-        if one.has_task or two.has_task:
+        if one.task or two.task:
             if self.combo_index == SortComboEnum.NAME:
-                one_value = one.btn.get_title().lower()
-                two_value = two.btn.get_title().lower()
+                one_value = one.button_row.get_title().lower()
+                two_value = two.button_row.get_title().lower()
             else:
                 return 0
         elif not entry_one or not entry_one.game or not entry_two or not entry_two.game:

@@ -5,7 +5,6 @@ https://github.com/nicotine-plus/nicotine-plus/blob/master/build-aux/windows/set
 """
 
 import os
-import platform
 import shutil
 import sys
 import sysconfig
@@ -14,7 +13,7 @@ from pathlib import Path
 
 from cx_Freeze import Executable, setup  # pyright: ignore[reportMissingImports, reportUnknownVariableType]
 
-if platform.system() != 'Windows':
+if sys.platform not in ('win32', 'msys'):
     raise NotImplementedError('Freezing is only supported on Windows!')
 
 USAGE_MSG = f'\n\nUsage:\n\t{Path(__file__).name} build_dir [dest_dir]'
@@ -142,7 +141,7 @@ def freeze(argv: list[str]):
 def find_files(
     pattern: str,
     search_path: Path | str,
-    dest_path: Path | str = Path(),
+    dest_path: Path | str = '',
     recursive: bool = False,
 ) -> list[tuple[Path, Path]]:
     source_files: list[Path] = []

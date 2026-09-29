@@ -68,7 +68,7 @@ template $MainWindow: Adw.Window {
               spacing: 6;
 
               SearchEntry library_search_entry {
-                placeholder-text: "Search games by their name";
+                placeholder-text: "Search games";
                 search-changed => $on_search_changed();
               }
 
@@ -105,6 +105,7 @@ template $MainWindow: Adw.Window {
               ]
 
               row-selected => $on_game_selected();
+              row-activated => $on_row_activated();
             }
           };
         };

@@ -125,7 +125,7 @@ class SettingsDialog(Adw.PreferencesDialog):
             self.config = RencherConfig()
             value = self.config.get('settings', 'reduce_motion')
 
-        if value:
+        if value :
             Gtk.Settings.get_default().set_property('gtk-enable-animations', False)
         else:
             import ctypes
@@ -160,65 +160,5 @@ class SettingsDialog(Adw.PreferencesDialog):
         dialog.set_response_appearance('ok', Adw.ResponseAppearance.DESTRUCTIVE)
         dialog.set_close_response('cancel')
         dialog.set_default_response('cancel')
-        dialog.connect('response', self.nuke_games)
+        # dialog.connect('response', self.nuke_games)
         dialog.choose(self)
-
-    def nuke_games(self, _, response: str):
-        if response != 'ok':
-            return
-        data_dir = Path(self.data_dir_entry.get_text())
-        games_dir = data_dir / 'games'
-
-        def nuke_thread():
-            toast = Adw.Toast(title='All games have been successfully deleted', timeout=5)
-            total_work = 0
-            completed = 0
-            rpaths: list[str] = []
-
-            for _, dirs, files in os.walk(games_dir):
-                for _ in dirs:
-                    total_work += 1
-                for _ in files:
-                    total_work += 1
-
-            # task = self.window.tasks_popover.new_task('', TaskTypeEnum.NUKE, None, total_work)
-
-            for _, dirs, _ in os.walk(games_dir):
-                for dir in dirs:
-                    path = os.path.join(games_dir, dir)
-                    rpaths.append(path)
-                break
-
-            for root, dirs, files in os.walk(games_dir, topdown=False):
-                for filename in files:
-                    file = os.path.join(root, filename)
-                    try:
-                        os.unlink(file)
-                    except PermissionError:
-                        pass
-                    except FileNotFoundError:
-                        pass
-                    completed += 1
-                    # self.window.tasks_popover.update_task(task, completed)
-
-                for dirname in dirs:
-                    dir = os.path.join(root, dirname)
-                    try:
-                        os.rmdir(dir)
-                    except PermissionError:
-                        pass
-                    except FileNotFoundError:
-                        pass
-                    completed += 1
-                    # self.window.tasks_popover.update_task(task, completed)
-
-                if root in rpaths:
-                    GLib.idle_add(lambda r=root: self.window.library.remove_game(r))
-
-            GLib.idle_add(lambda: (
-                self.window.toast_overlay.add_toast(toast),
-            ))
-
-        thread = threading.Thread(target=nuke_thread)
-        thread.start()
-        self.close()

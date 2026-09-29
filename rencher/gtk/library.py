@@ -19,6 +19,18 @@ CHECK_PROCESS_MS: int = 250
 
 
 class Library(GObject.Object):
+    """
+    class for managing games
+
+    stores a list of all currently loaded games, has methods for retreving and adding games
+
+    also has actions for installing, deleting, running, closing games.
+
+    ---
+
+    everything akin to games happens here. any non-instant action that should be done upon a game, Should be made here
+    """
+
     window: 'MainWindow'
     store: Gio.ListStore
     processes: dict[GameEntry, tuple[subprocess.Popen[bytes], float]]  # time
@@ -91,7 +103,7 @@ class Library(GObject.Object):
             rpath = games_dir / dir
             GLib.idle_add(self.add_game, rpath)
 
-    def _msg(self, _t: RencherTask, text: str):
+    def _msg(self, _t: RencherTask, text: str) -> None:
         self.emit('message', text)
 
     def add_game(self, rpath: str) -> None:
@@ -228,9 +240,6 @@ class Library(GObject.Object):
                     return GLib.SOURCE_CONTINUE
 
                 GLib.timeout_add(CHECK_PROCESS_MS, _wait_to_term)
-
-    def is_running(self, rpath: str) -> bool:
-        return rpath in self.processes
 
     def _cleanup_game(self, entry: GameEntry) -> None:
         process, start = self.processes[entry]

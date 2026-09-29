@@ -20,6 +20,21 @@ from rencher.renpy.game import Game
 from rencher.renpy.paths import get_absolute_path, get_py_files, get_rpa_files, get_rpa_path, validate_game_files
 
 
+class TaskError(Exception):
+    """
+    raised by tasks when there's an expected error or warning
+
+    the message should be a simple summary of what happened *in that specific task*.
+    """
+
+    message: str
+    exception: Exception | None
+
+    def __init__(self, message: str, exception: Exception | None = None):
+        super().__init__(message)
+        self.message = message
+        self.exception = exception
+
 class RencherTask(GObject.Object):
     """
     Overridable class to simplify background tasks
@@ -48,6 +63,8 @@ class RencherTask(GObject.Object):
     _uuid: uuid.UUID
     _thread: threading.Thread | None
     _cancel_flag: threading.Event
+    _error: Exception | None
+    _warnings: list[TaskError]
 
     def __init__(self, label: str, max_progress: int = -1):
         super().__init__()
@@ -58,6 +75,8 @@ class RencherTask(GObject.Object):
         self._thread = None
         self._cancel_flag = threading.Event()
         self.finished = False
+        self._error = None
+        self._warnings = []
 
     def start(self) -> None:
         self._thread = threading.Thread(target=self._run_wrapper, daemon=True)
@@ -68,8 +87,8 @@ class RencherTask(GObject.Object):
             logging.debug(f'Starting task {self.uuid} - "{self.label}"')
             self.run()
         except Exception as e:
-            logging.error(f'Task {self.uuid} - "{self.label}" has failed: {e}')
-            # GLib.idle_add(self.set_property, 'error', str(e))
+            logging.error(f'Task {self.uuid} - "{self.label}" has failed: ({e.__class__.__name__}) {e}')
+            self._error = e
         finally:
             GLib.idle_add(self.set_property, 'finished', True)
 
@@ -92,6 +111,10 @@ class RencherTask(GObject.Object):
         logging.info(text)
         GLib.idle_add(self.emit, 'message', text)
 
+    def warn(self, warning: TaskError) -> None:
+        logging.warning(warning)
+        self._warnings.append(warning)
+
     @GObject.Property(type=float)
     def fraction(self) -> float:
         if self.max_progress <= 0:
@@ -104,6 +127,12 @@ class RencherTask(GObject.Object):
     @property
     def uuid(self):
         return self._uuid
+    @property
+    def error(self) -> Exception | None:
+        return self._error
+    @property
+    def warnings(self) -> list[TaskError]:
+        return self._warnings
 
 class DeleteGameTask(RencherTask):
     rpath: Path
@@ -138,12 +167,18 @@ class DeleteGameTask(RencherTask):
                     path.rmdir()
                 else:
                     path.unlink(missing_ok=True)
-            except (PermissionError, FileNotFoundError, OSError) as e:
-                logging.warning(f'Failed to delete {path}: {e}')
-
+            except PermissionError as e:
+                self.warn(TaskError(_('Insufficient permissions to delete "{}"').format(path), e))
+            except FileNotFoundError as e:
+                self.warn(TaskError(_('Tried to delete nonexistent file "{}"').format(path), e))
+            except OSError as e:
+                self.warn(TaskError(_('Failed to delete "{}"').format(path), e))
             self.advance()
 
-        self.message(_('"{}" has been deleted').format(self.rpath.name))
+        if not self.warnings:
+            self.message(_('"{}" has been deleted').format(self.rpath.name))
+
+        raise TaskError(_('Failed to delete the game as I don\'t get paid enough'))
 
 class NukeGamesTask(RencherTask):
     """deletes ALL games from the specified data directory"""
@@ -182,7 +217,7 @@ class ImportGameTask(RencherTask):
         config = RencherConfig()
         data_dir = Path(config.get_data_dir())
         archive: zipfile.ZipFile | rarfile.RarFile | None = None
-        folder_file_list: list[Path] = [] # all the files in the archive/folder
+        folder_file_list: list[Path] = []  # all the files in the archive/folder
         archive_file_list: list[str] = []
         start_time: float = time.perf_counter()  # to count how long it took to import
         name = self.nickname or self.source_path.stem
@@ -203,20 +238,27 @@ class ImportGameTask(RencherTask):
                     logging.error(f'Unknown file type detected ("{self.source_path}")')
                     self.message(_('The archive format is not supported!'))
                     return
-            except (rarfile.BadRarFile, rarfile.NotRarFile, zipfile.BadZipFile):
-                self.message(_('The archive supplied is invalid!'))
-                return
+            except (rarfile.BadRarFile, rarfile.NotRarFile, zipfile.BadZipFile) as e:
+                raise TaskError(_('The archive supplied is invalid or corrupt'), e) from e
+            except PermissionError as e:
+                raise TaskError(_('The archive couldn\'nt be opened'), e) from e
+            except OSError as e:
+                raise TaskError(_('IDFK'), e) from e
             else:
-                archive_file_list = archive.namelist()
+                archive_file_list = archive.namelist()  # pyright: ignore[reportUnknownVariableType]
         elif self.source_path.is_dir():
             logging.debug(f'Folder detected ("{self.source_path}/")')
             folder_file_list = list(self.source_path.rglob('*'))
         else:
+            # TODO raise here
             return
 
         if not self.target_entry and not validate_game_files(archive_file_list or folder_file_list):
-            self.message(_('The game supplied is invalid!'))
-            return
+            raise TaskError(_('The game supplied does not look like a valid Ren\'Py game'))
+
+        # self.warn(TaskError(_('hi')))
+        # raise TaskError('KYS')
+        # raise ValueError()
 
         """
         Determining a unique directory name
@@ -227,8 +269,7 @@ class ImportGameTask(RencherTask):
         while game_path is None or not os.path.exists(game_path):
             if time.perf_counter() - dir_time > 1:
                 # this will never happen unless you're a freak
-                self.message(_('Couldn\'t come up with a name!'))
-                return
+                raise TaskError(_('Could not come up with a game directory name'))
 
             # in case nickname is not set, use the path stem
             possible_paths: list[Path] = [
@@ -276,6 +317,7 @@ class ImportGameTask(RencherTask):
             return False
 
         for path in archive_file_list:
+            # TODO fix zip-slip aka malicious relative paths
             if self.is_cancelled or not archive:
                 break
 
@@ -297,6 +339,7 @@ class ImportGameTask(RencherTask):
 
             if path.is_dir():
                 target_path.mkdir(parents=True, exist_ok=True)
+                continue
             else:
                 target_path.parent.mkdir(parents=True, exist_ok=True)
                 path.copy(target_path)
@@ -311,8 +354,7 @@ class ImportGameTask(RencherTask):
             rpa_path = get_rpa_path(game_path)
             apath = get_absolute_path(game_path)
             if not rpa_path or not apath:
-                self.message(_('No game files found; target game is corrupt'))
-                return
+                raise TaskError(_('No game files found; target game is corrupt'))
             if rpa_path == apath:
                 new_rpa_path = apath / 'game'
                 rpa_files = get_rpa_files(apath)
@@ -365,19 +407,9 @@ class ImportGameTask(RencherTask):
                     game_codenames = [script.stem for script in game_scripts]
                     game_codenames.remove(self.target_entry.codename)
                     game.config.set('info', 'codename', game_codenames[0])
-                except ValueError:
-                    logging.warning(_('Couldn\'t determine codename'))
-                    pass
+                except ValueError as e:
+                    self.warn(TaskError(_('Couldn\'t determine codename'), e))
             game.config.write()
-
-            # self.window.library.add_game(game_path)  ?
-            # selected_row = self.window.library_list_box.get_selected_row()
-            # if not selected_row:
-            #     result = self.window.library.find(game_path)
-            #     if result:
-            #         _, game_item = result
-            #         row = self.window.rows[game_item]
-            #         self.window.library_list_box.select_row(row)
 
             logging.info(f'Importing done in {time.perf_counter() - start_time:.2f}s')
             if config.get('settings', 'delete_on_import') == 'true':
@@ -386,13 +418,12 @@ class ImportGameTask(RencherTask):
                     if archive:
                         archive.close()
                     self.source_path.unlink()
-                except PermissionError:
-                    logging.error(_('Couldn\'t delete archive! File left untouched'))
+                except PermissionError as e:
+                    self.warn(TaskError(_('Couldn\'t delete archive! File left untouched'), e))
                 except Exception as e:
-                    logging.error(f"Couldn't delete archive! {e}")
+                    self.warn(TaskError(_('Couldn\'t delete archive! File left untouched'), e))
                 else:
                     logging.info(f'Archive "{self.source_path.name}" deleted!')
-
         else:
             shutil.rmtree(game_path)
             logging.info(f'Importing cancelled. Total thread runtime: {time.perf_counter() - start_time:.2f}s')
