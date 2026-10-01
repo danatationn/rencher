@@ -115,6 +115,12 @@ class RencherTask(GObject.Object):
         logging.warning(warning)
         self._warnings.append(warning)
 
+    def get_retry_task(self) -> 'RencherTask | None':
+        raise NotImplementedError
+
+    def get_cancel_task(self) -> 'RencherTask | None':
+        raise NotImplementedError
+
     @GObject.Property(type=float)
     def fraction(self) -> float:
         if self.max_progress <= 0:
@@ -178,7 +184,13 @@ class DeleteGameTask(RencherTask):
         if not self.warnings:
             self.message(_('"{}" has been deleted').format(self.rpath.name))
 
-        raise TaskError(_('Failed to delete the game as I don\'t get paid enough'))
+    @override
+    def get_retry_task(self) -> 'RencherTask':
+        return DeleteGameTask(self.rpath)
+
+    @override
+    def get_cancel_task(self) -> None:
+        return None
 
 class NukeGamesTask(RencherTask):
     """deletes ALL games from the specified data directory"""
@@ -255,10 +267,6 @@ class ImportGameTask(RencherTask):
 
         if not self.target_entry and not validate_game_files(archive_file_list or folder_file_list):
             raise TaskError(_('The game supplied does not look like a valid Ren\'Py game'))
-
-        # self.warn(TaskError(_('hi')))
-        # raise TaskError('KYS')
-        # raise ValueError()
 
         """
         Determining a unique directory name
@@ -427,3 +435,14 @@ class ImportGameTask(RencherTask):
         else:
             shutil.rmtree(game_path)
             logging.info(f'Importing cancelled. Total thread runtime: {time.perf_counter() - start_time:.2f}s')
+
+    @override
+    def get_retry_task(self) -> 'RencherTask | None':
+        return ImportGameTask(self.source_path, self.nickname, self.target_entry)
+
+    @override
+    def get_cancel_task(self) -> 'RencherTask | None':
+        if self.game_path:
+            return DeleteGameTask(self.game_path)
+        else:
+            return None

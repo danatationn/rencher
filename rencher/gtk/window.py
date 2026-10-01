@@ -102,10 +102,11 @@ class MainWindow(Adw.Window):
 
         if not self.library_list_box.get_selected_row():
             self.library_view_stack.set_visible_child_name('game-select')
-        # self.library_list_box.invalidate_sort()
+        self.library_list_box.invalidate_sort()
 
     def _on_game_changed(self, _library: Library, entry: GameEntry) -> None:
         entry.refresh()  # gamedetailview + the row binds entry properties. this updates every label
+        # self.library_list_box.invalidate_sort()
 
     def _on_game_removed(self, _library: Library, entry: GameEntry) -> None:
         row = self.rows.get(entry)
@@ -155,7 +156,7 @@ class MainWindow(Adw.Window):
                 self._select_adjacent_row(row)
 
         row.set_task(task)
-        # self.library_list_box.invalidate_sort()
+        self.library_list_box.invalidate_sort()
 
     def _on_task_finished(self, _library: Library, task: RencherTask, entry: GameEntry | None) -> None:
         row = self.task_rows.get(task)

@@ -98,6 +98,11 @@ class MainApplication(Adw.Application):
     def do_activate(self):
         Adw.Application.do_activate(self)
 
+        if os.environ.get('MESON_BUILD_ROOT', None):
+            logging.debug('Running from Meson')
+        elif os.environ.get('container', None):
+            logging.debug('Running from Flatpak')
+
         self.config = RencherConfig()
         self.window = MainWindow(application=self)
         self.window.present()

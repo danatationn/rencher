@@ -2,7 +2,7 @@ import traceback
 from collections.abc import Callable
 from gettext import gettext as _
 
-from gi.repository import Adw, Gtk
+from gi.repository import Adw, GLib, Gtk
 
 from rencher.gtk.tasks import RencherTask
 
@@ -63,7 +63,7 @@ class TaskTracebackDialog(Adw.Dialog):
         scrolled.set_child(text_view)
 
         self._add_button(_('Cancel'), self._on_cancel)
-        # self._add_button(_('Retry'), self._on_cancel, 'suggested-action')
+        self._add_button(_('Retry'), self._on_cancel, 'suggested-action')
 
     def _add_button(self, label: str, callback: Callable[[Gtk.Button], None], style: str | None = None) -> None:
         button = Gtk.Button(label=label, hexpand=True)
@@ -75,7 +75,9 @@ class TaskTracebackDialog(Adw.Dialog):
     ### callbacks
 
     def _on_cancel(self, _button: Gtk.Button) -> None:
+        self.activate_action('library.cancel-task', GLib.Variant('s', str(self.task.uuid)))
         self.close()
 
     def _on_retry(self, _button: Gtk.Button) -> None:
+        self.activate_action('library.retry-task', GLib.Variant('s', str(self.task.uuid)))
         self.close()
