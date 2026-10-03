@@ -77,3 +77,17 @@ if host_machine.system() == 'windows'
     ])
     run_target('makensis', command: ['makensis', nsi])
 endif
+
+if host_machine.system() == 'linux'
+    flatpak_builder = find_program('flatpak-builder', required: false)
+    if flatpak_builder.found()
+        run_target('flatpak', command: [
+            'flatpak-builder',
+            '--install',
+            '--user',
+            '--force-clean',
+            meson.project_source_root() / 'build' / 'flatpak',
+            meson.project_source_root() / 'build-aux' / 'flatpak' / 'com.github.danatationn.rencher.yml'
+        ])
+    endif
+endif

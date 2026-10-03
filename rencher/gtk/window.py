@@ -9,7 +9,7 @@ from rencher.gtk.game_entry import GameEntry
 from rencher.gtk.library import Library
 from rencher.gtk.tasks import DeleteGameTask, RencherTask, TaskError
 from rencher.gtk.utils import gtk_template_callback, gtk_template_child
-from rencher.gtk.widgets.codename_dialog import RencherCodename
+from rencher.gtk.widgets.codename_dialog import CodenameDialog
 from rencher.gtk.widgets.game_detail_view import GameDetailView
 from rencher.gtk.widgets.game_row import GameRow
 from rencher.gtk.widgets.import_dialog import ImportDialog
@@ -45,7 +45,6 @@ class MainWindow(Adw.Window):
     app: 'MainApplication'
     settings_dialog: SettingsDialog
     import_dialog: ImportDialog
-    codename_dialog: RencherCodename
     library: Library
     error_dialog: Adw.AlertDialog | None
 
@@ -67,8 +66,10 @@ class MainWindow(Adw.Window):
         self.toasts = {}
 
         self.app = self.get_application()  # pyright: ignore[reportAttributeAccessIssue]
-        self.library = Library(self)
+        self.library = Library()
+        self.insert_action_group('library', self.library.action_group)
         self.library.connect('game-added', self._on_game_added)
+        self.library.connect('game-unknown-exec', self._on_game_unknown_exec)
         self.library.connect('game-changed', self._on_game_changed)
         self.library.connect('game-removed', self._on_game_removed)
         self.library.connect('task-started', self._on_task_started)
@@ -81,7 +82,6 @@ class MainWindow(Adw.Window):
 
         self.import_dialog = ImportDialog(self)
         self.settings_dialog = SettingsDialog(self)
-        self.codename_dialog = RencherCodename(self)
 
         self.error_dialog = None
 
@@ -231,6 +231,13 @@ class MainWindow(Adw.Window):
             row.set_task(None)
         else:
             self._remove_row(row, row.entry)
+
+    def _on_game_unknown_exec(self, library: Library, entry: GameEntry):
+        # TODO right now this shows all dialogs all at once.
+        # it's not a big deal if you only have a couple games that are broken,
+        # but it is when there's a lot.
+        # i'll add a queue thing later
+        CodenameDialog(library, entry).present(self)
 
     @gtk_template_callback
     def on_import_clicked(self, _button: Gtk.Button | None = None) -> None:

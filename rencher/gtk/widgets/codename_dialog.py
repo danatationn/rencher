@@ -1,22 +1,23 @@
 import glob
+import logging
 import os.path
-from typing import TYPE_CHECKING
+from gettext import gettext as _
 
 from gi.repository import Adw, Gtk
 
-from rencher.renpy.game import Game
+from rencher.gtk.game_entry import GameEntry
+from rencher.gtk.library import Library
 
-if TYPE_CHECKING:
-    from rencher.gtk.window import MainWindow
 
-class RencherCodename(Adw.AlertDialog):
-    window: 'MainWindow'
-    game: Game
+class CodenameDialog(Adw.AlertDialog):
+    library: Library
+    entry: GameEntry
     codename_list_box: Gtk.ListBox
 
-    def __init__(self, window: 'MainWindow'):
+    def __init__(self, library: Library, entry: GameEntry):
         super().__init__()
-        self.window = window
+        self.library = library
+        self.entry = entry
 
         self.codename_list_box = Gtk.ListBox()
         self.codename_list_box.add_css_class('boxed-list')
@@ -24,29 +25,23 @@ class RencherCodename(Adw.AlertDialog):
 
         self.add_response('ok', 'OK')
         self.set_default_response('ok')
-
         self.connect('response', self.on_response)
 
-    def popup(self, rpath: str) -> None:
-        self.game = Game(rpath=rpath)
-        self.codename_list_box.remove_all()
-
-        self.set_heading('Select Mod Executable')
-        self.set_body(f'The mod "{self.game.name}" provides multiple executables.\n'+
+        self.set_heading(_('Select Mod Executable'))
+        self.set_body(f'The mod "{self.entry.name}" provides multiple executables.\n'+
                        'Please choose the correct one below.\n'+
                        '(You can change this later in settings.)')
 
-        py_files = glob.glob(os.path.join(self.game.apath, '*.py'))
+        py_files = glob.glob(os.path.join(self.entry.apath, '*.py'))
         for path in py_files:
             name = os.path.splitext(os.path.basename(path))[0]
             row = Adw.ActionRow(title=name)
             self.codename_list_box.append(row)
 
-        self.choose(self.window)
-
-    def on_response(self, *_):
+    def on_response(self, _dialog: 'CodenameDialog', _id: str) -> None:
         selected_row = self.codename_list_box.get_selected_row()
-        if isinstance(selected_row, Adw.ButtonRow):
+        if isinstance(selected_row, Adw.ActionRow):
             codename = selected_row.get_title()
-            self.game.config['info']['codename'] = codename
-            self.game.config.write()
+            self.entry.config.set('info', 'codename', codename)
+            self.entry.config.write()
+            self.library.add_game(self.entry.rpath)

@@ -103,7 +103,7 @@ class OptionsDialog(Adw.PreferencesDialog):
 
         sel_codename = self.codename_combo.get_selected_item()
         if not isinstance(sel_codename, Gtk.StringObject):
-            logging.error('TODO something has no scripts')
+            logging.error(f'"{self.entry.game.rpath.stem}" has no scripts! Ignoring for now')
             return
 
         if self.entry.name != self.nickname_entry.get_text():

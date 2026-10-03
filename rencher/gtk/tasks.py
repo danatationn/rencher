@@ -253,7 +253,7 @@ class ImportGameTask(RencherTask):
             except (rarfile.BadRarFile, rarfile.NotRarFile, zipfile.BadZipFile) as e:
                 raise TaskError(_('The archive supplied is invalid or corrupt'), e) from e
             except PermissionError as e:
-                raise TaskError(_('The archive couldn\'nt be opened'), e) from e
+                raise TaskError(_('The archive couldn\'t be opened'), e) from e
             except OSError as e:
                 raise TaskError(_('IDFK'), e) from e
             else:
@@ -262,8 +262,7 @@ class ImportGameTask(RencherTask):
             logging.debug(f'Folder detected ("{self.source_path}/")')
             folder_file_list = list(self.source_path.rglob('*'))
         else:
-            # TODO raise here
-            return
+            raise TaskError(_('The path does not exist!'), FileNotFoundError())
 
         if not self.target_entry and not validate_game_files(archive_file_list or folder_file_list):
             raise TaskError(_('The game supplied does not look like a valid Ren\'Py game'))
@@ -325,11 +324,14 @@ class ImportGameTask(RencherTask):
             return False
 
         for path in archive_file_list:
-            # TODO fix zip-slip aka malicious relative paths
             if self.is_cancelled or not archive:
                 break
 
             if should_skip(path):
+                continue
+            resolved_path = game_path.resolve()
+            if not Path(resolved_path / path).resolve().is_relative_to(resolved_path):
+                # fix zip slip
                 continue
 
             archive.extract(path, game_path)  # pyright: ignore[reportUnknownMemberType]

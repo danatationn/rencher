@@ -3,7 +3,6 @@ import os.path
 import subprocess
 import time
 from pathlib import Path
-from typing import TYPE_CHECKING
 
 from gi.repository import Gio, GLib, GObject
 
@@ -11,9 +10,6 @@ from rencher.gtk.game_entry import GameEntry
 from rencher.gtk.tasks import DeleteGameTask, ImportGameTask, RencherTask
 from rencher.renpy.config import RencherConfig
 from rencher.renpy.game import Game, GameInvalidError, GameNoExecutableError
-
-if TYPE_CHECKING:
-    from rencher.gtk.window import MainWindow
 
 CHECK_PROCESS_MS: int = 250
 
@@ -33,7 +29,7 @@ class Library(GObject.Object):
 
     # this is all horrendous and will be refactored after v1.2.0
 
-    window: 'MainWindow'
+    action_group: Gio.SimpleActionGroup
     store: Gio.ListStore
     tasks: dict[str, RencherTask]  # str is uuid. tasks with errors stay
     processes: dict[GameEntry, tuple[subprocess.Popen[bytes], float]]  # float is time
@@ -42,6 +38,7 @@ class Library(GObject.Object):
     # signal name: flags, return types, arg types
     __gsignals__: dict[str, tuple[GObject.SignalFlags, None, tuple[type, ...]]] = {
         'game-added':       (GObject.SignalFlags.RUN_FIRST, None, (GameEntry,)),
+        'game-unknown-exec':(GObject.SignalFlags.RUN_FIRST, None, (GameEntry,)),
         'game-removed':     (GObject.SignalFlags.RUN_FIRST, None, (GameEntry,)),
         'game-changed':     (GObject.SignalFlags.RUN_FIRST, None, (GameEntry,)),
         # object = subprocess.Popen[bytes]
@@ -54,41 +51,38 @@ class Library(GObject.Object):
         'message':          (GObject.SignalFlags.RUN_FIRST, None, (str,)),
     }
 
-    def __init__(self, window: 'MainWindow'):
+    def __init__(self):
         super().__init__()
-        self.window = window
         self.store = Gio.ListStore(item_type=GameEntry)
         self.tasks = {}
         self.processes = {}
         self._terminating_processes = []
 
-        action_group = Gio.SimpleActionGroup.new()
+        self.action_group = Gio.SimpleActionGroup.new()
         # s = rpath
         delete_action = Gio.SimpleAction.new_stateful('delete-game', GLib.VariantType.new('s'), GLib.Variant('d', 0.0))
         delete_action.connect('activate', self._on_delete_game)
+        self.action_group.add_action(delete_action)
         # sss = rpath, nickname, game rpath
         import_action = Gio.SimpleAction.new_stateful('import-game', GLib.VariantType('(sss)'), GLib.Variant('d', 0.0))
         import_action.connect('activate', self._on_import_game)
+        self.action_group.add_action(import_action)
         # s = rpath
         run_action = Gio.SimpleAction.new('run-game', GLib.VariantType.new('s'))
         run_action.connect('activate', self._run_game)
+        self.action_group.add_action(run_action)
+        # s = rpath
         stop_action = Gio.SimpleAction.new('stop-game', GLib.VariantType.new('s'))
         stop_action.connect('activate', self._close_game)
+        self.action_group.add_action(stop_action)
         # s = uuid
         retry_action = Gio.SimpleAction.new('retry-task', GLib.VariantType.new('s'))
         retry_action.connect('activate', self._retry_task)
+        self.action_group.add_action(retry_action)
         # s = uuid
         cancel_action = Gio.SimpleAction.new('cancel-task', GLib.VariantType.new('s'))
         cancel_action.connect('activate', self._cancel_task)
-
-        action_group.add_action(delete_action)
-        action_group.add_action(import_action)
-        action_group.add_action(run_action)
-        action_group.add_action(stop_action)
-        action_group.add_action(retry_action)
-        action_group.add_action(cancel_action)
-
-        self.window.insert_action_group('library', action_group)
+        self.action_group.add_action(cancel_action)
 
     def find(self, rpath: str | Path) -> tuple[int, GameEntry] | None:
         rpath = os.path.normpath(rpath)
@@ -125,13 +119,19 @@ class Library(GObject.Object):
 
         try:
             game_item = GameEntry(rpath=rpath)
-        except GameNoExecutableError:
-            self.window.codename_dialog.popup(rpath)
         except GameInvalidError:
             logging.warning(f'Couldn\'t load "{os.path.basename(rpath)}"')
-        else:
-            self.store.append(game_item)
-            self.emit('game-added', game_item)
+            return
+
+        try:
+            game_item.game.get_main_script()
+        except GameNoExecutableError:
+            self.emit('game-unknown-exec', game_item)
+            return
+
+        self.store.append(game_item)
+        self.emit('game-added', game_item)
+
         logging.debug(f'Added: "{os.path.basename(rpath)}"')
 
     def remove_game(self, rpath: str) -> None:
@@ -225,12 +225,16 @@ class Library(GObject.Object):
 
         try:
             process = entry.run()
+        except GameNoExecutableError as e:
+            logging.error('Couldn\'t find the game\'s executable!')
+            self.emit('game-closed', entry, None, e)
+            return
         except Exception as e:
             self.emit('game-closed', entry, None, e)
             return
-        else:
-            self.processes[entry] = ((process, time.time()))
-            self.emit('game-launched', entry, process)
+
+        self.processes[entry] = ((process, time.time()))
+        self.emit('game-launched', entry, process)
 
         def _watch_process() -> bool:
             if process in self._terminating_processes:

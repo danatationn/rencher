@@ -10,6 +10,7 @@ from rencher.gtk.library import Library
 from rencher.gtk.rpc import Rpc
 from rencher.gtk.utils import gtk_template_callback, gtk_template_child, open_file_manager
 from rencher.gtk.widgets.options_dialog import OptionsDialog
+from rencher.renpy.game import GameNoExecutableError
 
 
 @Gtk.Template.from_resource('/com/github/danatationn/rencher/ui/game_detail_view.ui')
@@ -97,9 +98,16 @@ class GameDetailView(Gtk.Box):
         self.options_dialog.delete_game_button.set_sensitive(True)
         self.entry.refresh()
 
-        if isinstance(err, PermissionError):
-            alert = Adw.AlertDialog(heading=_('Error'), body=_('This game\'s executable is not executable!'))
+        if err:
+            alert = Adw.AlertDialog(heading=_('Error'))
             alert.add_response('ok', _('OK'))
+            if isinstance(err, PermissionError):
+                alert.set_body(_('This game\'s executable is not executable!'))
+            elif isinstance(err, GameNoExecutableError):
+                alert.set_body(_('Couldn\'t find the game executable!'))
+            else:
+                alert.set_body(_('Something went wrong launching the game! ({}{})')
+                    .format(err.__class__.__name__, f': {err}' if str(err) else ''))
             alert.choose(self)
 
         if process and process.returncode != 0 and self.log_row.is_sensitive():

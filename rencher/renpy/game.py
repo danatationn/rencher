@@ -28,10 +28,10 @@ class Game:
         rpath = Path(rpath) if rpath is not None else None
         apath = Path(apath) if apath is not None else None
 
-        if not rpath and apath:
+        if apath and not rpath:
             self.rpath = apath
             self.apath = apath
-        elif not apath and rpath:
+        elif rpath and not apath:
             self.rpath = rpath
             if apath := get_absolute_path(rpath):
                 self.apath = apath
@@ -170,7 +170,7 @@ class Game:
             version.append(commit)
         return version
 
-    def run(self) -> subprocess.Popen[bytes]:
+    def run(self) -> subprocess.Popen[bytes] | None:
         """
             launches the game with the specified options
         """
@@ -178,7 +178,7 @@ class Game:
 
         exec_path = self.get_exec_path()
         if not exec_path:
-            return  # TODO
+            raise GameNoExecutableError
         args: list[str] = [str(exec_path)]
 
         # bash can't run files with crlf line endings. convert to lf

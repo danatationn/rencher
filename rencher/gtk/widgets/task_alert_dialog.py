@@ -1,5 +1,4 @@
 from gettext import gettext as _
-import logging
 
 from gi.repository import Adw, GLib, Gtk
 

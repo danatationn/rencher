@@ -1,8 +1,8 @@
 import os.path
+import sys
 from collections.abc import Iterable
 from configparser import ConfigParser
 from pathlib import Path
-import sys
 from typing import TYPE_CHECKING, override
 
 from rencher.renpy.paths import config_path, local_path
