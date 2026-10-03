@@ -352,7 +352,8 @@ class ImportGameTask(RencherTask):
                 continue
             else:
                 target_path.parent.mkdir(parents=True, exist_ok=True)
-                path.copy(target_path)
+                # path.copy(target_path)
+                shutil.copy(path, target_path)
 
             self.advance()
 
@@ -402,7 +403,8 @@ class ImportGameTask(RencherTask):
                     target_path.mkdir(parents=True, exist_ok=True)
                 else:
                     target_path.parent.mkdir(parents=True, exist_ok=True)
-                    path.copy(target_path)
+                    # path.copy(target_path)
+                    shutil.copy(path, target_path)
 
                 self.advance()
 

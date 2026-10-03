@@ -63,7 +63,7 @@ class TaskTracebackDialog(Adw.Dialog):
         scrolled.set_child(text_view)
 
         self._add_button(_('Cancel'), self._on_cancel)
-        self._add_button(_('Retry'), self._on_cancel, 'suggested-action')
+        self._add_button(_('Retry'), self._on_retry, 'suggested-action')
 
     def _add_button(self, label: str, callback: Callable[[Gtk.Button], None], style: str | None = None) -> None:
         button = Gtk.Button(label=label, hexpand=True)
