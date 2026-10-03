@@ -28,7 +28,6 @@ class GameDetailView(Gtk.Box):
     log_text_view: Gtk.TextView = gtk_template_child()
 
     entry: GameEntry
-    rpc: Rpc
     row: Adw.ActionRow | Gtk.ListBoxRow
     log_buf: Gtk.TextBuffer
 
@@ -37,10 +36,9 @@ class GameDetailView(Gtk.Box):
     options_dialog: OptionsDialog
     options_button: Gtk.Button = gtk_template_child()
 
-    def __init__(self, entry: GameEntry, rpc: Rpc, row: Adw.ActionRow | Gtk.ListBoxRow, library: Library, **kwargs):
+    def __init__(self, entry: GameEntry, row: Adw.ActionRow | Gtk.ListBoxRow, library: Library, **kwargs):
         super().__init__(**kwargs)
         self.entry = entry
-        self.rpc = rpc
         self.row = row
         self.log_buf = self.log_text_view.get_buffer()
 
@@ -75,6 +73,7 @@ class GameDetailView(Gtk.Box):
     def _game_launched(self, _library: Library, entry: GameEntry, process: subprocess.Popen[bytes]) -> None:
         if self.entry != entry:
             return
+        self.activate_action('rpc.update', GLib.Variant('a(ss)', [('state', entry.name)]))
         self.play_button.set_label(_('Stop'))
         self.play_button.get_style_context().add_class('destructive-action')
         self.play_button.get_style_context().remove_class('suggested-action')
@@ -91,6 +90,7 @@ class GameDetailView(Gtk.Box):
     ) -> None:
         if self.entry != entry:
             return
+        self.activate_action('rpc.clear')
         self.play_button.set_label(_('Play'))
         self.play_button.get_style_context().add_class('suggested-action')
         self.play_button.get_style_context().remove_class('destructive-action')

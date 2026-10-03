@@ -360,6 +360,7 @@ class ImportGameTask(RencherTask):
         Some R6 mods come with .rpa files in root and nothing else
         This tries to make a game/ directory and move them there
         """
+        # TODO this code is broken. needs to get checked against blue skies
         if self.target_entry:
             rpa_path = get_rpa_path(game_path)
             apath = get_absolute_path(game_path)

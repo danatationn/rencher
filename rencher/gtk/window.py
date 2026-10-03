@@ -7,6 +7,7 @@ from gi.repository import Adw, GLib, Gtk
 
 from rencher.gtk.game_entry import GameEntry
 from rencher.gtk.library import Library
+from rencher.gtk.rpc import Rpc
 from rencher.gtk.tasks import DeleteGameTask, RencherTask, TaskError
 from rencher.gtk.utils import gtk_template_callback, gtk_template_child
 from rencher.gtk.widgets.codename_dialog import CodenameDialog
@@ -16,6 +17,7 @@ from rencher.gtk.widgets.import_dialog import ImportDialog
 from rencher.gtk.widgets.settings_dialog import SettingsDialog
 from rencher.gtk.widgets.task_alert_dialog import TaskAlertDialog
 from rencher.gtk.widgets.traceback_dialog import TaskTracebackDialog
+from rencher.renpy.config import RencherConfig
 
 if TYPE_CHECKING:
     from rencher.gtk.application import MainApplication
@@ -47,6 +49,7 @@ class MainWindow(Adw.Window):
     import_dialog: ImportDialog
     library: Library
     error_dialog: Adw.AlertDialog | None
+    rpc: Rpc
 
     # templates
     toast_overlay: Adw.ToastOverlay = gtk_template_child()
@@ -75,6 +78,12 @@ class MainWindow(Adw.Window):
         self.library.connect('task-started', self._on_task_started)
         self.library.connect('task-finished', self._on_task_finished)
         self.library.connect('message', self._on_message)
+
+        self.rpc = Rpc(1485229562123124818)
+        self.insert_action_group('rpc', self.rpc.action_group)
+
+        if RencherConfig().get('settings', 'discord_rpc') == 'true':
+            self.activate_action('rpc.start')
 
         self.ascending_order = False
         self.library_list_box.set_sort_func(self.sort_func)
@@ -261,7 +270,7 @@ class MainWindow(Adw.Window):
                 view = self.game_views.get(entry, None)
 
                 if not view:
-                    view = GameDetailView(entry, self.app.rpc, row, self.library)
+                    view = GameDetailView(entry, row, self.library)
                     self.game_views[entry] = view
                     self.library_view_stack.add_named(view, entry.rpath)
 

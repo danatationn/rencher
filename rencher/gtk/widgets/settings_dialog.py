@@ -1,8 +1,6 @@
-import os.path
-import platform
+import logging
 import sys
 import threading
-from pathlib import Path
 from typing import TYPE_CHECKING, override
 
 from gi.repository import Adw, GLib, Gtk
@@ -83,6 +81,11 @@ class SettingsDialog(Adw.PreferencesDialog):
 
         if self.config['settings']['data_dir'] != old_data_dir:
             self.window.library.load_games()
+
+        if self.config.get('settings', 'discord_rpc') == 'true':
+            self.activate_action('rpc.start')
+        else:
+            self.activate_action('rpc.stop')
 
         self.set_reduced_motion(self.reduce_motion_switch)
 

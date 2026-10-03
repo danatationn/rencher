@@ -28,8 +28,6 @@ class MainApplication(Adw.Application):
     action_info: list[tuple[str, Callable[[Gio.SimpleAction, GLib.Variant | None], None], list[str]]]
     simple_actions: dict[str, Gio.SimpleAction]
 
-    rpc: Rpc
-
     def __init__(self, *args, **kwargs):
         super().__init__(
             *args,
@@ -77,9 +75,6 @@ class MainApplication(Adw.Application):
             self.simple_actions[id] = simple_action
             if accels:
                 self.set_accels_for_action(f'app.{id}', accels)
-
-        self.rpc = Rpc(1485229562123124818)
-        self.rpc.start()
 
     @override
     def do_command_line(self, command_line):
@@ -153,7 +148,7 @@ class MainApplication(Adw.Application):
 
     @override
     def do_shutdown(self) -> None:
-        self.rpc.stop()
+        self.window.activate_action('rpc.stop')
         Adw.Application.do_shutdown(self)
 
     def on_quit(self, _action: Gio.SimpleAction, _variant: GLib.Variant | None) -> None:
