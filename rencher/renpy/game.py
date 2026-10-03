@@ -143,32 +143,34 @@ class Game:
         Returns:
             the version as a string. returns `None` if it couldn't be determined
         """
-        vc_path = self.apath/'renpy'/'vc_version.py'
-        init_path = self.apath/'renpy'/'__init__.py'
+        vc_path = self.apath / 'renpy' / 'vc_version.py'
+        init_path = self.apath / 'renpy' / '__init__.py'
         commit: int | None = None
         version: list[int] = []
 
         if vc_path.is_file():
             with open(vc_path) as f:
                 vc_content = f.read()
-                version_match = re.findall(r'version .*\'(.*)\'', vc_content, re.MULTILINE)
-                if version_match:
-                    version = list(map(int, version_match[0].split('.')))
-                commit_match = re.findall(r'vc_version.*(\b\d+\b)', vc_content, re.MULTILINE)
-                if commit_match:
-                    commit = int(commit_match[0])
+
+                if version_match := re.search(r'version .*\'(.*)\'', vc_content):
+                    version_str = version_match.group(1)
+                    version = [int(v) for v in version_str.split('.')]
+
+                if commit_match := re.search(r'vc_version.*(\b\d+\b)', vc_content):
+                    commit = int(commit_match.group(1))
 
         if init_path.is_file():
             with open(init_path) as f:
                 init_content = f.read()
-                version_match = re.findall(r'version_tuple.*\((\d.*)\)', init_content, re.MULTILINE)
-                if version_match:
-                    version_list = re.findall(r'\b\d+\b', version_match[0])
-                    version = list(map(int, version_list[0].split('.')))
+
+                if version_match := re.search(r'version_tuple.*\((\d.*)\)', init_content):
+                    version_list: list[str] = re.findall(r'\b\d+\b', version_match.group(1))
+                    version = [int(v) for v in version_list]
 
         if commit:
             version.append(commit)
-        return version
+
+        return version if version else None
 
     def run(self) -> subprocess.Popen[bytes] | None:
         """
