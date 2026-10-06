@@ -117,16 +117,17 @@ class Library(GObject.Object):
             self.update_game(rpath)
             return
 
-        try:
-            game_item = GameEntry(rpath=rpath)
-        except GameInvalidError:
-            logging.warning(f'Couldn\'t load "{os.path.basename(rpath)}"')
-            return
+        game_item = None
 
         try:
+            game_item = GameEntry(rpath=rpath)
             game_item.game.get_main_script()
         except GameNoExecutableError:
-            self.emit('game-unknown-exec', game_item)
+            if game_item:
+                self.emit('game-unknown-exec', game_item)
+            return
+        except GameInvalidError:
+            logging.warning(f'Couldn\'t load "{os.path.basename(rpath)}"')
             return
 
         self.store.append(game_item)
