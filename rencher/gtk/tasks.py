@@ -17,7 +17,7 @@ from rencher.gtk.game_entry import GameEntry
 from rencher.gtk.utils import windowficate_path
 from rencher.renpy.config import RencherConfig
 from rencher.renpy.game import Game
-from rencher.renpy.paths import get_absolute_path, get_py_files, get_rpa_files, get_rpa_path, validate_game_files
+from rencher.renpy.paths import get_absolute_path, get_py_files, get_script_files, get_script_path, validate_game_files
 
 
 class TaskError(Exception):
@@ -361,15 +361,14 @@ class ImportGameTask(RencherTask):
         Some R6 mods come with .rpa files in root and nothing else
         This tries to make a game/ directory and move them there
         """
-        # TODO this code is broken. needs to get checked against blue skies
         if self.target_entry:
-            rpa_path = get_rpa_path(game_path)
+            rpa_path = get_script_path(game_path)
             apath = get_absolute_path(game_path)
             if not rpa_path or not apath:
                 raise TaskError(_('No game files found; target game is corrupt'))
-            if rpa_path == apath:
+            if rpa_path.name != 'game':
                 new_rpa_path = apath / 'game'
-                rpa_files = get_rpa_files(apath)
+                rpa_files = get_script_files(apath)
                 if not new_rpa_path.exists():
                     new_rpa_path.mkdir(parents=True, exist_ok=True)
                 for path in rpa_files:
@@ -381,7 +380,7 @@ class ImportGameTask(RencherTask):
 
                 # get_absolute_path is based off of get_rpa_files so we need to clear the cache
                 # otherwise it will dump the game files outside the folder
-                get_rpa_files.cache_clear()
+                get_script_files.cache_clear()
 
             apath = get_absolute_path(game_path)
             if not apath:

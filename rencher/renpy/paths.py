@@ -23,7 +23,7 @@ def get_py_files(apath: Path | str) -> list[Path]:
     return [file for file in apath.iterdir() if file.suffix == '.py']
 
 @lru_cache
-def get_rpa_files(rpath: Path | str) -> list[Path]:
+def get_script_files(rpath: Path | str) -> list[Path]:
     if isinstance(rpath, str):
         rpath = Path(rpath)
 
@@ -46,15 +46,16 @@ def get_rpa_files(rpath: Path | str) -> list[Path]:
 
     return rp_files
 
-def get_rpa_path(rpath: Path | str) -> Path | None:
+def get_script_path(rpath: Path | str) -> Path | None:
+    """the script path is apath/game"""
     if isinstance(rpath, str):
         rpath = Path(rpath)
 
-    game_files = get_rpa_files(rpath)
+    game_files = get_script_files(rpath)
     if not game_files:
         return None
 
-    # some mods apparently store ren'py files in lib/
+    # some games apparently store ren'py scripts in lib/
     # those are further nested inside the game so just try and get the top folder
     rpa_path = min(game_files, key=lambda path: len(path.parents))
     return rpa_path.parent
@@ -63,7 +64,7 @@ def get_absolute_path(rpath: Path | str) -> Path | None:
     if isinstance(rpath, str):
         rpath = Path(rpath)
 
-    rpa_path = get_rpa_path(rpath)
+    rpa_path = get_script_path(rpath)
     if rpa_path:
         return rpa_path.parent
     return None

@@ -253,7 +253,7 @@ class Game:
 
             2. in newer ren'py versions, a dll called "librenpython" got added
             this library includes all the python libraries ren'py needs (i think)
-            this makes modding a bit more complicated, as certain conflicts might arise
+            this makes modding a bit more complicated, as libraries can collide
 
             PRE LIBRENPYTHON:
             * libraries were located in lib/ inside the exec path
@@ -279,7 +279,7 @@ class Game:
                 # we're not in lib. where we want to actually do stuff
                 continue
 
-            libs_path = candidate.parent/'libs'
+            libs_path = candidate.parent/'lib'
             librenpython_path = candidate.parent/'librenpython.so'
             if libs_path.is_dir() and librenpython_path.is_file():
                 shutil.rmtree(libs_path)
