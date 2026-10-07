@@ -14,7 +14,8 @@ from pathlib import Path
 from cx_Freeze import Executable, setup  # pyright: ignore[reportMissingImports, reportUnknownVariableType]
 
 if sys.platform not in ('win32', 'msys'):
-    raise NotImplementedError('Freezing is only supported on Windows!')
+    print('ERROR: Freezing is (currently) only supported on Windows')
+    sys.exit(1)
 
 USAGE_MSG = f'\n\nUsage:\n\t{Path(__file__).name} build_dir [dest_dir]'
 TYPELIB_PREFIXES = [
@@ -38,25 +39,27 @@ TYPELIB_PREFIXES = [
     'GLibWin32',
     'Win32-',
 ]
-base_prefix = Path(os.environ['MSYSTEM_PREFIX'])
-if not base_prefix:
-    raise ValueError('MSYSTEM_PREFIX environment variable is not set')
+if base_prefix := os.environ.get('MSYSTEM_PREFIX', None):
+    base_prefix = Path(base_prefix)
+else:
+    print('ERROR: MSYSTEM_PREFIX environment variable is not set')
+    sys.exit(2)
 lib_dir = base_prefix / 'bin'
 lib_ext = '.dll'
 
 pkgconf_path = shutil.which('pkg-config')
 if not pkgconf_path:
-    raise FileNotFoundError('pkg-config was not found in path (not installed?)')
-
+    print('ERROR: pkg-config was not found in path (not installed?)')
+    sys.exit(3)
 
 def freeze(argv: list[str]):
     include_files: list[tuple[Path, Path]] = []
     if len(argv) == 1:
         print('ERROR: No build dir specified!' + USAGE_MSG)
-        return
+        sys.exit(4)
     elif not os.path.isdir(argv[1]):
         print(f'ERROR: "{argv[1]}" is not a directory!' + USAGE_MSG)
-        return
+        sys.exit(5)
 
     rencher_module = (
         Path(argv[1]) / 'lib' / f'python{sys.version_info.major}.{sys.version_info.minor}' / 'site-packages'
