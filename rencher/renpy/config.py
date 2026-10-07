@@ -48,7 +48,7 @@ class GameConfig(ConfigParser):
     ) -> list[str]:
         if not filenames:
             filenames = self.game_config_path
-        read_ok = super().read(filenames)
+        read_ok = super().read(filenames, encoding='utf-8')
         self.validate()
         return read_ok
 
@@ -93,7 +93,7 @@ class GameConfig(ConfigParser):
         game_config_dir.mkdir(parents=True, exist_ok=True)
         open(self.game_config_path, 'a').close()
         if not fp:
-            fp = open(self.game_config_path, 'w')
+            fp = open(self.game_config_path, 'w', encoding='utf-8')
         new_config.write(fp, space_around_delimiters)
         fp.close()
 
@@ -133,7 +133,7 @@ class RencherConfig(ConfigParser):
     ) -> list[str]:
         if not filenames:
             filenames = config_path
-        read_ok = super().read(filenames)
+        read_ok = super().read(filenames, encoding='utf-8')
         self.validate()
         return read_ok
 
@@ -170,7 +170,7 @@ class RencherConfig(ConfigParser):
 
         open(config_path, 'a').close()
         if not fp:
-            fp = open(config_path, 'w')
+            fp = open(config_path, 'w', encoding='utf-8')
         super().write(fp, space_around_delimiters)
         fp.close()
 
