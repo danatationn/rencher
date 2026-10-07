@@ -79,7 +79,7 @@ class OptionsDialog(Adw.PreferencesDialog):
                 codename_index = i
 
         self.codename_combo.set_model(string_list)
-        if codename_index:
+        if codename_index is not None:
             self.codename_combo.set_selected(codename_index)
 
         for overwrite_switch, switch, key in self.switches_list:
@@ -179,7 +179,7 @@ class OptionsDialog(Adw.PreferencesDialog):
     def on_delete_game(self, _widget: Adw.ButtonRow):
         dialog = Adw.AlertDialog(
             heading=_('Are you sure?'),
-            body=_(f'This will permanently delete "{self.entry.name}".\nThis action cannot be undone.'),
+            body=_('This will permanently delete "{}".\nThis action cannot be undone.').format(self.entry.name),
         )
         dialog.add_response('cancel', _('No'))
         dialog.add_response('ok', _('Yes'))
