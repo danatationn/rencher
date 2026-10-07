@@ -293,12 +293,18 @@ class ImportGameTask(RencherTask):
                 else:
                     new_path = path
                 if not new_path.exists():
-                    new_path.mkdir(parents=True, exist_ok=True)
-                    game_path = new_path
-                    break
+                    try:
+                        new_path.mkdir(parents=True)
+                    except FileExistsError as e:
+                        raise TaskError(
+                            _('A directory with the name {} already exists').format(new_path.name), e,
+                        ) from e
+                    else:
+                        game_path = new_path
+                        break
 
         if not self.is_cancelled:
-            logging.info(_(f'Importing the game at "{game_path}/"'))
+            logging.info(f'Importing the game at "{game_path}/"')
             self.game_path = game_path
 
         if self.target_entry:
@@ -363,29 +369,26 @@ class ImportGameTask(RencherTask):
         """
         if self.target_entry:
             rpa_path = get_script_path(game_path)
-            apath = get_absolute_path(game_path)
-            if not rpa_path or not apath:
+            if not rpa_path:
                 raise TaskError(_('No game files found; target game is corrupt'))
-            if rpa_path.name != 'game':
-                new_rpa_path = apath / 'game'
-                rpa_files = get_script_files(apath)
-                if not new_rpa_path.exists():
-                    new_rpa_path.mkdir(parents=True, exist_ok=True)
-                for path in rpa_files:
+
+            apath = game_path if rpa_path == game_path else rpa_path.parent
+            new_rpa_path = apath / 'game'
+
+            if rpa_path != new_rpa_path:
+                for path in get_script_files(apath):
                     if self.is_cancelled:
                         break
+                    if path.is_relative_to(new_rpa_path):
+                        continue
                     relative_path = path.relative_to(rpa_path)
                     target_path = new_rpa_path / relative_path
-                    path.move(target_path)
+                    target_path.parent.mkdir(parents=True, exist_ok=True)
+                    shutil.move(path, target_path)
 
                 # get_absolute_path is based off of get_rpa_files so we need to clear the cache
                 # otherwise it will dump the game files outside the folder
-                get_script_files.cache_clear()
-
-            apath = get_absolute_path(game_path)
-            if not apath:
-                ...
-                return
+                # get_script_files.cache_clear()
 
             for path in self.target_entry.game.apath.rglob('*'):
                 if self.is_cancelled:
@@ -423,20 +426,26 @@ class ImportGameTask(RencherTask):
                     self.warn(TaskError(_('Couldn\'t determine codename'), e))
             game.config.write()
 
+            if archive:
+                archive.close()
+
             logging.info(f'Importing done in {time.perf_counter() - start_time:.2f}s')
             if config.get('settings', 'delete_on_import') == 'true':
                 try:
-                    # if archive is still open windows will whine and scream and not let you
                     if archive:
-                        archive.close()
-                    self.source_path.unlink()
+                        self.source_path.unlink()
+                    else:
+                        shutil.rmtree(self.source_path)
                 except PermissionError as e:
-                    self.warn(TaskError(_('Couldn\'t delete archive! File left untouched'), e))
+                    self.warn(TaskError(_('Couldn\'t delete source!'), e))
                 except Exception as e:
-                    self.warn(TaskError(_('Couldn\'t delete archive! File left untouched'), e))
+                    self.warn(TaskError(_('Couldn\'t delete source!'), e))
                 else:
-                    logging.info(f'Archive "{self.source_path.name}" deleted!')
+                    logging.info(f'Source "{self.source_path.name}" deleted!')
         else:
+            if archive:
+                archive.close()
+
             shutil.rmtree(game_path)
             logging.info(f'Importing cancelled. Total thread runtime: {time.perf_counter() - start_time:.2f}s')
 
