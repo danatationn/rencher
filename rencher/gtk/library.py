@@ -27,7 +27,7 @@ class Library(GObject.Object):
     everything akin to games happens here. any non-instant action that should be done upon a game, Should be made here
     """
 
-    # this is all horrendous and will be refactored after v1.2.0
+    # this is all horrendous and will be refactored after v1.3.0
 
     action_group: Gio.SimpleActionGroup
     store: Gio.ListStore
@@ -105,8 +105,7 @@ class Library(GObject.Object):
             if isinstance(item, GameEntry):
                 self.remove_game(item.rpath)
 
-        for dir in games_dir.iterdir():
-            rpath = games_dir / dir
+        for rpath in games_dir.iterdir():
             GLib.idle_add(self.add_game, rpath)
 
     def _msg(self, _t: RencherTask, text: str) -> None:
@@ -299,7 +298,6 @@ class Library(GObject.Object):
 
     def _cancel_task(self, _action: Gio.SimpleAction, uuid: GLib.Variant):
         # ugh
-        logging.debug('mgrefhjkivnrevu4h74hfgiu4llgf')
         uuid_str = uuid.get_string()
         if not (old_task := self.tasks.get(uuid_str, None)):
             return
