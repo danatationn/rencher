@@ -301,11 +301,12 @@ class Game:
             return True
         elif len(py_files) <= 1:
             return False
-        else:
-            raise FileNotFoundError(f'{self.rpath.name} has no .py files!')
     @property
     def is_launchable(self) -> bool:
-        if self.get_main_script():
-            return True
-        else:
+        try:
+            if self.get_main_script():
+                return True
+            else:
+                return False
+        except GameInvalidError:
             return False
