@@ -1,6 +1,7 @@
 import os
 from enum import Enum
 from gettext import gettext as _
+from pathlib import Path
 from typing import TYPE_CHECKING
 
 from gi.repository import Adw, GLib, Gtk
@@ -210,8 +211,19 @@ class MainWindow(Adw.Window):
         """selects either the next or previous row if either exist"""
         was_selected = row == self.library_list_box.get_selected_row()
         next_row = row.get_next_sibling() or row.get_prev_sibling()
+
+        if not next_row:
+            return
+        if not isinstance(next_row, GameRow):
+            return
+
+        def _select():
+            if next_row.get_parent() is self.library_list_box:
+                self.library_list_box.select_row(next_row)
+            return GLib.SOURCE_REMOVE
+
         if was_selected and next_row:
-            GLib.idle_add(self.library_list_box.select_row, next_row)
+            GLib.idle_add(_select)
 
     def _show_task_dialog(self, row: GameRow) -> None:
         if (toast := self.toasts.get(row)):
@@ -267,6 +279,13 @@ class MainWindow(Adw.Window):
     def on_game_selected(self, _widget: Gtk.ListBox, row: GameRow | None) -> None:
         if row:
             if entry := self.games.get(row):
+                if not Path(entry.rpath).is_dir():
+                    self.library.remove_game(entry.rpath)
+                    self.toast_overlay.add_toast(
+                        Adw.Toast(title=_('This game is missing!'))
+                    )
+                    return
+
                 view = self.game_views.get(entry, None)
 
                 if not view:
