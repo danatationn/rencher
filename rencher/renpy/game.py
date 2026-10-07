@@ -183,21 +183,9 @@ class Game:
             raise GameNoExecutableError
         args: list[str] = [str(exec_path)]
 
-        # bash can't run files with crlf line endings. convert to lf
-        if exec_path.suffix == '.sh':
-            temp_path = exec_path.with_suffix('.tmp')
-            has_crlf: bool = False
-            with open(exec_path, 'rb') as f_in, open(temp_path, 'wb') as f_out:
-                if f_in.readline().endswith(b'\r\n'):
-                    logging.debug(f'"{self.rpath}" has crlf line endings. Converting')
-                    has_crlf = True
-                    f_in.seek(0)
-                    for line in f_in:
-                        f_out.write(line.replace(b'\r\n', b'\n'))
-            if has_crlf:
-                temp_path.replace(exec_path)
-        # python can however
-        elif exec_path.suffix == '.py':
+        # python works with crlf on unix, while bash can't.
+        # bash conversion happens in setup()
+        if exec_path.suffix == '.py':
             args.insert(0, sys.executable)
 
         self.setup()
@@ -205,29 +193,12 @@ class Game:
 
         if self.config['overwritten']['skip_splash_scr'] == 'true':
             env['RENPY_SKIP_SPLASHSCREEN'] = '1'
-        elif env.get('RENPY_SKIP_SPLASHSCREEN'):
-            env.pop('RENPY_SKIP_SPLASHSCREEN')
         if self.config['overwritten']['skip_main_menu'] == 'true':
             env['RENPY_SKIP_MAIN_MENU'] = ('Did you know you can put anything here and it stills work '
                                            'like ren\'py doesn\'t even check for the value it\'s crazy')
-        elif env.get('RENPY_SKIP_MAIN_MENU'):
-            env.pop('RENPY_SKIP_MAIN_MENU')
-
-        # py_path = str(self.get_main_script())
-        # librenpython_path = os.path.join(os.path.dirname(args[0]), 'librenpython.so')
-        # if os.path.isfile(librenpython_path):
-        #     args.extend([py_path])
-        # else:
-        #     args.extend(['-EO', py_path])
 
         if self.config['overwritten']['forced_save_dir'] == 'true':
             save_dir = os.path.join(self.apath, 'game', 'saves')
-
-            # save_slot = self.config['options'].getint('save_slot')
-            # if 1 < save_slot <= 10:
-            #     save_dir = os.path.join(save_dir, str(save_slot))
-            #     logging.debug(save_dir)
-
             args.extend(['--savedir', save_dir])
 
         if os.environ.get('FLATPAK_ID'):
@@ -241,7 +212,7 @@ class Game:
         for item in self.config['overwritten']:
             config_dict[item] = self.config['overwritten'][item]
         logging.info(f'Running "{os.path.basename(self.rpath)}"...')
-        logging.debug(f'"{os.path.basename(self.rpath)}" config: {config_dict}')
+        logging.debug(f'"{os.path.basename(self.rpath)}" config: {self.config['overwritten']}')
         logging.debug(f'"{os.path.basename(self.rpath)}" args: {args}')
         return subprocess.Popen(args, env=os.environ | env, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
@@ -254,6 +225,8 @@ class Game:
             2. in newer ren'py versions, a dll called "librenpython" got added
             this library includes all the python libraries ren'py needs (i think)
             this makes modding a bit more complicated, as libraries can collide
+
+            3. converts crlf line endings to lf on unix based systems
 
             PRE LIBRENPYTHON:
             * libraries were located in lib/ inside the exec path
@@ -270,8 +243,22 @@ class Game:
         for candidate in self._exec_candidates():
             if not candidate.is_file():
                 continue
+            # bash can't run files with crlf line endings. convert to lf
+            if candidate.suffix == '.sh':
+                temp_path = candidate.with_suffix('.tmp')
+                has_crlf: bool = False
+                with open(candidate, 'rb') as f_in:
+                    if f_in.readline().endswith(b'\r\n'):
+                        with open(temp_path, 'wb') as f_out:
+                            logging.debug(f'"{self.rpath.name}" has crlf line endings. Converting')
+                            has_crlf = True
+                            f_in.seek(0)
+                            for line in f_in:
+                                f_out.write(line.replace(b'\r\n', b'\n'))
+                if has_crlf:
+                    temp_path.replace(candidate)
             if not os.access(candidate, os.X_OK) and platform.system() != 'Windows':
-                logging.debug(f'Making "{candidate}" executable')
+                logging.debug(f'Making "{candidate.name}" executable')
                 mode = os.stat(candidate).st_mode
                 os.chmod(candidate, mode | 0o111)
 
