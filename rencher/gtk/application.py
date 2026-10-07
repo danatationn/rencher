@@ -33,7 +33,7 @@ class MainApplication(Adw.Application):
             *args,
             **kwargs,
             application_id='com.github.danatationn.rencher',
-            flags=Gio.ApplicationFlags.HANDLES_COMMAND_LINE | Gio.ApplicationFlags.NON_UNIQUE,
+            flags=Gio.ApplicationFlags.HANDLES_COMMAND_LINE,
         )
 
         self.add_main_option('verbose', ord('v'), GLib.OptionFlags.NONE, GLib.OptionArg.NONE, 'Enable verbose output')
@@ -148,7 +148,9 @@ class MainApplication(Adw.Application):
 
     @override
     def do_shutdown(self) -> None:
-        self.window.activate_action('rpc.stop')
+        if hasattr(self, 'window'):
+            # fixes crash when passing --version
+            self.window.activate_action('rpc.stop')
         Adw.Application.do_shutdown(self)
 
     def on_quit(self, _action: Gio.SimpleAction, _variant: GLib.Variant | None) -> None:
