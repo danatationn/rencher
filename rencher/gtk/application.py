@@ -205,7 +205,10 @@ class MainApplication(Adw.Application):
         local_version_str = importlib.metadata.version('rencher')
 
         try:
-            response = requests.get('https://api.github.com/repos/danatationn/rencher/releases/latest')
+            response = requests.get(
+                'https://api.github.com/repos/danatationn/rencher/releases/latest',
+                timeout=10,
+            )
         except requests.exceptions.ConnectionError:
             logging.error('Couldn\'t check upstream version!')
             return
