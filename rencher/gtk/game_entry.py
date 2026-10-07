@@ -100,6 +100,10 @@ class GameEntry(GObject.Object):
             return False
 
     @override
+    def __ne__(self, other: object):
+        return not self == other
+
+    @override
     def __hash__(self):
         return hash(self.rpath)
 

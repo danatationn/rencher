@@ -1,8 +1,10 @@
 import logging
 import os.path
 import subprocess
+import threading
 import time
 from pathlib import Path
+from typing import IO
 
 from gi.repository import Gio, GLib, GObject
 
@@ -41,12 +43,14 @@ class Library(GObject.Object):
         'game-unknown-exec':(GObject.SignalFlags.RUN_FIRST, None, (GameEntry,)),
         'game-removed':     (GObject.SignalFlags.RUN_FIRST, None, (GameEntry,)),
         'game-changed':     (GObject.SignalFlags.RUN_FIRST, None, (GameEntry,)),
-        # object = subprocess.Popen[bytes]
+        # object=subprocess.Popen[bytes]
         'game-launched':    (GObject.SignalFlags.RUN_FIRST, None, (GameEntry, object)),
-        # object, object = subprocess.Popen[bytes] | None, Error | None
+        # bool=is_stderr
+        'game-log':         (GObject.SignalFlags.RUN_FIRST, None, (GameEntry, str, bool)),
+        # object=subprocess.Popen[bytes] | None, object=Error | None
         'game-closed':      (GObject.SignalFlags.RUN_FIRST, None, (GameEntry, object, object)),
         'task-started':     (GObject.SignalFlags.RUN_FIRST, None, (RencherTask, object)),
-        # object = Error | None
+        # object=Error | None
         'task-finished':    (GObject.SignalFlags.RUN_FIRST, None, (RencherTask, object)),
         'message':          (GObject.SignalFlags.RUN_FIRST, None, (str,)),
     }
@@ -236,6 +240,9 @@ class Library(GObject.Object):
         self.processes[entry] = ((process, time.time()))
         self.emit('game-launched', entry, process)
 
+        for stream, is_stderr in [(process.stdout, False), (process.stderr, True)]:
+            threading.Thread(target=self._read_stream, args=(entry, stream, is_stderr), daemon=True).start()
+
         def _watch_process() -> bool:
             if process in self._terminating_processes:
                 return GLib.SOURCE_REMOVE
@@ -245,6 +252,14 @@ class Library(GObject.Object):
             return GLib.SOURCE_CONTINUE
 
         GLib.timeout_add(CHECK_PROCESS_MS, _watch_process)
+
+    def is_game_running(self, rpath: str) -> bool:
+        result = self.find(rpath)
+        return result is not None and result[1] in self.processes
+
+    def _read_stream(self, entry: GameEntry, stream: IO[bytes], is_stderr: bool) -> None:
+        for line in stream:
+            GLib.idle_add(self.emit, 'game-log', entry, line.decode(errors='replace'), is_stderr)
 
     def _close_game(self, _action: Gio.SimpleAction, param: GLib.Variant) -> None:
         rpath = param.get_string()
@@ -275,8 +290,9 @@ class Library(GObject.Object):
                 GLib.timeout_add(CHECK_PROCESS_MS, _wait_to_term)
 
     def _cleanup_game(self, entry: GameEntry) -> None:
-        process, start = self.processes[entry]
-        del self.processes[entry]
+        if not (info := self.processes.pop(entry, None)):
+            return
+        process, start = info
 
         entry.game.cleanup(time.time() - start)
 

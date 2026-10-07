@@ -1,13 +1,11 @@
 import subprocess
-import threading
 from gettext import gettext as _
-from typing import IO
+from typing import override
 
 from gi.repository import Adw, GLib, GObject, Gtk
 
 from rencher.gtk.game_entry import GameEntry
 from rencher.gtk.library import Library
-from rencher.gtk.rpc import Rpc
 from rencher.gtk.utils import gtk_template_callback, gtk_template_child, open_file_manager
 from rencher.gtk.widgets.options_dialog import OptionsDialog
 from rencher.renpy.game import GameNoExecutableError
@@ -30,6 +28,8 @@ class GameDetailView(Gtk.Box):
     entry: GameEntry
     row: Adw.ActionRow | Gtk.ListBoxRow
     log_buf: Gtk.TextBuffer
+    _handler_ids: list[int]
+    library: Library
 
     play_button: Gtk.Button = gtk_template_child()
     error_dialog: Adw.AlertDialog | None
@@ -41,7 +41,7 @@ class GameDetailView(Gtk.Box):
         self.entry = entry
         self.row = row
         self.log_buf = self.log_text_view.get_buffer()
-
+        self.library = library
         self.error_dialog = None
         self.options_dialog = OptionsDialog(entry)
 
@@ -55,8 +55,14 @@ class GameDetailView(Gtk.Box):
         self.entry.bind_property('rpath', self.rpath_row, 'subtitle', GObject.BindingFlags.SYNC_CREATE)
         self.entry.bind_property('codename', self.codename_row, 'subtitle', GObject.BindingFlags.SYNC_CREATE)
 
-        library.connect('game-launched', self._game_launched)
-        library.connect('game-closed', self._game_closed)
+        self._handler_ids = [
+            self.library.connect('game-launched', self._game_launched),
+            self.library.connect('game-closed', self._game_closed),
+            self.library.connect('game-log', self._on_log_line),
+        ]
+
+        if self.library.is_game_running(self.entry.rpath):
+            self._set_running_ui(True)
 
         self.log_buf = self.log_text_view.get_buffer()
         self.log_buf.create_tag('stderr', foreground='orange')
@@ -64,26 +70,19 @@ class GameDetailView(Gtk.Box):
 
     @gtk_template_callback
     def on_play_clicked(self, _play_button: Gtk.Button) -> None:
-        if self.entry.process and self.entry.process.poll() is None:
+        if self.library.is_game_running(self.entry.rpath):
             self.play_button.set_label(_('Stopping'))
             self.activate_action('library.stop-game', GLib.Variant('s', self.entry.rpath))
         else:
             self.activate_action('library.run-game', GLib.Variant('s', self.entry.rpath))
 
-    def _game_launched(self, _library: Library, entry: GameEntry, process: subprocess.Popen[bytes]) -> None:
+    def _game_launched(self, _library: Library, entry: GameEntry, _process: subprocess.Popen[bytes]) -> None:
         if self.entry != entry:
             return
         self.activate_action('rpc.update', GLib.Variant('a(ss)', [('state', entry.name)]))
-        self.play_button.set_label(_('Stop'))
-        self.play_button.get_style_context().add_class('destructive-action')
-        self.play_button.get_style_context().remove_class('suggested-action')
-
-        self.options_dialog.delete_game_button.set_sensitive(False)
-
+        self._set_running_ui(True)
         self.log_row.set_expanded(False)
         self.log_buf.set_text('')
-        threading.Thread(target=self._read_stream, args=(process.stdout, False), daemon=True).start()
-        threading.Thread(target=self._read_stream, args=(process.stderr, True), daemon=True).start()
 
     def _game_closed(
         self, _library: Library, entry: GameEntry, process: subprocess.Popen[bytes] | None, err: Exception | None,
@@ -91,11 +90,7 @@ class GameDetailView(Gtk.Box):
         if self.entry != entry:
             return
         self.activate_action('rpc.clear')
-        self.play_button.set_label(_('Play'))
-        self.play_button.get_style_context().add_class('suggested-action')
-        self.play_button.get_style_context().remove_class('destructive-action')
-
-        self.options_dialog.delete_game_button.set_sensitive(True)
+        self._set_running_ui(False)
         self.entry.refresh()
 
         if err:
@@ -122,11 +117,22 @@ class GameDetailView(Gtk.Box):
             self.error_dialog.connect('response', self._on_error_dialog_response)
             GLib.idle_add(self.error_dialog.present, self)
 
-    def _read_stream(self, stream: IO[bytes], is_stderr: bool) -> None:
-        for line in stream:
-            GLib.idle_add(self._on_log_line, line.decode(errors='replace'), is_stderr)
+    def _set_running_ui(self, is_running: bool) -> None:
+        if is_running:
+            self.play_button.set_label(_('Stop'))
+            self.play_button.get_style_context().add_class('destructive-action')
+            self.play_button.get_style_context().remove_class('suggested-action')
+        else:
+            self.play_button.set_label(_('Play'))
+            self.play_button.get_style_context().add_class('suggested-action')
+            self.play_button.get_style_context().remove_class('destructive-action')
+        self.options_dialog.delete_game_button.set_sensitive(not is_running)
 
-    def _on_log_line(self, line: str, is_stderr: bool) -> None:
+
+    def _on_log_line(self, _library: Library, entry: GameEntry, line: str, is_stderr: bool) -> None:
+        if self.entry != entry:
+            return
+
         if is_stderr:
             self.log_buf.insert_with_tags_by_name(self.log_buf.get_end_iter(), line, 'stderr')
         else:
@@ -153,3 +159,10 @@ class GameDetailView(Gtk.Box):
     def on_options_clicked(self, _widget: Gtk.Button):
         self.options_dialog.change_game(self.entry)
         self.options_dialog.present(self)
+
+    @override
+    def do_unroot(self) -> None:
+        for id in self._handler_ids:
+            self.library.disconnect(id)
+        self._handler_ids.clear()
+        Gtk.Box.do_unroot(self)
