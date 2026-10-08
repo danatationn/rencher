@@ -1,6 +1,5 @@
 import os
 import platform
-from functools import lru_cache
 from pathlib import Path
 
 local_path = Path()
@@ -14,15 +13,14 @@ elif platform.system() == 'Windows':
     local_path = Path.home() / 'AppData' / 'Local' / 'Rencher'
     config_path = local_path / 'config.ini'
 
-@lru_cache
+# @lru_cache
 def get_py_files(apath: Path | str) -> list[Path]:
     if isinstance(apath, str):
         apath = Path(apath)
 
-    # return [file.name for file in apath.iterdir() if file.suffix == '.py']
     return [file for file in apath.iterdir() if file.suffix == '.py']
 
-@lru_cache
+# @lru_cache
 def get_script_files(rpath: Path | str) -> list[Path]:
     if isinstance(rpath, str):
         rpath = Path(rpath)
@@ -83,6 +81,8 @@ def validate_game_files(files: list[str] | list[Path]) -> bool:
     if not files:
         return False
 
+    # TODO accept only list[Path] and checks everything in order
+
     rp_files = [file for file in files if '.rp' in os.path.splitext(file)[1]]
     game_files = [
         rp_file for rp_file in rp_files
@@ -116,7 +116,7 @@ def validate_game_files(files: list[str] | list[Path]) -> bool:
 
     game_files = [file for file in rel_files
                   if os.path.commonpath(['game', file])
-                  if os.path.splitext(file)[1] == '.rpa']
+                  if os.path.splitext(file)[1] in ['.rpa', '.rpy', '.rpyc']]
     if not game_files:
         return False
 
