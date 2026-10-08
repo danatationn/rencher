@@ -38,6 +38,9 @@ class Game:
             else:
                 name = rpath.name
                 raise GameInvalidError(f'{name} is not a valid game! ({rpath})')
+        elif rpath and apath:
+            self.rpath = rpath
+            self.apath = apath
 
         config_path = self.apath/'game'/'rencher.ini'
         self.config = GameConfig(config_path)
@@ -296,7 +299,10 @@ class Game:
         return self.get_renpy_version()
     @property
     def is_mod(self):
-        py_files = get_py_files(self.apath)
+        try:
+            py_files = get_py_files(self.apath)
+        except FileNotFoundError:
+            return False
         if len(py_files) > 1:
             return True
         elif len(py_files) <= 1:
