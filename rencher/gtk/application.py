@@ -11,7 +11,6 @@ import gi
 import requests
 from rich.logging import RichHandler
 
-from rencher.gtk.rpc import Rpc
 from rencher.renpy.config import RencherConfig
 
 gi.require_version('Gtk', '4.0')
@@ -109,7 +108,7 @@ class MainApplication(Adw.Application):
         self.window.add_controller(event_controller_key)
 
         if self.config['settings']['suppress_updates'] != 'true':
-            version_thread = threading.Thread(target=self.check_version)
+            version_thread = threading.Thread(target=self.check_version, daemon=True)
             version_thread.start()
 
     def on_key_pressed(
@@ -238,6 +237,7 @@ class MainApplication(Adw.Application):
                 toast.connect('button-clicked', lambda *_: Gtk.show_uri(self.window, download_url, Gdk.CURRENT_TIME))
 
                 GLib.idle_add(self.window.toast_overlay.add_toast, toast)
+                return
             elif upstream_version == local_version:
                 toast.set_title(_('You\'re up to date! (v{})').format(local_version_str))
             else:

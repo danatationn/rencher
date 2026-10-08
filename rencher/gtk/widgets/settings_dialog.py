@@ -109,7 +109,7 @@ class SettingsDialog(Adw.PreferencesDialog):
 
     @gtk_template_callback
     def on_check_updates(self, _):
-        thread = threading.Thread(target=lambda: self.window.app.check_version(show_up_to_date_toast=True))
+        thread = threading.Thread(target=lambda: self.window.app.check_version(show_up_to_date_toast=True), daemon=True)
         thread.start()
         self.close()
 
