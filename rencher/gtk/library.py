@@ -132,6 +132,9 @@ class Library(GObject.Object):
         except GameInvalidError:
             logging.warning(f'Couldn\'t load "{os.path.basename(rpath)}"')
             return
+        except Exception as e:
+            logging.error(f'Couldn\'t load "{os.path.basename(rpath)}" because of {e}')
+            return
 
         self.store.append(game_item)
         self.emit('game-added', game_item)
