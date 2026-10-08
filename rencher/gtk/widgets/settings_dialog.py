@@ -1,4 +1,3 @@
-import logging
 import sys
 import threading
 from typing import TYPE_CHECKING, override
@@ -126,16 +125,19 @@ class SettingsDialog(Adw.PreferencesDialog):
             value = switch.get_active()
         else:
             self.config = RencherConfig()
-            value = self.config.get('settings', 'reduce_motion')
+            value = self.config.get('settings', 'reduce_motion') == 'true'
 
-        if value :
-            Gtk.Settings.get_default().set_property('gtk-enable-animations', False)
+        if value:
+            if settings := Gtk.Settings.get_default():
+                settings.set_property('gtk-enable-animations', False)
         else:
             import ctypes
+            import ctypes.wintypes
 
             SPI_GETCLIENTAREAANIMATION = 0x1042
             animations_enabled = ctypes.wintypes.BOOL()
 
+            # TODO type is Any
             success = ctypes.windll.user32.SystemParametersInfoW(
                 SPI_GETCLIENTAREAANIMATION,
                 0,
@@ -143,10 +145,11 @@ class SettingsDialog(Adw.PreferencesDialog):
                 0,
             )
 
-            if success and not animations_enabled.value:
-                Gtk.Settings.get_default().set_property('gtk-enable-animations', False)
-            else:
-                Gtk.Settings.get_default().set_property('gtk-enable-animations', True)
+            if settings := Gtk.Settings.get_default():
+                if success and not animations_enabled.value:
+                    settings.set_property('gtk-enable-animations', False)
+                else:
+                    settings.set_property('gtk-enable-animations', True)
 
     @gtk_template_callback
     def on_reset_data_dir(self, _widget: Adw.ButtonRow):  # type: ignore
