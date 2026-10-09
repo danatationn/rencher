@@ -61,7 +61,7 @@ class MainWindow(Adw.Window):
     library_search_button: Gtk.ToggleButton = gtk_template_child()
 
     def __init__(self, application: MainApplication):
-        super().__init__()
+        super().__init__(application=application)
 
         self.rows = {}
         self.games = {}

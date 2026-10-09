@@ -42,8 +42,8 @@ class ImportDialog(Adw.Dialog):
     archive_location: str
     folder_location: str
 
-    def __init__(self, window: 'MainWindow', *args, **kwargs):
-        super().__init__(*args, **kwargs)
+    def __init__(self, window: 'MainWindow'):
+        super().__init__()
 
         self.selected_type = ImportTypeEnum.ARCHIVE
         self.archive_location = ''

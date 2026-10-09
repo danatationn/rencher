@@ -137,10 +137,17 @@ class Library(GObject.Object):
     def _pool_add_game(self, rpath: str, gen: uuid.UUID) -> None:
         if gen != self._pool_generation:
             return
-        entry = self._load_game(rpath)
-        GLib.idle_add(self.add_game, rpath, entry)
 
-    def add_game(self, rpath: str, pool_entry: tuple[GameEntry | None, Exception | None]) -> None:
+        entry = self._load_game(rpath)
+
+        def _finish() -> bool:
+            if gen == self._pool_generation:
+                self.add_game(rpath, entry)
+            return GLib.SOURCE_REMOVE
+
+        GLib.idle_add(_finish)
+
+    def add_game(self, rpath: str, pool_entry: tuple[GameEntry | None, Exception | None] | None = None) -> None:
         if self.find(rpath):
             self.update_game(rpath)
             return

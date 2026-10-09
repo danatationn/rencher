@@ -2,7 +2,7 @@ import sys
 import threading
 from typing import TYPE_CHECKING, override
 
-from gi.repository import Adw, GLib, Gtk
+from gi.repository import Adw, Gio, GLib, Gtk
 
 from rencher.gtk.utils import gtk_template_callback, gtk_template_child, open_file_manager
 from rencher.renpy.config import RencherConfig
@@ -29,8 +29,8 @@ class SettingsDialog(Adw.PreferencesDialog):
     reduce_motion_switch: Adw.SwitchRow = gtk_template_child()
     switches_list: list[tuple[Adw.SwitchRow, str]]
 
-    def __init__(self, window: 'MainWindow', *args, **kwargs):
-        super().__init__(*args, **kwargs)
+    def __init__(self, window: 'MainWindow'):
+        super().__init__()
 
         self.switches_list = [
             (self.delete_import_switch, 'delete_on_import'),
@@ -91,14 +91,14 @@ class SettingsDialog(Adw.PreferencesDialog):
     @gtk_template_callback
     def on_picker_clicked(self, _widget: Gtk.Button):
         dialog = Gtk.FileDialog()
-        dialog.select_folder(self.window, None, self.on_folder_selected)
+        dialog.select_folder(self.window, None, self._on_folder_selected)
 
     @gtk_template_callback
     def on_dir_clicked(self, _):
         data_dir = self.data_dir_entry.get_text()
         open_file_manager(data_dir)
 
-    def on_folder_selected(self, dialog: Gtk.FileDialog, result):
+    def _on_folder_selected(self, dialog: Gtk.FileDialog, result: Gio.Task) -> None:
         try:
             folder = dialog.select_folder_finish(result)
         except GLib.Error:

@@ -1,5 +1,4 @@
 import glob
-import logging
 import os.path
 from gettext import gettext as _
 
