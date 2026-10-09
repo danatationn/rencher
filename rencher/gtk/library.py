@@ -3,6 +3,8 @@ import os.path
 import subprocess
 import threading
 import time
+import uuid
+from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 from typing import IO
 
@@ -37,6 +39,9 @@ class Library(GObject.Object):
     processes: dict[GameEntry, tuple[subprocess.Popen[bytes], float]]  # float is time
     _terminating_processes: list[subprocess.Popen[bytes]]
 
+    _pool_generation: uuid.UUID | None
+    _thread_pool: ThreadPoolExecutor
+
     # signal name: flags, return types, arg types
     __gsignals__: dict[str, tuple[GObject.SignalFlags, None, tuple[type, ...]]] = {
         'game-added':       (GObject.SignalFlags.RUN_FIRST, None, (GameEntry,)),
@@ -61,6 +66,8 @@ class Library(GObject.Object):
         self.tasks = {}
         self.processes = {}
         self._terminating_processes = []
+        self._pool_generation = None
+        self._thread_pool = ThreadPoolExecutor()
 
         self.action_group = Gio.SimpleActionGroup.new()
         # s = rpath
@@ -109,37 +116,55 @@ class Library(GObject.Object):
             if isinstance(item, GameEntry):
                 self.remove_game(item.rpath)
 
+        self._pool_generation = uuid.uuid4()
+        gen = self._pool_generation
+
         for rpath in games_dir.iterdir():
-            GLib.idle_add(self.add_game, rpath)
+            self._thread_pool.submit(self._pool_add_game, str(rpath), gen)
 
     def _msg(self, _t: RencherTask, text: str) -> None:
         self.emit('message', text)
 
-    def add_game(self, rpath: str) -> None:
+    def _load_game(self, rpath: str) -> tuple[GameEntry | None, Exception | None]:
+        game_item = None
+        try:
+            game_item = GameEntry(rpath=rpath)
+            game_item.game.get_main_script()
+            return game_item, None
+        except Exception as e:
+            return game_item, e
+
+    def _pool_add_game(self, rpath: str, gen: uuid.UUID) -> None:
+        if gen != self._pool_generation:
+            return
+        entry = self._load_game(rpath)
+        GLib.idle_add(self.add_game, rpath, entry)
+
+    def add_game(self, rpath: str, pool_entry: tuple[GameEntry | None, Exception | None]) -> None:
         if self.find(rpath):
             self.update_game(rpath)
             return
 
-        game_item = None
+        game_item, error = pool_entry or self._load_game(rpath)
+        match error:
+            case None:
+                pass
+            case GameNoExecutableError():
+                if game_item:
+                    self.emit('game-unknown-exec', game_item)
+                return
+            case GameInvalidError():
+                logging.warning(f'Couldn\'t load "{os.path.basename(rpath)}"')
+                return
+            case _:
+                logging.error(f'Couldn\'t load "{os.path.basename(rpath)}" because of {error}')
+                return
 
-        try:
-            game_item = GameEntry(rpath=rpath)
-            game_item.game.get_main_script()
-        except GameNoExecutableError:
-            if game_item:
-                self.emit('game-unknown-exec', game_item)
-            return
-        except GameInvalidError:
-            logging.warning(f'Couldn\'t load "{os.path.basename(rpath)}"')
-            return
-        except Exception as e:
-            logging.error(f'Couldn\'t load "{os.path.basename(rpath)}" because of {e}')
-            return
+        if game_item:
+            self.store.append(game_item)
+            self.emit('game-added', game_item)
 
-        self.store.append(game_item)
-        self.emit('game-added', game_item)
-
-        logging.debug(f'Added: "{os.path.basename(rpath)}"')
+            logging.debug(f'Added: "{os.path.basename(rpath)}"')
 
     def remove_game(self, rpath: str) -> None:
         result = self.find(rpath)
