@@ -7,17 +7,14 @@ permissions:
 jobs:
   linux-job:
     name: Linux
-    runs-on: ubuntu-latest
-    container:
-      image: ubuntu:25.10
-      options: --privileged
+    runs-on: ubuntu-26.04
     steps:
       - uses: actions/checkout@v7
       - name: Install packages
         env:
           DEBIAN_FRONTEND: noninteractive
         run: |
-          apt update && apt install -y \
+          sudo apt update && sudo apt install -y \
             python3-dev \
             python3-pip \
             python3-venv \
@@ -34,7 +31,7 @@ jobs:
             flatpak-builder \
             meson \
             nodejs
-          pip install uv --break-system-packages
+          pipx install uv
 
       - name: Cache uv
         uses: actions/cache@v6
@@ -52,7 +49,7 @@ jobs:
         uses: actions/cache@v6
         with:
           path: |
-              /var/lib/flatpak
+              ~/.local/share/flatpak
               .flatpak-builder
           key: flatpak-${{ runner.os }}-49
 
