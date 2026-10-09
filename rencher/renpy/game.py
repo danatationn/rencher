@@ -298,15 +298,14 @@ class Game:
     def version(self) -> list[int] | None:
         return self.get_renpy_version()
     @property
-    def is_mod(self):
+    def is_mod(self) -> bool:
         try:
             py_files = get_py_files(self.apath)
         except FileNotFoundError:
             return False
         if len(py_files) > 1:
             return True
-        elif len(py_files) <= 1:
-            return False
+        return False
     @property
     def is_launchable(self) -> bool:
         try:

@@ -27,10 +27,8 @@ class MainApplication(Adw.Application):
     action_info: list[tuple[str, Callable[[Gio.SimpleAction, GLib.Variant | None], None], list[str]]]
     simple_actions: dict[str, Gio.SimpleAction]
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self):
         super().__init__(
-            *args,
-            **kwargs,
             application_id='com.github.danatationn.rencher',
             flags=Gio.ApplicationFlags.HANDLES_COMMAND_LINE,
         )

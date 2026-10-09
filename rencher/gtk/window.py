@@ -60,8 +60,8 @@ class MainWindow(Adw.Window):
     library_search_entry: Gtk.SearchEntry = gtk_template_child()
     library_search_button: Gtk.ToggleButton = gtk_template_child()
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+    def __init__(self, application: MainApplication):
+        super().__init__()
 
         self.rows = {}
         self.games = {}
@@ -69,7 +69,7 @@ class MainWindow(Adw.Window):
         self.task_rows = {}
         self.toasts = {}
 
-        self.app = self.get_application()  # pyright: ignore[reportAttributeAccessIssue]
+        self.app = application
         self.library = Library()
         self.insert_action_group('library', self.library.action_group)
         self.library.connect('game-added', self._on_game_added)
@@ -282,7 +282,7 @@ class MainWindow(Adw.Window):
                 if not Path(entry.rpath).is_dir():
                     self.library.remove_game(entry.rpath)
                     self.toast_overlay.add_toast(
-                        Adw.Toast(title=_('This game is missing!'))
+                        Adw.Toast(title=_('This game is missing!')),
                     )
                     return
 

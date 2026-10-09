@@ -107,7 +107,7 @@ class GameEntry(GObject.Object):
     def __hash__(self):
         return hash(self.rpath)
 
-    def run(self) -> subprocess.Popen[bytes]:
+    def run(self) -> subprocess.Popen[bytes] | None:
         process = self.game.run()
         self._process = process
         return process

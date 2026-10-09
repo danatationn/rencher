@@ -264,6 +264,9 @@ class Library(GObject.Object):
         except Exception as e:
             self.emit('game-closed', entry, None, e)
             return
+        else:
+            if not process:
+                return
 
         self.processes[entry] = ((process, time.time()))
         self.emit('game-launched', entry, process)

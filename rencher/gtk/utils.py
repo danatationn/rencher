@@ -1,7 +1,6 @@
 import logging
 import platform
 import subprocess
-import sys
 import typing
 from pathlib import Path
 

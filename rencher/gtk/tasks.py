@@ -17,7 +17,7 @@ from rencher.gtk.game_entry import GameEntry
 from rencher.gtk.utils import windowficate_path
 from rencher.renpy.config import RencherConfig
 from rencher.renpy.game import Game
-from rencher.renpy.paths import get_absolute_path, get_py_files, get_script_files, get_script_path, validate_game_files
+from rencher.renpy.paths import get_py_files, get_script_files, get_script_path, validate_game_files
 
 
 class TaskError(Exception):
