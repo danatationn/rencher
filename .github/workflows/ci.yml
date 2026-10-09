@@ -55,8 +55,8 @@ jobs:
 
       - name: Package Flatpak
         run: |
-          flatpak remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo --system
-          flatpak install org.gnome.Sdk//49 org.gnome.Platform//49 --system -y --no-related
+          flatpak remote-add --if-not-exists flathub --user https://flathub.org/repo/flathub.flatpakrepo
+          flatpak install org.gnome.Sdk//49 org.gnome.Platform//49 --user -y --no-related
           flatpak-builder --install --user build/flatpak build-aux/flatpak/com.github.danatationn.rencher.yml
           flatpak build-bundle ~/.local/share/flatpak/repo build/Rencher.flatpak com.github.danatationn.rencher
 
