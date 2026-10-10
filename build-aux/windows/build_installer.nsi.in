@@ -48,7 +48,7 @@ Unicode true
 
 Name "${NAME}"
 BrandingText "${NAME} ${DISPLAYVERSION}"
-OutFile "RencherInstaller-@version@.exe"
+OutFile "RencherInstaller.exe"
 InstallDir "$PROGRAMFILES64\${NAME}"
 
 RequestExecutionLevel admin

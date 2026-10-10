@@ -129,5 +129,5 @@ jobs:
       - name: Upload NSIS installer artifact
         uses: actions/upload-artifact@v7
         with:
-          path: build/RencherInstaller-*.exe
+          path: build/RencherInstaller.exe
           archive: false
