@@ -9,6 +9,7 @@ import shutil
 import sys
 import sysconfig
 import tempfile
+import tomllib
 from pathlib import Path
 
 from cx_Freeze import Executable, setup  # pyright: ignore[reportMissingImports, reportUnknownVariableType]
@@ -93,8 +94,10 @@ def freeze(argv: list[str]):
 
     project_root: Path | None = None
     for path in Path(__file__).parents:
-        if Path(path / 'pyproject.toml').is_file():
+        if (pyproject_path := path / 'pyproject.toml').is_file():
             project_root = path
+            with open(pyproject_path, 'rb') as f:
+                pyproject = tomllib.load(f)
     if not project_root:
         print('ERROR: Couldn\'t find project root!')
         sys.exit(1)
@@ -112,10 +115,14 @@ def freeze(argv: list[str]):
     if (venv_path := project_root / '.venv').is_dir():
         sys.path.insert(0, str(venv_path / 'Lib' / 'site-packages'))
 
+    description = pyproject['project']['description']
+    version = pyproject['project']['version']
+    da_copyright = pyproject['tool']['rencher']['copyright']
+
     setup(
         name='Rencher',
-        description='Rencher',
-        version=1,
+        description=description,
+        version=version,
         options={
             'build': {
                 'build_base': dest_dir,
@@ -124,7 +131,6 @@ def freeze(argv: list[str]):
                 'packages': ['requests', 'configparser', 'rarfile', 'cairo', 'rich'],
                 'optimize': 2,
                 'include_files': include_files,
-                'include_msvcr': True,
             },
         },
         executables=[
@@ -133,7 +139,7 @@ def freeze(argv: list[str]):
                 script=build_dir,
                 target_name='rencher',
                 icon=icon_path,
-                # copyright=rencher.__copyright__,
+                copyright=da_copyright,
             ),
         ],
     )
