@@ -35,6 +35,7 @@ freeze_dir = run_command(
     check: true,
 ).stdout().strip()
 conf.set('build_dir', meson.project_build_root() / freeze_dir)
+conf.set('source_dir', meson.project_source_root())
 
 # install
 configure_file(
@@ -75,7 +76,7 @@ if host_machine.system() == 'windows'
      	get_option('prefix'),
       meson.project_build_root()
     ])
-    run_target('makensis', command: ['makensis', nsi])
+    run_target('makensis', command: ['makensis', '-INPUTCHARSET', 'UTF8', nsi])
 endif
 
 if host_machine.system() == 'linux'

@@ -1,43 +1,77 @@
-!include "MUI.nsh"
+# to be completely honest this was all made by claude
+
+Unicode true
+
+!include "MUI2.nsh"
 !include "nsDialogs.nsh"
 !include "LogicLib.nsh"
 !include "FileFunc.nsh"
+!include "x64.nsh"
 !define NAME "Rencher"
 !define APPFILE "rencher.exe"
 !define VERSION "@version@.0"
+!define DISPLAYVERSION "@version@"
 !define PUBLISHER "danatationn"
-!define MUI_ICON "..\data\assets\rencher-inst.ico"
-!define MUI_UNICON "..\data\assets\rencher-deinst.ico"
+!define URL "https://github.com/danatationn/rencher"
+!define UNINSTKEY "SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\${NAME}"
+!define ASSETS "@source_dir@\data\assets"
+
+# looks
+!define MUI_ICON "${ASSETS}\rencher-inst.ico"
+!define MUI_UNICON "${ASSETS}\rencher-deinst.ico"
 !define MUI_HEADERIMAGE
-!define MUI_HEADERIMAGE_BITMAP "..\data\assets\header_img.bmp"
-!define MUI_HEADERIMAGE_BITMAP_RTL "..\data\assets\header_img_rtl.bmp"
-!define MUI_WELCOMEFINISHPAGE_BITMAP "..\data\assets\welcome_img.bmp"
+!define MUI_HEADERIMAGE_BITMAP "${ASSETS}\header_img.bmp"
+!define MUI_HEADERIMAGE_BITMAP_RTL "${ASSETS}\header_img_rtl.bmp"
+!define MUI_HEADERIMAGE_UNBITMAP "${ASSETS}\header_img.bmp"
+!define MUI_HEADERIMAGE_UNBITMAP_RTL "${ASSETS}\header_img_rtl.bmp"
+!define MUI_WELCOMEFINISHPAGE_BITMAP "${ASSETS}\welcome_img.bmp"
+!define MUI_UNWELCOMEFINISHPAGE_BITMAP "${ASSETS}\welcome_img.bmp"
+!define MUI_ABORTWARNING
+!define MUI_UNABORTWARNING
+
+# installer texts
+!define MUI_WELCOMEPAGE_TITLE "Welcome to ${NAME} ${DISPLAYVERSION}"
+!define MUI_WELCOMEPAGE_TEXT "This will install ${NAME}, a launcher for your Ren'Py visual novels.$\r$\n$\r$\nIf ${NAME} is already installed, it will be updated. Your game library and settings will be kept.$\r$\n$\r$\nClick Next to continue."
+!define MUI_FINISHPAGE_TITLE "${NAME} is ready"
+!define MUI_FINISHPAGE_TEXT "${NAME} ${DISPLAYVERSION} has been installed on your computer."
 !define MUI_FINISHPAGE_RUN
 !define MUI_FINISHPAGE_RUN_FUNCTION RunAppAfterInstall
 !define MUI_FINISHPAGE_RUN_TEXT "Launch ${NAME}"
+!define MUI_FINISHPAGE_LINK "${NAME} on GitHub"
+!define MUI_FINISHPAGE_LINK_LOCATION "${URL}"
+
+# uninstaller texts
+!define MUI_UNWELCOMEPAGE_TITLE "Uninstall ${NAME}"
+!define MUI_UNWELCOMEPAGE_TEXT "This will remove ${NAME} ${DISPLAYVERSION} from your computer.$\r$\n$\r$\nBefore continuing, make sure ${NAME} and any games you launched from it are closed.$\r$\n$\r$\nClick Next to continue."
+!define MUI_UNFINISHPAGE_TITLE "${NAME} has been removed"
+!define MUI_UNFINISHPAGE_TEXT "Thanks for using ${NAME}!$\r$\n$\r$\nIf something didn't work out for you, feel free to open an issue on GitHub."
 
 Name "${NAME}"
-OutFile "RencherInstaller.exe"
-InstallDir "$PROGRAMFILES\${NAME}"
+BrandingText "${NAME} ${DISPLAYVERSION}"
+OutFile "RencherInstaller-@version@.exe"
+InstallDir "$PROGRAMFILES64\${NAME}"
 
 RequestExecutionLevel admin
 VIProductVersion "${VERSION}"
 VIAddVersionKey "ProductName" "${NAME}"
 VIAddVersionKey "CompanyName" "${PUBLISHER}"
-VIAddVersionKey "LegalCopyright" "© 2025 ${PUBLISHER}"
+VIAddVersionKey "LegalCopyright" "@copyright@"
 VIAddVersionKey "FileDescription" "${NAME} Installer"
 VIAddVersionKey "FileVersion" "${VERSION}"
 VIAddVersionKey "ProductVersion" "${VERSION}"
 
-ShowInstDetails show
-ShowUninstDetails show
+ShowInstDetails hide
+ShowUninstDetails hide
 
 Var CHECK_DESKTOP
 Var CHECK_STARTMENU
 Var CHECK_USERDATA
+Var USERDATA_DIR
+Var USERDATA_WARNING
 
 !insertmacro MUI_PAGE_WELCOME
-!insertmacro MUI_PAGE_LICENSE "..\LICENSE.txt"
+!insertmacro MUI_PAGE_LICENSE "@source_dir@\LICENSE.txt"
+!define MUI_PAGE_CUSTOMFUNCTION_LEAVE DirectoryPageLeave
 !insertmacro MUI_PAGE_DIRECTORY
 Page custom CustomOptionsPage CustomOptionsPageLeave
 !insertmacro MUI_PAGE_INSTFILES
@@ -50,27 +84,152 @@ UninstPage custom un.UninstOptionsPage un.UninstOptionsPageLeave
 
 !insertmacro MUI_LANGUAGE "English"
 
+# SHARED
+
+# a running exe can't be opened for writing, so use that to detect it
+# usage: Push <dir>, Call WaitForAppClosed
+!macro WaitForAppClosed un
+Function ${un}WaitForAppClosed
+    Exch $R0
+    ${If} ${FileExists} "$R0\${APPFILE}"
+        retry:
+            ClearErrors
+            FileOpen $0 "$R0\${APPFILE}" a
+            ${If} ${Errors}
+                MessageBox MB_RETRYCANCEL|MB_ICONEXCLAMATION "${NAME} is currently running. Please close it and click Retry." /SD IDCANCEL IDRETRY retry
+                Abort
+            ${EndIf}
+            FileClose $0
+    ${EndIf}
+    Pop $R0
+FunctionEnd
+!macroend
+!insertmacro WaitForAppClosed ""
+!insertmacro WaitForAppClosed "un."
+
+# only removes what the installer put there
+!macro RemoveAppFiles dir
+    RMDir /r "${dir}\lib"
+    RMDir /r "${dir}\share"
+    Delete "${dir}\*.dll"
+    Delete "${dir}\${APPFILE}"
+    Delete "${dir}\frozen_application_license.txt"
+    Delete "${dir}\uninstaller.exe"
+    RMDir "${dir}"
+!macroend
+
+!macro RemoveShortcuts
+    Delete "$DESKTOP\${NAME}.lnk"
+    Delete "$SMPROGRAMS\${NAME}\${NAME}.lnk"
+    Delete "$SMPROGRAMS\${NAME}\${NAME} Uninstaller.lnk"
+    RMDir "$SMPROGRAMS\${NAME}"
+!macroend
+
 # INSTALER
 
+Function .onInit
+    ${IfNot} ${RunningX64}
+        MessageBox MB_OK|MB_ICONSTOP "${NAME} requires a 64-bit version of Windows." /SD IDOK
+        Abort
+    ${EndIf}
+    SetRegView 64
+
+    # update an existing install in place, unless /D= picked another folder
+    # (InstallDirRegKey can't be used for this, as it only reads the 32-bit registry)
+    ReadRegStr $0 HKLM "${UNINSTKEY}" "InstallLocation"
+    ${If} $0 != ""
+    ${AndIf} $INSTDIR == "$PROGRAMFILES64\${NAME}"
+        StrCpy $INSTDIR $0
+    ${EndIf}
+
+    # defaults for silent installs, where the options page is skipped
+    StrCpy $CHECK_DESKTOP ${BST_CHECKED}
+    StrCpy $CHECK_STARTMENU ${BST_CHECKED}
+FunctionEnd
+
+# always install into a dedicated folder, so the uninstaller can't take anything else with it
+Function EnsureDedicatedDir
+    # drive roots keep their trailing backslash (D:\)
+    StrCpy $0 $INSTDIR 1 -1
+    ${If} $0 == "\"
+        StrCpy $INSTDIR $INSTDIR -1
+    ${EndIf}
+    ${GetFileName} "$INSTDIR" $0
+    ${If} $0 != "${NAME}"
+        StrCpy $INSTDIR "$INSTDIR\${NAME}"
+    ${EndIf}
+FunctionEnd
+
+Function DirectoryPageLeave
+    Call EnsureDedicatedDir
+FunctionEnd
+
+# older versions were 32-bit and installed to Program Files (x86)
+Function RemoveLegacyInstall
+    SetRegView 32
+    ReadRegStr $1 HKLM "${UNINSTKEY}" "InstallLocation"
+    ${If} $1 != ""
+        DeleteRegKey HKLM "${UNINSTKEY}"
+    ${EndIf}
+    SetRegView 64
+
+    # v1.1.x didn't write any registry keys, so fall back to the old default folder
+    ${If} $1 == ""
+    ${AndIf} ${FileExists} "$PROGRAMFILES32\${NAME}\uninstaller.exe"
+        StrCpy $1 "$PROGRAMFILES32\${NAME}"
+    ${EndIf}
+
+    ${If} $1 == ""
+    ${OrIf} $1 == $INSTDIR
+        Return
+    ${EndIf}
+
+    DetailPrint "Removing old 32-bit version from $1"
+    Push $1
+    Call WaitForAppClosed
+    !insertmacro RemoveShortcuts
+    # older installers didn't force a dedicated folder, so leave anything else alone
+    ${GetFileName} "$1" $0
+    ${If} $0 == "${NAME}"
+        !insertmacro RemoveAppFiles "$1"
+    ${EndIf}
+FunctionEnd
+
 Function CustomOptionsPage
+    !insertmacro MUI_HEADER_TEXT "Shortcuts" "Choose where you'd like to find ${NAME}."
+
     nsDialogs::Create 1018
     Pop $0
     ${If} $0 == error
         Abort
     ${EndIf}
 
-    ${NSD_CreateCheckbox} 10u 10u 200u 10u "Create desktop shortcut"
+    ${NSD_CreateGroupBox} 0 0 100% 52u "Create shortcuts"
+    Pop $0
+
+    ${NSD_CreateCheckbox} 12u 16u 260u 12u "On the &desktop"
     Pop $CHECK_DESKTOP
     ${NSD_SetState} $CHECK_DESKTOP ${BST_CHECKED}
 
-    ${NSD_CreateCheckbox} 10u 25u 200u 10u "Create Start Menu shortcut"
+    ${NSD_CreateCheckbox} 12u 32u 260u 12u "In the &Start Menu"
     Pop $CHECK_STARTMENU
     ${NSD_SetState} $CHECK_STARTMENU ${BST_CHECKED}
+
+    ${NSD_CreateLabel} 0 62u 100% 24u "${NAME} will be installed to:$\r$\n$INSTDIR"
+    Pop $0
+
+    # this is the last page before installing, so make that obvious
+    GetDlgItem $0 $HWNDPARENT 1
+    SendMessage $0 ${WM_SETTEXT} 0 "STR:$(^InstallBtn)"
 
     nsDialogs::Show
 FunctionEnd
 
 Function CustomOptionsPageLeave
+    # aborting here keeps the user on this page instead of failing the install
+    Push $INSTDIR
+    Call WaitForAppClosed
+
     ${NSD_GetState} $CHECK_DESKTOP $CHECK_DESKTOP
     ${NSD_GetState} $CHECK_STARTMENU $CHECK_STARTMENU
 FunctionEnd
@@ -78,18 +237,36 @@ FunctionEnd
 
 Section "Install"
 	SetShellVarContext all
+	# the pages already did these, but they're skipped in silent mode
+	Call EnsureDedicatedDir
+	Push $INSTDIR
+	Call WaitForAppClosed
+
+	Call RemoveLegacyInstall
+
+	# remove leftovers from a previous version
+	RMDir /r "$INSTDIR\lib"
+	RMDir /r "$INSTDIR\share"
+	Delete "$INSTDIR\*.dll"
 
 	SetOutPath $INSTDIR
 	File /r "@build_dir@\*.*"
 	WriteUninstaller "$INSTDIR\uninstaller.exe"
-	WriteRegStr HKLM "SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\${NAME}" "DisplayName" "${NAME}"
-	WriteRegStr HKLM "SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\${NAME}" "DisplayVersion" "${VERSION}"
-	WriteRegStr HKLM "SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\${NAME}" "Publisher" "${PUBLISHER}"
-	WriteRegStr HKLM "SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\${NAME}" "UninstallString" "$INSTDIR\uninstaller.exe"
-	WriteRegStr HKLM "SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\${NAME}" "DisplayIcon" "$INSTDIR\${APPFILE}"
-	WriteRegStr HKLM "SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\${NAME}" "InstallLocation" "$INSTDIR"
-	WriteRegDWORD HKLM "SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\${NAME}" "NoModify" 1
-	WriteRegDWORD HKLM "SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\${NAME}" "NoRepair" 1
+
+	${GetSize} "$INSTDIR" "/S=0K" $0 $1 $2
+	IntFmt $0 "0x%08X" $0
+
+	WriteRegStr HKLM "${UNINSTKEY}" "DisplayName" "${NAME}"
+	WriteRegStr HKLM "${UNINSTKEY}" "DisplayVersion" "${DISPLAYVERSION}"
+	WriteRegStr HKLM "${UNINSTKEY}" "Publisher" "${PUBLISHER}"
+	WriteRegStr HKLM "${UNINSTKEY}" "UninstallString" '"$INSTDIR\uninstaller.exe"'
+	WriteRegStr HKLM "${UNINSTKEY}" "QuietUninstallString" '"$INSTDIR\uninstaller.exe" /S'
+	WriteRegStr HKLM "${UNINSTKEY}" "DisplayIcon" "$INSTDIR\${APPFILE}"
+	WriteRegStr HKLM "${UNINSTKEY}" "InstallLocation" "$INSTDIR"
+	WriteRegStr HKLM "${UNINSTKEY}" "URLInfoAbout" "${URL}"
+	WriteRegDWORD HKLM "${UNINSTKEY}" "EstimatedSize" "$0"
+	WriteRegDWORD HKLM "${UNINSTKEY}" "NoModify" 1
+	WriteRegDWORD HKLM "${UNINSTKEY}" "NoRepair" 1
 
     ${If} $CHECK_DESKTOP == ${BST_CHECKED}
         CreateShortcut "$DESKTOP\${NAME}.lnk" "$INSTDIR\${APPFILE}"
@@ -102,44 +279,105 @@ Section "Install"
     ${EndIf}
 SectionEnd
 
+# launch through explorer so the app doesn't inherit the installer's admin rights
 Function RunAppAfterInstall
-	Exec "$INSTDIR\${APPFILE}"
+	Exec '"$WINDIR\explorer.exe" "$INSTDIR\${APPFILE}"'
 FunctionEnd
 
 # UNINSTALLER
 
+Function un.onInit
+    SetRegView 64
+FunctionEnd
+
 Function un.UninstOptionsPage
+    !insertmacro MUI_HEADER_TEXT "Uninstall ${NAME}" "Choose what to remove from your computer."
+
     nsDialogs::Create 1018
     Pop $0
     ${If} $0 == error
         Abort
     ${EndIf}
 
-    ${NSD_CreateCheckbox} 10u 85u 280u 10u "Also delete my game library and settings (cannot be undone)"
+    ${NSD_CreateLabel} 0 0 100% 10u "${NAME} will be removed from:"
+    Pop $0
+    ${NSD_CreateText} 0 12u 100% 12u "$INSTDIR"
+    Pop $0
+    SendMessage $0 ${EM_SETREADONLY} 1 0
+
+    ${NSD_CreateGroupBox} 0 34u 100% 84u "Your data"
+    Pop $0
+
+    SetShellVarContext current
+    StrCpy $USERDATA_DIR "$LOCALAPPDATA\${NAME}"
+    SetShellVarContext all
+    # games may live elsewhere if the user picked a custom library folder
+    ReadINIStr $1 "$USERDATA_DIR\config.ini" "settings" "data_dir"
+
+    ${If} $1 == ""
+        StrCpy $2 "Also delete my game library and settings"
+    ${Else}
+        StrCpy $2 "Also delete my settings"
+    ${EndIf}
+    ${NSD_CreateCheckbox} 12u 48u 270u 12u "$2"
     Pop $CHECK_USERDATA
     ${NSD_SetState} $CHECK_USERDATA ${BST_UNCHECKED}
+    ${NSD_OnClick} $CHECK_USERDATA un.OnUserDataClick
+
+    ${NSD_CreateLabel} 24u 62u 258u 10u "$USERDATA_DIR"
+    Pop $0
+    SetCtlColors $0 0x707070 transparent
+
+    ${If} $1 != ""
+        ${NSD_CreateLabel} 24u 74u 258u 18u "Your game library in $1 will be kept."
+        Pop $0
+        SetCtlColors $0 0x707070 transparent
+    ${EndIf}
+
+    ${NSD_CreateLabel} 24u 96u 258u 18u "Warning: this can't be undone! Everything in this folder will be permanently deleted."
+    Pop $USERDATA_WARNING
+    SetCtlColors $USERDATA_WARNING 0xC42B1C transparent
+    ShowWindow $USERDATA_WARNING ${SW_HIDE}
+
+    ${IfNot} ${FileExists} "$USERDATA_DIR\*.*"
+        EnableWindow $CHECK_USERDATA 0
+        ${NSD_SetText} $CHECK_USERDATA "No game library or settings found"
+    ${EndIf}
+
+    GetDlgItem $0 $HWNDPARENT 1
+    SendMessage $0 ${WM_SETTEXT} 0 "STR:$(^UninstallBtn)"
 
     nsDialogs::Show
 FunctionEnd
 
+Function un.OnUserDataClick
+    Pop $0
+    ${NSD_GetState} $CHECK_USERDATA $0
+    ${If} $0 == ${BST_CHECKED}
+        ShowWindow $USERDATA_WARNING ${SW_SHOW}
+    ${Else}
+        ShowWindow $USERDATA_WARNING ${SW_HIDE}
+    ${EndIf}
+FunctionEnd
+
 Function un.UninstOptionsPageLeave
+    Push $INSTDIR
+    Call un.WaitForAppClosed
+
     ${NSD_GetState} $CHECK_USERDATA $CHECK_USERDATA
 FunctionEnd
 
 Section "Uninstall"
 	SetShellVarContext all
+	Push $INSTDIR
+	Call un.WaitForAppClosed
 
-    Delete "$INSTDIR\${NAME}.exe"
-    Delete "$INSTDIR\uninstaller.exe"
-    RMDir /r "$INSTDIR"
-    DeleteRegKey HKLM "SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\${NAME}"
-
-    Delete "$DESKTOP\${NAME}.lnk"
-    Delete "$SMPROGRAMS\${NAME}\${NAME}.lnk"
-    Delete "$SMPROGRAMS\${NAME}\${NAME} Uninstaller.lnk"
-    RMDir "$SMPROGRAMS\${NAME}"
+    !insertmacro RemoveAppFiles "$INSTDIR"
+    DeleteRegKey HKLM "${UNINSTKEY}"
+    !insertmacro RemoveShortcuts
 
     ${If} $CHECK_USERDATA == ${BST_CHECKED}
-        RMDir /r "$LOCALAPPDATA\@name"
+        # user data lives in the user's profile, not the all-users one
+        RMDir /r "$USERDATA_DIR"
     ${EndIf}
 SectionEnd
