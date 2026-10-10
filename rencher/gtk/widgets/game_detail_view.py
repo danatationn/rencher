@@ -85,7 +85,7 @@ class GameDetailView(Gtk.Box):
         self.log_buf.set_text('')
 
     def _game_closed(
-        self, _library: Library, entry: GameEntry, process: subprocess.Popen[bytes] | None, err: Exception | None,
+        self, _library: Library, entry: GameEntry, failed: bool, err: Exception | None,
     ) -> None:
         if self.entry != entry:
             return
@@ -105,7 +105,7 @@ class GameDetailView(Gtk.Box):
                     .format(err.__class__.__name__, f': {err}' if str(err) else ''))
             alert.choose(self)
 
-        if process and process.returncode != 0 and self.log_row.is_sensitive():
+        if failed and self.log_row.is_sensitive():
             self.error_dialog = Adw.AlertDialog(
                 heading=_('Something went wrong!'),
                 body=_('A game has errors. Check the logs for more details.'),

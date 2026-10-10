@@ -52,8 +52,8 @@ class Library(GObject.Object):
         'game-launched':    (GObject.SignalFlags.RUN_FIRST, None, (GameEntry, object)),
         # bool=is_stderr
         'game-log':         (GObject.SignalFlags.RUN_FIRST, None, (GameEntry, str, bool)),
-        # object=subprocess.Popen[bytes] | None, object=Error | None
-        'game-closed':      (GObject.SignalFlags.RUN_FIRST, None, (GameEntry, object, object)),
+        # bool=failed, object=Error | None
+        'game-closed':      (GObject.SignalFlags.RUN_FIRST, None, (GameEntry, bool, object)),
         'task-started':     (GObject.SignalFlags.RUN_FIRST, None, (RencherTask, object)),
         # object=Error | None
         'task-finished':    (GObject.SignalFlags.RUN_FIRST, None, (RencherTask, object)),
@@ -266,10 +266,10 @@ class Library(GObject.Object):
             process = entry.run()
         except GameNoExecutableError as e:
             logging.error('Couldn\'t find the game\'s executable!')
-            self.emit('game-closed', entry, None, e)
+            self.emit('game-closed', entry, False, e)
             return
         except Exception as e:
-            self.emit('game-closed', entry, None, e)
+            self.emit('game-closed', entry, False, e)
             return
         else:
             if not process:
@@ -330,11 +330,16 @@ class Library(GObject.Object):
     def _cleanup_game(self, entry: GameEntry) -> None:
         if not (info := self.processes.pop(entry, None)):
             return
+
         process, start = info
+        failed = process.returncode != 0 and process not in self._terminating_processes
+
+        if process in self._terminating_processes:
+            self._terminating_processes.remove(process)
 
         entry.game.cleanup(time.time() - start)
 
-        self.emit('game-closed', entry, process, None)
+        self.emit('game-closed', entry, failed, None)
 
     def _retry_task(self, _action: Gio.SimpleAction, uuid: GLib.Variant):
         uuid_str = uuid.get_string()
