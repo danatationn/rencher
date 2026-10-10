@@ -100,6 +100,7 @@ class Game:
     def _exec_candidates(self):
         """
             yields exec paths in priority order:
+                0. apath/lib/libdir/codename.exe (when on windows, no librenpython)
                 1. apath/codename.sh or codename.exe
                 2. apath/lib/libdir/codename(.exe)
                 3. apath/lib/libdir/pythonw(.exe)
@@ -107,12 +108,20 @@ class Game:
         is_windows = True if platform.system() == 'Windows' else False
         main_script = self.get_main_script()
 
+        # ren'py games without librenpython has exe files that launch the exe inside lib and then exit
+        # ui wise, this will make it look like the game crashed, and then it will launch anyway
+        if is_windows:
+            for lib_dir in self._lib_directories():
+                lib_path = self.apath / 'lib' / lib_dir
+                if lib_path.is_dir() and not (lib_path / 'librenpython.dll').is_file():
+                    yield (lib_path / self.codename).with_suffix('.exe')
+
         yield main_script.with_suffix('.exe' if is_windows else '.sh')
 
         for lib_dir in self._lib_directories():
-            lib_path = self.apath/'lib'/lib_dir
+            lib_path = self.apath / 'lib' / lib_dir
             for name in (self.codename, 'pythonw'):
-                yield (lib_path/name).with_suffix('.exe' if is_windows else '')
+                yield (lib_path / name).with_suffix('.exe' if is_windows else '')
 
     def get_exec_path(self) -> Path | None:
         for canditate in self._exec_candidates():
