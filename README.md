@@ -20,8 +20,8 @@ Main features:
 <br/>
 
 <p>
-	<img src="data/screenshots/Screenshot From 2025-11-02 17-47-53.png" alt="Screenshot of Rencher's UI showing off the main window" width="384px"/>
-	<img src="data/screenshots/Screenshot From 2025-11-02 17-48-27.png" alt="Screenshot of Rencher's UI showing off the import menu" width="384px"/>
+	<img src="data/screenshots/Screenshot From 2026-10-11 09-48-05.png" alt="Screenshot of Rencher's UI showing off the library" width="384px"/>
+	<img src="data/screenshots/Screenshot From 2026-10-11 09-53-52.png" alt="Screenshot of Rencher's UI showing off the import menu" width="384px"/>
 </p>
 
 ## Download!
