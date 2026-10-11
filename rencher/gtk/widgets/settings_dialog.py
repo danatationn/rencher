@@ -98,7 +98,7 @@ class SettingsDialog(Adw.PreferencesDialog):
         data_dir = self.data_dir_entry.get_text()
         open_file_manager(data_dir)
 
-    def _on_folder_selected(self, dialog: Gtk.FileDialog, result: Gio.Task) -> None:
+    def _on_folder_selected(self, dialog: Gtk.FileDialog, result: Gio.AsyncResult) -> None:
         try:
             folder = dialog.select_folder_finish(result)
         except GLib.Error:
