@@ -7,7 +7,7 @@ from typing import override
 
 from gi.repository import Adw, GLib, Gtk
 
-from rencher.gtk.game_entry import GameEntry
+from rencher.gtk.game_item import GameItem
 from rencher.gtk.utils import gtk_template_callback, gtk_template_child, open_file_manager
 from rencher.renpy.config import RencherConfig
 from rencher.renpy.paths import get_py_files
@@ -32,10 +32,10 @@ class OptionsDialog(Adw.PreferencesDialog):
     switches_list: list[tuple[Gtk.Switch, Adw.SwitchRow, str]]
     # options_save_slot: Adw.SpinRow = gtk_template_child()
 
-    entry: GameEntry
+    entry: GameItem
     rencher_config: ConfigParser
 
-    def __init__(self, entry: GameEntry):
+    def __init__(self, entry: GameItem):
         super().__init__()
 
         self.entry = entry
@@ -57,7 +57,7 @@ class OptionsDialog(Adw.PreferencesDialog):
 
         self.change_game(entry)
 
-    def change_game(self, entry: GameEntry):
+    def change_game(self, entry: GameItem):
         self.entry.update(entry.game)
         string_list = Gtk.StringList()
         self.codename_combo.set_model(string_list)

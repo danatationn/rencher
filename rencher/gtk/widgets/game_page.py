@@ -4,17 +4,17 @@ from typing import override
 
 from gi.repository import Adw, GLib, GObject, Gtk
 
-from rencher.gtk.game_entry import GameEntry
+from rencher.gtk.game_item import GameItem
 from rencher.gtk.library import Library
 from rencher.gtk.utils import gtk_template_callback, gtk_template_child, open_file_manager
 from rencher.gtk.widgets.options_dialog import OptionsDialog
 from rencher.renpy.game import GameNoExecutableError
 
 
-@Gtk.Template.from_resource('/com/github/danatationn/rencher/ui/game_detail_view.ui')
-class GameDetailView(Gtk.Box):
-    __gtype_name__: str = 'GameDetailView'
-
+@Gtk.Template.from_resource('/com/github/danatationn/rencher/ui/game_page.ui')
+class GamePage(Gtk.Box):
+    __gtype_name__: str = 'GamePage'
+    
     title_status_page: Adw.StatusPage = gtk_template_child()
     last_played_row: Adw.ActionRow = gtk_template_child()
     playtime_row: Adw.ActionRow = gtk_template_child()
@@ -25,7 +25,7 @@ class GameDetailView(Gtk.Box):
     log_row: Adw.ExpanderRow = gtk_template_child()
     log_text_view: Gtk.TextView = gtk_template_child()
 
-    entry: GameEntry
+    entry: GameItem
     row: Adw.ActionRow | Gtk.ListBoxRow
     log_buf: Gtk.TextBuffer
     _handler_ids: list[int]
@@ -36,7 +36,7 @@ class GameDetailView(Gtk.Box):
     options_dialog: OptionsDialog
     options_button: Gtk.Button = gtk_template_child()
 
-    def __init__(self, entry: GameEntry, row: Adw.ActionRow | Gtk.ListBoxRow, library: Library):
+    def __init__(self, entry: GameItem, row: Adw.ActionRow | Gtk.ListBoxRow, library: Library):
         super().__init__()
         self.entry = entry
         self.row = row
@@ -76,7 +76,7 @@ class GameDetailView(Gtk.Box):
         else:
             self.activate_action('library.run-game', GLib.Variant('s', self.entry.rpath))
 
-    def _game_launched(self, _library: Library, entry: GameEntry, _process: subprocess.Popen[bytes]) -> None:
+    def _game_launched(self, _library: Library, entry: GameItem, _process: subprocess.Popen[bytes]) -> None:
         if self.entry != entry:
             return
         self.activate_action('rpc.update', GLib.Variant('a(ss)', [('state', entry.name)]))
@@ -85,7 +85,7 @@ class GameDetailView(Gtk.Box):
         self.log_buf.set_text('')
 
     def _game_closed(
-        self, _library: Library, entry: GameEntry, failed: bool, err: Exception | None,
+        self, _library: Library, entry: GameItem, failed: bool, err: Exception | None,
     ) -> None:
         if self.entry != entry:
             return
@@ -129,7 +129,7 @@ class GameDetailView(Gtk.Box):
         self.options_dialog.delete_game_button.set_sensitive(not is_running)
 
 
-    def _on_log_line(self, _library: Library, entry: GameEntry, line: str, is_stderr: bool) -> None:
+    def _on_log_line(self, _library: Library, entry: GameItem, line: str, is_stderr: bool) -> None:
         if self.entry != entry:
             return
 

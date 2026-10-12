@@ -13,8 +13,8 @@ from typing import TYPE_CHECKING, override
 import rarfile
 from gi.repository import GLib, GObject
 
-from rencher.gtk.game_entry import GameEntry
-from rencher.gtk.utils import windowficate_path
+from rencher.gtk.game_item import GameItem
+from rencher.gtk.utils import sanitize_path
 from rencher.renpy.config import RencherConfig
 from rencher.renpy.game import Game
 from rencher.renpy.paths import get_py_files, get_script_files, get_script_path, validate_game_files
@@ -211,11 +211,11 @@ class NukeGamesTask(RencherTask):
 class ImportGameTask(RencherTask):
     source_path: Path
     nickname: str | None
-    target_entry: GameEntry | None
+    target_entry: GameItem | None
     game_path: Path | None  # is some by the end
     game: Game | None
 
-    def __init__(self, source_path: Path, nickname: str | None = None, target_entry: GameEntry | None = None):
+    def __init__(self, source_path: Path, nickname: str | None = None, target_entry: GameItem | None = None):
         label = nickname if nickname else source_path.name
         super().__init__(label)
         self.source_path = source_path
@@ -289,7 +289,7 @@ class ImportGameTask(RencherTask):
 
             for path in possible_paths:
                 if config.get('settings', 'windowficate_filenames') == 'true' or platform.system() == 'Windows':
-                    new_path = windowficate_path(path)
+                    new_path = sanitize_path(path)
                 else:
                     new_path = path
                 if not new_path.exists():

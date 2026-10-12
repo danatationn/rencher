@@ -4,16 +4,16 @@ from gettext import gettext as _
 
 from gi.repository import Adw, Gtk
 
-from rencher.gtk.game_entry import GameEntry
+from rencher.gtk.game_item import GameItem
 from rencher.gtk.library import Library
 
 
 class CodenameDialog(Adw.AlertDialog):
     library: Library
-    entry: GameEntry
+    entry: GameItem
     codename_list_box: Gtk.ListBox
 
-    def __init__(self, library: Library, entry: GameEntry):
+    def __init__(self, library: Library, entry: GameItem):
         super().__init__()
         self.library = library
         self.entry = entry

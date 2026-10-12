@@ -2,7 +2,7 @@ from enum import Enum, auto
 
 from gi.repository import Adw, GObject, Gtk
 
-from rencher.gtk.game_entry import GameEntry
+from rencher.gtk.game_item import GameItem
 from rencher.gtk.tasks import RencherTask, TaskError
 
 
@@ -15,7 +15,7 @@ class RowState(Enum):
 
 
 class GameRow(Gtk.ListBoxRow):
-    _entry: GameEntry | None
+    _entry: GameItem | None
     _task: RencherTask | None
     # _error: Exception | None
     _button_box: Gtk.Box
@@ -25,7 +25,7 @@ class GameRow(Gtk.ListBoxRow):
     _task_signal_id: int
     _fraction_binding: GObject.Binding | None
 
-    def __init__(self, entry: GameEntry | None = None, fallback_name: str = ''):
+    def __init__(self, entry: GameItem | None = None, fallback_name: str = ''):
         super().__init__()
 
         if not entry and fallback_name == '':
@@ -63,7 +63,7 @@ class GameRow(Gtk.ListBoxRow):
         overlay.add_overlay(self.pb)
         self.set_child(overlay)
 
-    def set_entry(self, entry: GameEntry) -> None:
+    def set_entry(self, entry: GameItem) -> None:
         if self._entry:
             self._entry.update(entry.game)
         else:
@@ -184,5 +184,5 @@ class GameRow(Gtk.ListBoxRow):
         return self._task
 
     @property
-    def entry(self) -> GameEntry | None:
+    def entry(self) -> GameItem | None:
         return self._entry

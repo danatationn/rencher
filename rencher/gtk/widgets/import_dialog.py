@@ -10,7 +10,7 @@ import rarfile
 from gi.repository import Adw, Gio, GLib, Gtk
 from gi.repository.GObject import GParamSpec
 
-from rencher.gtk.game_entry import GameEntry
+from rencher.gtk.game_item import GameItem
 from rencher.gtk.utils import gtk_template_callback, gtk_template_child
 
 if TYPE_CHECKING:
@@ -56,18 +56,18 @@ class ImportDialog(Adw.Dialog):
 
     @override
     def do_show(self):
-        list_store = Gio.ListStore.new(GameEntry)
+        list_store = Gio.ListStore.new(GameItem)
         list_store_len = 0
 
-        list_store.append(GameEntry())  # option for no mod . default
+        list_store.append(GameItem())  # option for no mod . default
         for game_item in self.window.library.store:
-            if not isinstance(game_item, GameEntry):
+            if not isinstance(game_item, GameItem):
                 continue
             if not game_item.game.is_mod:
                 list_store.append(game_item)
                 list_store_len += 1
 
-        def _name_for_entry(entry: GameEntry, *_args: None):
+        def _name_for_entry(entry: GameItem, *_args: None):
             if hasattr(entry, 'game'):
                 return os.path.basename(entry.rpath)
             else:
@@ -172,7 +172,7 @@ class ImportDialog(Adw.Dialog):
     def on_import_clicked(self, _button: Adw.ActionRow) -> None:
         target_game = self.game_combo.get_selected_item()
         game_rpath = ''
-        if hasattr(target_game, '_game') and isinstance(target_game, GameEntry):
+        if hasattr(target_game, '_game') and isinstance(target_game, GameItem):
             game_rpath = target_game.rpath
 
         self.activate_action(

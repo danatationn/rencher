@@ -6,7 +6,7 @@
  	<file compressed="true" preprocess="xml-stripblanks">ui/settings.ui</file>
  	<file compressed="true" preprocess="xml-stripblanks">ui/shortcuts.ui</file>
   	<file compressed="true" preprocess="xml-stripblanks">ui/window.ui</file>
- 	<file compressed="true" preprocess="xml-stripblanks">ui/game_detail_view.ui</file>
+ 	<file compressed="true" preprocess="xml-stripblanks">ui/game_page.ui</file>
 
     <!-- not needed on linux but it is on windows -->
 	<file alias="icons/16x16/apps/com.github.danatationn.rencher.png" compressed="true">assets/rencher-icon16.png</file>

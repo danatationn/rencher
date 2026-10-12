@@ -25,7 +25,8 @@ def open_file_manager(path: str):
     elif platform.system() == 'Windows':
         subprocess.run(['explorer', path.replace('/', '\\')])
 
-def windowficate_path(path: Path) -> Path:
+def sanitize_path(path: Path) -> Path:
+    # TODO make this universal
     """
     returns a file that abides by the Windows file naming conventions
 

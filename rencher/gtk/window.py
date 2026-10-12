@@ -6,13 +6,13 @@ from typing import TYPE_CHECKING
 
 from gi.repository import Adw, GLib, Gtk
 
-from rencher.gtk.game_entry import GameEntry
+from rencher.gtk.game_item import GameItem
 from rencher.gtk.library import Library
 from rencher.gtk.rpc import Rpc
 from rencher.gtk.tasks import DeleteGameTask, RencherTask, TaskError
 from rencher.gtk.utils import gtk_template_callback, gtk_template_child
 from rencher.gtk.widgets.codename_dialog import CodenameDialog
-from rencher.gtk.widgets.game_detail_view import GameDetailView
+from rencher.gtk.widgets.game_page import GamePage
 from rencher.gtk.widgets.game_row import GameRow
 from rencher.gtk.widgets.import_dialog import ImportDialog
 from rencher.gtk.widgets.settings_dialog import SettingsDialog
@@ -34,9 +34,9 @@ class MainWindow(Adw.Window):
     __gtype_name__: str = 'MainWindow'
 
     # variables
-    rows: dict[GameEntry, GameRow]
-    games: dict[GameRow, GameEntry]
-    game_views: dict[GameEntry, GameDetailView]
+    rows: dict[GameItem, GameRow]
+    games: dict[GameRow, GameItem]
+    game_views: dict[GameItem, GamePage]
     task_rows: dict[RencherTask, GameRow]
     toasts: dict[GameRow, Adw.Toast]
 
@@ -102,7 +102,7 @@ class MainWindow(Adw.Window):
         if os.environ.get('MESON_BUILD_ROOT', None):
             self.add_css_class('devel')
 
-    def _on_game_added(self, _library: Library, entry: GameEntry) -> None:
+    def _on_game_added(self, _library: Library, entry: GameItem) -> None:
         row = GameRow(entry)
         self.rows[entry] = row
         self.games[row] = entry
@@ -114,11 +114,11 @@ class MainWindow(Adw.Window):
             self.library_view_stack.set_visible_child_name('game-select')
         self.library_list_box.invalidate_sort()
 
-    def _on_game_changed(self, _library: Library, entry: GameEntry) -> None:
+    def _on_game_changed(self, _library: Library, entry: GameItem) -> None:
         entry.refresh()  # gamedetailview + the row binds entry properties. this updates every label
         # self.library_list_box.invalidate_sort()
 
-    def _on_game_removed(self, _library: Library, entry: GameEntry) -> None:
+    def _on_game_removed(self, _library: Library, entry: GameItem) -> None:
         row = self.rows.get(entry)
         if not row:
             return
@@ -128,7 +128,7 @@ class MainWindow(Adw.Window):
 
         self._remove_row(row, entry)
 
-    def _remove_row(self, row: GameRow, entry: GameEntry | None) -> None:
+    def _remove_row(self, row: GameRow, entry: GameItem | None) -> None:
         if entry:
             self.rows.pop(entry, None)
             if view := self.game_views.pop(entry, None):
@@ -148,7 +148,7 @@ class MainWindow(Adw.Window):
             self.library_view_stack.set_visible_child_name('empty')
             self.library_search_button.set_sensitive(False)
 
-    def _on_task_started(self, _library: Library, task: RencherTask, entry: GameEntry | None) -> None:
+    def _on_task_started(self, _library: Library, task: RencherTask, entry: GameItem | None) -> None:
         if not entry:
             # add the button to promise that a game is coming
             row = GameRow(None, task.label)
@@ -168,7 +168,7 @@ class MainWindow(Adw.Window):
         row.set_task(task)
         self.library_list_box.invalidate_sort()
 
-    def _on_task_finished(self, _library: Library, task: RencherTask, entry: GameEntry | None) -> None:
+    def _on_task_finished(self, _library: Library, task: RencherTask, entry: GameItem | None) -> None:
         row = self.task_rows.get(task)
         if not row:
             return
@@ -253,7 +253,7 @@ class MainWindow(Adw.Window):
         else:
             self._remove_row(row, row.entry)
 
-    def _on_game_unknown_exec(self, library: Library, entry: GameEntry):
+    def _on_game_unknown_exec(self, library: Library, entry: GameItem):
         # TODO right now this shows all dialogs all at once.
         # it's not a big deal if you only have a couple games that are broken,
         # but it is when there's a lot.
@@ -289,7 +289,7 @@ class MainWindow(Adw.Window):
                 view = self.game_views.get(entry, None)
 
                 if not view:
-                    view = GameDetailView(entry, row, self.library)
+                    view = GamePage(entry, row, self.library)
                     self.game_views[entry] = view
                     self.library_view_stack.add_named(view, entry.rpath)
 

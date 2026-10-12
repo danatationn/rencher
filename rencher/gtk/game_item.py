@@ -45,16 +45,15 @@ def format_playtime(time: float) -> str | None:
     else:
         return None
 
-class GameEntry(GObject.Object):
+class GameItem(GObject.Object):
     """
     wrapper for Game() so that we can more easily work with them in gtk.
 
-    if you want to get Path objects, do game_entry.game.rpath
+    if you want to get Path objects, do game_item.game.rpath
 
     properties here are also properly formatted. if you want raw values, get them from the config
     """
 
-    __gtype_name__: str = 'GameEntry'
     _game: Game
     _process: subprocess.Popen[bytes] | None
     if TYPE_CHECKING:
@@ -94,7 +93,7 @@ class GameEntry(GObject.Object):
 
     @override
     def __eq__(self, other: object):
-        if isinstance(other, GameEntry):
+        if isinstance(other, GameItem):
             return self.rpath == other.rpath
         else:
             return False
