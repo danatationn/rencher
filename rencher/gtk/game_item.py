@@ -49,7 +49,7 @@ class GameItem(GObject.Object):
     """
     wrapper for Game() so that we can more easily work with them in gtk.
 
-    if you want to get Path objects, do game_item.game.rpath
+    if you want to get Path objects, do game_item.game.top_dir
 
     properties here are also properly formatted. if you want raw values, get them from the config
     """
@@ -58,8 +58,8 @@ class GameItem(GObject.Object):
     _process: subprocess.Popen[bytes] | None
     if TYPE_CHECKING:
         name: str = 'N/A'
-        rpath: str = 'N/A'
-        apath: str = 'N/A'
+        top_dir: str = 'N/A'
+        base_dir: str = 'N/A'
         last_played: str = 'Never'
         playtime: str = 'N/A'
         added_on: str = 'N/A'
@@ -67,25 +67,25 @@ class GameItem(GObject.Object):
         codename: str = 'N/A'
     else:
         name: GObject.Property = GObject.Property(type=str, default='N/A')
-        rpath: GObject.Property = GObject.Property(type=str, default='N/A')
-        apath: GObject.Property = GObject.Property(type=str, default='N/A')
+        top_dir: GObject.Property = GObject.Property(type=str, default='N/A')
+        base_dir: GObject.Property = GObject.Property(type=str, default='N/A')
         last_played: GObject.Property = GObject.Property(type=str, default='Never')
         playtime: GObject.Property = GObject.Property(type=str, default='N/A')
         added_on: GObject.Property = GObject.Property(type=str, default='N/A')
         version: GObject.Property = GObject.Property(type=str, default='N/A')
         codename: GObject.Property = GObject.Property(type=str, default='N/A')
 
-    def __init__(self, rpath: str | None = None, game: Game | None = None):
+    def __init__(self, top_dir: str | None = None, game: Game | None = None):
         super().__init__()
 
         self._process = None
 
-        if not rpath and not game:
+        if not top_dir and not game:
             return
-        if game and not rpath:
-            rpath = str(game.rpath)
-        if rpath and not game:
-            game = Game(rpath=rpath)
+        if game and not top_dir:
+            top_dir = str(game.top_dir)
+        if top_dir and not game:
+            game = Game(top_dir=Path(top_dir))
 
         if game:
             self._game = game
@@ -94,7 +94,7 @@ class GameItem(GObject.Object):
     @override
     def __eq__(self, other: object):
         if isinstance(other, GameItem):
-            return self.rpath == other.rpath
+            return self.top_dir == other.top_dir
         else:
             return False
 
@@ -104,7 +104,7 @@ class GameItem(GObject.Object):
 
     @override
     def __hash__(self):
-        return hash(self.rpath)
+        return hash(self.top_dir)
 
     def run(self) -> subprocess.Popen[bytes] | None:
         process = self.game.run()
@@ -119,8 +119,8 @@ class GameItem(GObject.Object):
 
         property_map: dict[str, Callable[[], str | float | bool | None | Path]] = {
             'name': lambda: game.name,
-            'rpath': lambda: game.rpath,
-            'apath': lambda: game.apath,
+            'top_dir': lambda: game.top_dir,
+            'base_dir': lambda: game.base_dir,
             'last_played': lambda: game.config.get_value('last_played'),
             'added_on': lambda: game.config.get_value('added_on'),
             'playtime': lambda: game.config.get_value('playtime'),
@@ -139,7 +139,7 @@ class GameItem(GObject.Object):
 
                 # setattr(self, prop, value if value else 'N/A')
                 if prop == 'name':
-                    setattr(self, prop, value if value else game.rpath.name)
+                    setattr(self, prop, value if value else game.top_dir.name)
                 else:
                     setattr(self, prop, value if value else 'N/A')
             except Exception as e:

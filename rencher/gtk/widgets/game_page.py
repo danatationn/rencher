@@ -25,7 +25,7 @@ class GamePage(Gtk.Box):
     log_row: Adw.ExpanderRow = gtk_template_child()
     log_text_view: Gtk.TextView = gtk_template_child()
 
-    entry: GameItem
+    game_item: GameItem
     row: Adw.ActionRow | Gtk.ListBoxRow
     log_buf: Gtk.TextBuffer
     _handler_ids: list[int]
@@ -36,24 +36,24 @@ class GamePage(Gtk.Box):
     options_dialog: OptionsDialog
     options_button: Gtk.Button = gtk_template_child()
 
-    def __init__(self, entry: GameItem, row: Adw.ActionRow | Gtk.ListBoxRow, library: Library):
+    def __init__(self, game_item: GameItem, row: Adw.ActionRow | Gtk.ListBoxRow, library: Library):
         super().__init__()
-        self.entry = entry
+        self.game_item = game_item
         self.row = row
         self.log_buf = self.log_text_view.get_buffer()
         self.library = library
         self.error_dialog = None
-        self.options_dialog = OptionsDialog(entry)
+        self.options_dialog = OptionsDialog(game_item)
 
         # to change the labels when the view is created, we need GObject.BindingFlags.SYNC_CREATE
         # or else it only updates when something changes
-        self.entry.bind_property('name', self.title_status_page, 'title', GObject.BindingFlags.SYNC_CREATE)
-        self.entry.bind_property('last_played', self.last_played_row, 'subtitle', GObject.BindingFlags.SYNC_CREATE)
-        self.entry.bind_property('playtime', self.playtime_row, 'subtitle', GObject.BindingFlags.SYNC_CREATE)
-        self.entry.bind_property('added_on', self.added_on_row, 'subtitle', GObject.BindingFlags.SYNC_CREATE)
-        self.entry.bind_property('version', self.version_row, 'subtitle', GObject.BindingFlags.SYNC_CREATE)
-        self.entry.bind_property('rpath', self.rpath_row, 'subtitle', GObject.BindingFlags.SYNC_CREATE)
-        self.entry.bind_property('codename', self.codename_row, 'subtitle', GObject.BindingFlags.SYNC_CREATE)
+        self.game_item.bind_property('name', self.title_status_page, 'title', GObject.BindingFlags.SYNC_CREATE)
+        self.game_item.bind_property('last_played', self.last_played_row, 'subtitle', GObject.BindingFlags.SYNC_CREATE)
+        self.game_item.bind_property('playtime', self.playtime_row, 'subtitle', GObject.BindingFlags.SYNC_CREATE)
+        self.game_item.bind_property('added_on', self.added_on_row, 'subtitle', GObject.BindingFlags.SYNC_CREATE)
+        self.game_item.bind_property('version', self.version_row, 'subtitle', GObject.BindingFlags.SYNC_CREATE)
+        self.game_item.bind_property('top_dir', self.rpath_row, 'subtitle', GObject.BindingFlags.SYNC_CREATE)
+        self.game_item.bind_property('codename', self.codename_row, 'subtitle', GObject.BindingFlags.SYNC_CREATE)
 
         self._handler_ids = [
             self.library.connect('game-launched', self._game_launched),
@@ -61,7 +61,7 @@ class GamePage(Gtk.Box):
             self.library.connect('game-log', self._on_log_line),
         ]
 
-        if self.library.is_game_running(self.entry.rpath):
+        if self.library.is_game_running(self.game_item.top_dir):
             self._set_running_ui(True)
 
         self.log_buf = self.log_text_view.get_buffer()
@@ -70,28 +70,28 @@ class GamePage(Gtk.Box):
 
     @gtk_template_callback
     def on_play_clicked(self, _play_button: Gtk.Button) -> None:
-        if self.library.is_game_running(self.entry.rpath):
+        if self.library.is_game_running(self.game_item.top_dir):
             self.play_button.set_label(_('Stopping'))
-            self.activate_action('library.stop-game', GLib.Variant('s', self.entry.rpath))
+            self.activate_action('library.stop-game', GLib.Variant('s', self.game_item.top_dir))
         else:
-            self.activate_action('library.run-game', GLib.Variant('s', self.entry.rpath))
+            self.activate_action('library.run-game', GLib.Variant('s', self.game_item.top_dir))
 
-    def _game_launched(self, _library: Library, entry: GameItem, _process: subprocess.Popen[bytes]) -> None:
-        if self.entry != entry:
+    def _game_launched(self, _library: Library, game_item: GameItem, _process: subprocess.Popen[bytes]) -> None:
+        if self.game_item != game_item:
             return
-        self.activate_action('rpc.update', GLib.Variant('a(ss)', [('state', entry.name)]))
+        self.activate_action('rpc.update', GLib.Variant('a(ss)', [('state', game_item.name)]))
         self._set_running_ui(True)
         self.log_row.set_expanded(False)
         self.log_buf.set_text('')
 
     def _game_closed(
-        self, _library: Library, entry: GameItem, failed: bool, err: Exception | None,
+        self, _library: Library, game_item: GameItem, failed: bool, err: Exception | None,
     ) -> None:
-        if self.entry != entry:
+        if self.game_item != game_item:
             return
         self.activate_action('rpc.clear')
         self._set_running_ui(False)
-        self.entry.refresh()
+        self.game_item.refresh()
 
         if err:
             alert = Adw.AlertDialog(heading=_('Error'))
@@ -129,8 +129,8 @@ class GamePage(Gtk.Box):
         self.options_dialog.delete_game_button.set_sensitive(not is_running)
 
 
-    def _on_log_line(self, _library: Library, entry: GameItem, line: str, is_stderr: bool) -> None:
-        if self.entry != entry:
+    def _on_log_line(self, _library: Library, game_item: GameItem, line: str, is_stderr: bool) -> None:
+        if self.game_item != game_item:
             return
 
         if is_stderr:
@@ -153,11 +153,11 @@ class GamePage(Gtk.Box):
 
     @gtk_template_callback
     def on_dir_clicked(self, _widget: Gtk.Button) -> None:
-        open_file_manager(self.entry.apath)
+        open_file_manager(self.game_item.base_dir)
 
     @gtk_template_callback
     def on_options_clicked(self, _widget: Gtk.Button):
-        self.options_dialog.change_game(self.entry)
+        self.options_dialog.change_game(self.game_item)
         self.options_dialog.present(self)
 
     @override

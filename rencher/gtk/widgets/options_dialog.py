@@ -32,13 +32,13 @@ class OptionsDialog(Adw.PreferencesDialog):
     switches_list: list[tuple[Gtk.Switch, Adw.SwitchRow, str]]
     # options_save_slot: Adw.SpinRow = gtk_template_child()
 
-    entry: GameItem
+    game_item: GameItem
     rencher_config: ConfigParser
 
-    def __init__(self, entry: GameItem):
+    def __init__(self, game_item: GameItem):
         super().__init__()
 
-        self.entry = entry
+        self.game_item = game_item
 
         self.switches_list = [
             (self.overwrite_skip_splash_scr_switch, self.skip_splash_scr_switch, 'skip_splash_scr'),
@@ -55,27 +55,27 @@ class OptionsDialog(Adw.PreferencesDialog):
         #     page_increment=10,
         # ))
 
-        self.change_game(entry)
+        self.change_game(game_item)
 
-    def change_game(self, entry: GameItem):
-        self.entry.update(entry.game)
+    def change_game(self, game_item: GameItem):
+        self.game_item.update(game_item.game)
         string_list = Gtk.StringList()
         self.codename_combo.set_model(string_list)
 
         self.rencher_config = RencherConfig()
 
-        if entry.has_nickname:
-            self.nickname_entry.set_text(entry.name)
-        self.location_row.set_subtitle(str(entry.rpath))
+        if game_item.has_nickname:
+            self.nickname_entry.set_text(game_item.name)
+        self.location_row.set_subtitle(str(game_item.top_dir))
         # self.options_save_slot.set_text(game.config['options']['save_slot'])
 
-        py_files = get_py_files(entry.apath)
+        py_files = get_py_files(game_item.base_dir)
 
         codename_index = None
         for i, path in enumerate(py_files):
             codename = os.path.splitext(os.path.basename(path))[0]
             string_list.append(codename)
-            if codename == entry.config['info']['codename']:
+            if codename == game_item.config['info']['codename']:
                 codename_index = i
 
         self.codename_combo.set_model(string_list)
@@ -83,9 +83,9 @@ class OptionsDialog(Adw.PreferencesDialog):
             self.codename_combo.set_selected(codename_index)
 
         for overwrite_switch, switch, key in self.switches_list:
-            if entry.config['options'][key] != '':  # overwritten
+            if game_item.config['options'][key] != '':  # overwritten
                 overwrite_switch.set_active(True)
-                if entry.config['options'][key] == 'true':
+                if game_item.config['options'][key] == 'true':
                     switch.set_active(True)
                 else:
                     switch.set_active(False)
@@ -98,34 +98,34 @@ class OptionsDialog(Adw.PreferencesDialog):
 
     @override
     def do_closed(self):
-        if not Path(self.entry.rpath).is_dir():
+        if not Path(self.game_item.top_dir).is_dir():
             return  # it got deleted
 
         sel_codename = self.codename_combo.get_selected_item()
         if not isinstance(sel_codename, Gtk.StringObject):
-            logging.error(f'"{self.entry.game.rpath.stem}" has no scripts! Ignoring for now')
+            logging.error(f'"{self.game_item.game.top_dir.stem}" has no scripts! Ignoring for now')
             return
 
-        if self.entry.name != self.nickname_entry.get_text():
-            self.entry.config['info']['nickname'] = self.nickname_entry.get_text()
-        if self.entry.codename != sel_codename.get_string():
-            self.entry.config['info']['codename'] = sel_codename.get_string()
+        if self.game_item.name != self.nickname_entry.get_text():
+            self.game_item.config['info']['nickname'] = self.nickname_entry.get_text()
+        if self.game_item.codename != sel_codename.get_string():
+            self.game_item.config['info']['codename'] = sel_codename.get_string()
         # self.game.config['options']['save_slot'] = self.options_save_slot.get_text()
 
         for overwrite_switch, switch, key in self.switches_list:
             if overwrite_switch.get_active():
                 if switch.get_active():
-                    self.entry.config['options'][key] = 'true'
-                    self.entry.config['overwritten'][key] = 'true'
+                    self.game_item.config['options'][key] = 'true'
+                    self.game_item.config['overwritten'][key] = 'true'
                 else:
-                    self.entry.config['options'][key] = 'false'
-                    self.entry.config['overwritten'][key] = 'false'
+                    self.game_item.config['options'][key] = 'false'
+                    self.game_item.config['overwritten'][key] = 'false'
             else:
-                self.entry.config['options'][key] = ''
-                self.entry.config['overwritten'][key] = self.rencher_config['settings'][key]
+                self.game_item.config['options'][key] = ''
+                self.game_item.config['overwritten'][key] = self.rencher_config['settings'][key]
 
-        self.entry.config.write()
-        self.entry.refresh()
+        self.game_item.config.write()
+        self.game_item.refresh()
 
     @gtk_template_callback
     def on_switch_changed(self, _widget: Gtk.Switch | Adw.SwitchRow, _):
@@ -139,14 +139,14 @@ class OptionsDialog(Adw.PreferencesDialog):
 
     @gtk_template_callback
     def on_dir_clicked(self, _widget: Gtk.Button):
-        open_file_manager(str(self.entry.rpath))
+        open_file_manager(str(self.game_item.top_dir))
 
     @gtk_template_callback
     def on_clear_info(self, _widget: Adw.ButtonRow):  # type: ignore
         dialog = Adw.AlertDialog(
             heading=_('Are you sure?'),
             body=_('This will permanently reset all user data for "{}".\nThis action cannot be undone.')
-                .format(self.entry.name),
+                .format(self.game_item.name),
         )
         dialog.add_response('cancel', _('No'))
         dialog.add_response('ok', _('Yes'))
@@ -160,8 +160,8 @@ class OptionsDialog(Adw.PreferencesDialog):
         if response == 'ok':
             # slaughter time
             # self.entry.config['info']['nickname'] = ''
-            self.entry.config['info']['last_played'] = ''
-            self.entry.config['info']['playtime'] = '0.0'
+            self.game_item.config['info']['last_played'] = ''
+            self.game_item.config['info']['playtime'] = '0.0'
 
             # self.entry.config['options']['skip_splash_scr'] = ''
             # self.entry.config['options']['skip_main_menu'] = ''
@@ -170,7 +170,7 @@ class OptionsDialog(Adw.PreferencesDialog):
             # self.game.config.write_config()
 
             toast = Adw.Toast(
-                title=_('"{}" stats have been reset').format(self.entry.name),
+                title=_('"{}" stats have been reset').format(self.game_item.name),
                 timeout=5,
             )
             self.add_toast(toast)
@@ -179,7 +179,7 @@ class OptionsDialog(Adw.PreferencesDialog):
     def on_delete_game(self, _widget: Adw.ButtonRow):
         dialog = Adw.AlertDialog(
             heading=_('Are you sure?'),
-            body=_('This will permanently delete "{}".\nThis action cannot be undone.').format(self.entry.name),
+            body=_('This will permanently delete "{}".\nThis action cannot be undone.').format(self.game_item.name),
         )
         dialog.add_response('cancel', _('No'))
         dialog.add_response('ok', _('Yes'))
@@ -191,5 +191,5 @@ class OptionsDialog(Adw.PreferencesDialog):
 
     def on_delete_game_response(self, _dialog: Adw.AlertDialog, response: str):
         if response == 'ok':
-            self.activate_action('library.delete-game', GLib.Variant('s', self.entry.rpath))
+            self.activate_action('library.delete-game', GLib.Variant('s', self.game_item.top_dir))
             self.close()

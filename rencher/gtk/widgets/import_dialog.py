@@ -67,15 +67,15 @@ class ImportDialog(Adw.Dialog):
                 list_store.append(game_item)
                 list_store_len += 1
 
-        def _name_for_entry(entry: GameItem, *_args: None):
-            if hasattr(entry, 'game'):
-                return os.path.basename(entry.rpath)
+        def _name_for_game_item(game_item: GameItem, *_args: None):
+            if hasattr(game_item, 'game'):
+                return os.path.basename(game_item.top_dir)
             else:
                 return ''
 
         self.game_combo.set_model(list_store)
         self.game_combo.set_expression(
-            Gtk.ClosureExpression.new(str, _name_for_entry, None),
+            Gtk.ClosureExpression.new(str, _name_for_game_item, None),
         )
 
     @override
@@ -171,13 +171,13 @@ class ImportDialog(Adw.Dialog):
     @gtk_template_callback
     def on_import_clicked(self, _button: Adw.ActionRow) -> None:
         target_game = self.game_combo.get_selected_item()
-        game_rpath = ''
+        game_top_dir = ''
         if hasattr(target_game, '_game') and isinstance(target_game, GameItem):
-            game_rpath = target_game.rpath
+            game_top_dir = target_game.top_dir
 
         self.activate_action(
             'library.import-game',
-            GLib.Variant('(sss)', (self.location_entry.get_text(), self.title_entry.get_text(), game_rpath)),
+            GLib.Variant('(sss)', (self.location_entry.get_text(), self.title_entry.get_text(), game_top_dir)),
         )
 
         self.has_imported = True

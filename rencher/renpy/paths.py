@@ -14,19 +14,19 @@ elif platform.system() == 'Windows':
     config_path = local_path / 'config.ini'
 
 # @lru_cache
-def get_py_files(apath: Path | str) -> list[Path]:
-    if isinstance(apath, str):
-        apath = Path(apath)
+def get_py_files(base_dir: Path | str) -> list[Path]:
+    if isinstance(base_dir, str):
+        base_dir = Path(base_dir)
 
-    return [file for file in apath.iterdir() if file.suffix == '.py']
+    return [file for file in base_dir.iterdir() if file.suffix == '.py']
 
 # @lru_cache
-def get_script_files(rpath: Path | str) -> list[Path]:
-    if isinstance(rpath, str):
-        rpath = Path(rpath)
+def get_script_files(top_dir: Path | str) -> list[Path]:
+    if isinstance(top_dir, str):
+        top_dir = Path(top_dir)
 
     rp_files: list[Path] = []
-    for top_dir, _, files in rpath.walk():
+    for topdir, _, files in top_dir.walk():
         for f in files:
             ext = os.path.splitext(f)[1]
             if not ext.startswith('.rp'):
@@ -40,16 +40,15 @@ def get_script_files(rpath: Path | str) -> list[Path]:
             # cache file
             if ext == '.rpyb':
                 continue
-            rp_files.append(top_dir / f)
+            rp_files.append(topdir / f)
 
     return rp_files
 
-def get_script_path(rpath: Path | str) -> Path | None:
-    """the script path is apath/game"""
-    if isinstance(rpath, str):
-        rpath = Path(rpath)
+def get_game_path(top_dir: Path | str) -> Path | None:
+    if isinstance(top_dir, str):
+        top_dir = Path(top_dir)
 
-    game_files = get_script_files(rpath)
+    game_files = get_script_files(top_dir)
     if not game_files:
         return None
 
@@ -58,11 +57,11 @@ def get_script_path(rpath: Path | str) -> Path | None:
     rpa_path = min(game_files, key=lambda path: len(path.parents))
     return rpa_path.parent
 
-def get_absolute_path(rpath: Path | str) -> Path | None:
-    if isinstance(rpath, str):
-        rpath = Path(rpath)
+def get_base_dir(top_dir: Path | str) -> Path | None:
+    if isinstance(top_dir, str):
+        top_dir = Path(top_dir)
 
-    rpa_path = get_script_path(rpath)
+    rpa_path = get_game_path(top_dir)
     if rpa_path:
         return rpa_path.parent
     return None
@@ -99,8 +98,8 @@ def validate_game_files(files: list[str] | list[Path]) -> bool:
         return len(path.split(os.sep))
 
     rpa_path = min(game_files, key=path_length)
-    apath = os.path.abspath(os.path.join(rpa_path, '..', '..'))
-    rel_files = [os.path.relpath(file, apath) for file in files]
+    base_dir = os.path.abspath(os.path.join(rpa_path, '..', '..'))
+    rel_files = [os.path.relpath(file, base_dir) for file in files]
 
     required_folders = [file for file in rel_files
                         if len(file.split(os.sep)) == 1

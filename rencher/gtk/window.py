@@ -102,10 +102,10 @@ class MainWindow(Adw.Window):
         if os.environ.get('MESON_BUILD_ROOT', None):
             self.add_css_class('devel')
 
-    def _on_game_added(self, _library: Library, entry: GameItem) -> None:
-        row = GameRow(entry)
-        self.rows[entry] = row
-        self.games[row] = entry
+    def _on_game_added(self, _library: Library, game_item: GameItem) -> None:
+        row = GameRow(game_item)
+        self.rows[game_item] = row
+        self.games[row] = game_item
 
         GLib.idle_add(self.library_list_box.append, row)
         self.library_search_button.set_sensitive(True)
@@ -114,24 +114,24 @@ class MainWindow(Adw.Window):
             self.library_view_stack.set_visible_child_name('game-select')
         self.library_list_box.invalidate_sort()
 
-    def _on_game_changed(self, _library: Library, entry: GameItem) -> None:
-        entry.refresh()  # gamedetailview + the row binds entry properties. this updates every label
+    def _on_game_changed(self, _library: Library, game_item: GameItem) -> None:
+        game_item.refresh()  # gamepage + the row binds item properties. this updates every label
         # self.library_list_box.invalidate_sort()
 
-    def _on_game_removed(self, _library: Library, entry: GameItem) -> None:
-        row = self.rows.get(entry)
+    def _on_game_removed(self, _library: Library, game_item: GameItem) -> None:
+        row = self.rows.get(game_item)
         if not row:
             return
         if row.task and (row.task.error or row.task.warnings):
             # if a game was deleted and there were errors, the user should at least know
             return
 
-        self._remove_row(row, entry)
+        self._remove_row(row, game_item)
 
-    def _remove_row(self, row: GameRow, entry: GameItem | None) -> None:
-        if entry:
-            self.rows.pop(entry, None)
-            if view := self.game_views.pop(entry, None):
+    def _remove_row(self, row: GameRow, game_item: GameItem | None) -> None:
+        if game_item:
+            self.rows.pop(game_item, None)
+            if view := self.game_views.pop(game_item, None):
                 self.library_view_stack.remove(view)
         self.games.pop(row, None)
 
@@ -148,17 +148,17 @@ class MainWindow(Adw.Window):
             self.library_view_stack.set_visible_child_name('empty')
             self.library_search_button.set_sensitive(False)
 
-    def _on_task_started(self, _library: Library, task: RencherTask, entry: GameItem | None) -> None:
-        if not entry:
+    def _on_task_started(self, _library: Library, task: RencherTask, game_item: GameItem | None) -> None:
+        if not game_item:
             # add the button to promise that a game is coming
             row = GameRow(None, task.label)
             self.library_list_box.append(row)
             self.task_rows[task] = row
         else:
             # a game has been added
-            if not (row := self.rows.get(entry)):
-                row = GameRow(entry)
-                self.rows[entry] = row
+            if not (row := self.rows.get(game_item)):
+                row = GameRow(game_item)
+                self.rows[game_item] = row
                 self.library_list_box.append(row)
             self.task_rows[task] = row
 
@@ -168,17 +168,17 @@ class MainWindow(Adw.Window):
         row.set_task(task)
         self.library_list_box.invalidate_sort()
 
-    def _on_task_finished(self, _library: Library, task: RencherTask, entry: GameItem | None) -> None:
+    def _on_task_finished(self, _library: Library, task: RencherTask, game_item: GameItem | None) -> None:
         row = self.task_rows.get(task)
         if not row:
             return
 
-        if entry and not row.entry and not task.error:
+        if game_item and not row.game_item and not task.error:
             # it finished the task! yay
-            row.set_entry(entry)
+            row.set_game_item(game_item)
             row.set_task(None)
-            self.rows[entry] = row
-            self.games[row] = entry
+            self.rows[game_item] = row
+            self.games[row] = game_item
 
         # check exit status. if something went wrong then set up traceback dialog
         if task.error or task.warnings:
@@ -196,7 +196,7 @@ class MainWindow(Adw.Window):
             self.toast_overlay.add_toast(toast)
         else:
             self.task_rows.pop(task, None)
-            if row.entry:
+            if row.game_item:
                 row.set_task(None)
             else:
                 GLib.idle_add(self.library_list_box.remove, row)
@@ -247,18 +247,18 @@ class MainWindow(Adw.Window):
 
         del self.task_rows[task]
 
-        if row.entry and self.library.find(row.entry.rpath):
+        if row.game_item and self.library.find(row.game_item.top_dir):
             # game is still in library. don't remove
             row.set_task(None)
         else:
-            self._remove_row(row, row.entry)
+            self._remove_row(row, row.game_item)
 
-    def _on_game_unknown_exec(self, library: Library, entry: GameItem):
+    def _on_game_unknown_exec(self, library: Library, game_item: GameItem):
         # TODO right now this shows all dialogs all at once.
         # it's not a big deal if you only have a couple games that are broken,
         # but it is when there's a lot.
         # i'll add a queue thing later
-        CodenameDialog(library, entry).present(self)
+        CodenameDialog(library, game_item).present(self)
 
     @gtk_template_callback
     def on_import_clicked(self, _button: Gtk.Button | None = None) -> None:
@@ -278,22 +278,22 @@ class MainWindow(Adw.Window):
     @gtk_template_callback
     def on_game_selected(self, _widget: Gtk.ListBox, row: GameRow | None) -> None:
         if row:
-            if entry := self.games.get(row):
-                if not Path(entry.rpath).is_dir():
-                    self.library.remove_game(entry.rpath)
+            if game_item := self.games.get(row):
+                if not Path(game_item.top_dir).is_dir():
+                    self.library.remove_game(game_item.top_dir)
                     self.toast_overlay.add_toast(
                         Adw.Toast(title=_('This game is missing!')),
                     )
                     return
 
-                view = self.game_views.get(entry, None)
+                view = self.game_views.get(game_item, None)
 
                 if not view:
-                    view = GamePage(entry, row, self.library)
-                    self.game_views[entry] = view
-                    self.library_view_stack.add_named(view, entry.rpath)
+                    view = GamePage(game_item, row, self.library)
+                    self.game_views[game_item] = view
+                    self.library_view_stack.add_named(view, game_item.top_dir)
 
-                self.library_view_stack.set_visible_child_name(entry.rpath)
+                self.library_view_stack.set_visible_child_name(game_item.top_dir)
         else:
             self.library_view_stack.set_visible_child_name('game-select')
 
@@ -326,40 +326,40 @@ class MainWindow(Adw.Window):
             return True
         elif self.filter_text.lower() in widget.button_row.get_title().lower():
             return True
-        # elif widget.entry and self.filter_text.lower() in widget.entry.rpath.lower():
+        # elif widget.game_item and self.filter_text.lower() in widget.game_item.top_dir.lower():
             # return True
         else:
             return False
 
     def sort_func(self, one: GameRow, two: GameRow) -> int:
-        entry_one = self.games.get(one, None)
-        entry_two = self.games.get(two, None)
+        item_one = self.games.get(one, None)
+        item_two = self.games.get(two, None)
 
         one_value: str | int | float
         two_value: str | int | float
 
-        # entry is currently importing . so whatevsif not entry_one or not entry_two:
+        # game is currently importing . so whatevsif not item_one or not item_two:
         if one.task or two.task:
             if self.combo_index == SortComboEnum.NAME:
                 one_value = one.button_row.get_title().lower()
                 two_value = two.button_row.get_title().lower()
             else:
                 return 0
-        elif not entry_one or not entry_one.game or not entry_two or not entry_two.game:
+        elif not item_one or not item_one.game or not item_two or not item_two.game:
             return 0
         else:
             if self.combo_index == SortComboEnum.NAME:
-                one_value = entry_one.name.lower()
-                two_value = entry_two.name.lower()
+                one_value = item_one.name.lower()
+                two_value = item_two.name.lower()
             elif self.combo_index == SortComboEnum.LAST_PLAYED:
-                one_value = entry_one.game.config.get_value('last_played') or 0.0
-                two_value = entry_two.game.config.get_value('last_played') or 0.0
+                one_value = item_one.game.config.get_value('last_played') or 0.0
+                two_value = item_two.game.config.get_value('last_played') or 0.0
             elif self.combo_index == SortComboEnum.PLAYTIME:
-                one_value = entry_one.game.config.get_value('playtime') or 0.0
-                two_value = entry_two.game.config.get_value('playtime') or 0.0
+                one_value = item_one.game.config.get_value('playtime') or 0.0
+                two_value = item_two.game.config.get_value('playtime') or 0.0
             elif self.combo_index == SortComboEnum.ADDED_ON:
-                one_value = entry_one.game.config.get_value('added_on') or 0.0
-                two_value = entry_two.game.config.get_value('added_on') or 0.0
+                one_value = item_one.game.config.get_value('added_on') or 0.0
+                two_value = item_two.game.config.get_value('added_on') or 0.0
             else:
                 return 0
 

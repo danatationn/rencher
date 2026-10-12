@@ -15,7 +15,7 @@ class RowState(Enum):
 
 
 class GameRow(Gtk.ListBoxRow):
-    _entry: GameItem | None
+    _game_item: GameItem | None
     _task: RencherTask | None
     # _error: Exception | None
     _button_box: Gtk.Box
@@ -25,13 +25,13 @@ class GameRow(Gtk.ListBoxRow):
     _task_signal_id: int
     _fraction_binding: GObject.Binding | None
 
-    def __init__(self, entry: GameItem | None = None, fallback_name: str = ''):
+    def __init__(self, game_item: GameItem | None = None, fallback_name: str = ''):
         super().__init__()
 
-        if not entry and fallback_name == '':
-            raise ValueError('entry or fallback_name are required')
+        if not game_item and fallback_name == '':
+            raise ValueError('game item or fallback_name are required')
 
-        self._entry = entry
+        self._game_item = game_item
         self._task = None
         self._fraction_binding = None
         self._task_signal_id = 0
@@ -50,8 +50,8 @@ class GameRow(Gtk.ListBoxRow):
         self.action_button.add_css_class('flat')
         self._button_box.append(self.action_button)
 
-        if entry:
-            entry.bind_property('name', self.button_row, 'title', GObject.BindingFlags.SYNC_CREATE)
+        if game_item:
+            game_item.bind_property('name', self.button_row, 'title', GObject.BindingFlags.SYNC_CREATE)
         elif fallback_name != '':
             self.button_row.set_title(fallback_name)
 
@@ -63,12 +63,12 @@ class GameRow(Gtk.ListBoxRow):
         overlay.add_overlay(self.pb)
         self.set_child(overlay)
 
-    def set_entry(self, entry: GameItem) -> None:
-        if self._entry:
-            self._entry.update(entry.game)
+    def set_game_item(self, game_item: GameItem) -> None:
+        if self._game_item:
+            self._game_item.update(game_item.game)
         else:
-            self._entry = entry
-        self._entry.bind_property('name', self.button_row, 'title', GObject.BindingFlags.SYNC_CREATE)
+            self._game_item = game_item
+        self._game_item.bind_property('name', self.button_row, 'title', GObject.BindingFlags.SYNC_CREATE)
 
     def set_task(self, task: RencherTask | None) -> None:
         if self._task and self._task_signal_id:
@@ -184,5 +184,5 @@ class GameRow(Gtk.ListBoxRow):
         return self._task
 
     @property
-    def entry(self) -> GameItem | None:
-        return self._entry
+    def game_item(self) -> GameItem | None:
+        return self._game_item

@@ -10,7 +10,7 @@ from pathlib import Path
 from typing import override
 
 from rencher.renpy.config import GameConfig
-from rencher.renpy.paths import get_absolute_path, get_py_files, validate_game_files
+from rencher.renpy.paths import get_base_dir, get_py_files, validate_game_files
 
 
 class GameInvalidError(Exception):
@@ -19,66 +19,65 @@ class GameNoExecutableError(GameInvalidError):
     pass
 
 class Game:
-    rpath: Path
-    apath: Path
+    top_dir: Path
+    base_dir: Path
     config: GameConfig
 
+    def __init__(self, top_dir: Path | None = None, base_dir: Path | None = None):
+        top_dir = Path(top_dir) if top_dir is not None else None
+        base_dir = Path(base_dir) if base_dir is not None else None
 
-    def __init__(self, rpath: str | Path | None = None, apath: str | Path | None = None):
-        rpath = Path(rpath) if rpath is not None else None
-        apath = Path(apath) if apath is not None else None
-
-        if apath and not rpath:
-            self.rpath = apath
-            self.apath = apath
-        elif rpath and not apath:
-            self.rpath = rpath
-            if apath := get_absolute_path(rpath):
-                self.apath = apath
+        if base_dir and not top_dir:
+            self.top_dir = base_dir
+            self.base_dir = base_dir
+        elif top_dir and not base_dir:
+            self.top_dir = top_dir
+            if base_dir := get_base_dir(top_dir):
+                self.base_dir = base_dir
             else:
-                name = rpath.name
-                raise GameInvalidError(f'{name} is not a valid game! ({rpath})')
-        elif rpath and apath:
-            self.rpath = rpath
-            self.apath = apath
+                name = top_dir.name
+                raise GameInvalidError(f'{name} is not a valid game! ({top_dir})')
+        elif top_dir and base_dir:
+            self.top_dir = top_dir
+            self.base_dir = base_dir
 
-        config_path = self.apath/'game'/'rencher.ini'
+        config_path = self.base_dir / 'game' / 'rencher.ini'
         self.config = GameConfig(config_path)
 
     @override
     def __eq__(self, other: object) -> bool:
         if isinstance(other, Game):
-            return self.rpath == other.rpath
+            return self.top_dir == other.top_dir
         else:
             return False
 
     @override
     def __hash__(self):
-        return hash(self.rpath)
+        return hash(self.top_dir)
 
     def validate(self) -> bool:
         """
             returns false if game cannot be run/isn't a real game
         """
-        paths: list[str] = []
-        for (topdir, dirs, files) in self.apath.walk():
+        paths: list[Path] = []
+        for (topdir, dirs, files) in self.base_dir.walk():
             for dir in dirs:
-                paths.append(str(topdir/dir))
+                paths.append(topdir / dir)
             for file in files:
-                paths.append(str(topdir/file))
+                paths.append(topdir / file)
         return validate_game_files(paths)
 
     def get_main_script(self) -> Path:
         """
-            returns a path based off of the .py scripts located in apath
+            returns a path based off of the .py scripts located in base_dir
         """
-        py_files = get_py_files(self.apath)
+        py_files = get_py_files(self.base_dir)
         codename = self.config.get_value('codename')
 
         if codename != '':
-            return self.apath/f'{codename}.py'
+            return self.base_dir/f'{codename}.py'
         elif len(py_files) == 0:
-            raise GameInvalidError(f'No executable found in {self.apath}')
+            raise GameInvalidError(f'No executable found in {self.base_dir}')
         elif len(py_files) == 1:
             return py_files[0]
         else:  # more than 1, but with no codename assigned
@@ -100,10 +99,10 @@ class Game:
     def _exec_candidates(self):
         """
             yields exec paths in priority order:
-                0. apath/lib/libdir/codename.exe (when on windows, no librenpython)
-                1. apath/codename.sh or codename.exe
-                2. apath/lib/libdir/codename(.exe)
-                3. apath/lib/libdir/pythonw(.exe)
+                0. base_dir/lib/libdir/codename.exe (when on windows, no librenpython)
+                1. base_dir/codename.sh or codename.exe
+                2. base_dir/lib/libdir/codename(.exe)
+                3. base_dir/lib/libdir/pythonw(.exe)
         """
         is_windows = True if platform.system() == 'Windows' else False
         main_script = self.get_main_script()
@@ -112,14 +111,14 @@ class Game:
         # ui wise, this will make it look like the game crashed, and then it will launch anyway
         if is_windows:
             for lib_dir in self._lib_directories():
-                lib_path = self.apath / 'lib' / lib_dir
+                lib_path = self.base_dir / 'lib' / lib_dir
                 if lib_path.is_dir() and not (lib_path / 'librenpython.dll').is_file():
                     yield (lib_path / self.codename).with_suffix('.exe')
 
         yield main_script.with_suffix('.exe' if is_windows else '.sh')
 
         for lib_dir in self._lib_directories():
-            lib_path = self.apath / 'lib' / lib_dir
+            lib_path = self.base_dir / 'lib' / lib_dir
             for name in (self.codename, 'pythonw'):
                 yield (lib_path / name).with_suffix('.exe' if is_windows else '')
 
@@ -155,8 +154,8 @@ class Game:
         Returns:
             the version as a string. returns `None` if it couldn't be determined
         """
-        vc_path = self.apath / 'renpy' / 'vc_version.py'
-        init_path = self.apath / 'renpy' / '__init__.py'
+        vc_path = self.base_dir / 'renpy' / 'vc_version.py'
+        init_path = self.base_dir / 'renpy' / '__init__.py'
         commit: int | None = None
         version: list[int] = []
 
@@ -206,12 +205,12 @@ class Game:
         if self.config['overwritten']['skip_splash_scr'] == 'true':
             env['RENPY_SKIP_SPLASHSCREEN'] = '1'
         if self.config['overwritten']['skip_main_menu'] == 'true':
-            env['RENPY_SKIP_MAIN_MENU'] = ('Did you know you can put anything here and it stills work '
-                                           'like ren\'py doesn\'t even check for the value it\'s crazy')
+            env['RENPY_SKIP_MAIN_MENU'] = ('Did you know you can put anything here and it still works '
+                                           'like Ren\'Py doesn\'t even check for the value it\'s crazy')
 
         if self.config['overwritten']['forced_save_dir'] == 'true':
-            save_dir = os.path.join(self.apath, 'game', 'saves')
-            args.extend(['--savedir', save_dir])
+            save_dir = self.base_dir / 'game' / 'saves'
+            args.extend(['--savedir', str(save_dir)])
 
         if os.environ.get('FLATPAK_ID'):
             args.insert(0, 'flatpak-spawn')
@@ -223,9 +222,9 @@ class Game:
         config_dict = {}
         for item in self.config['overwritten']:
             config_dict[item] = self.config['overwritten'][item]
-        logging.info(f'Running "{os.path.basename(self.rpath)}"...')
-        logging.debug(f'"{os.path.basename(self.rpath)}" config: {self.config['overwritten']}')
-        logging.debug(f'"{os.path.basename(self.rpath)}" args: {args}')
+        logging.info(f'Running "{os.path.basename(self.top_dir)}"...')
+        logging.debug(f'"{os.path.basename(self.top_dir)}" config: {config_dict}')
+        logging.debug(f'"{os.path.basename(self.top_dir)}" args: {args}')
         return subprocess.Popen(args, env=os.environ | env, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
     # def run_wine()
@@ -262,24 +261,25 @@ class Game:
                 with open(candidate, 'rb') as f_in:
                     if f_in.readline().endswith(b'\r\n'):
                         with open(temp_path, 'wb') as f_out:
-                            logging.debug(f'"{self.rpath.name}" has crlf line endings. Converting')
+                            logging.debug(f'"{self.top_dir.name}" has crlf line endings. Converting')
                             has_crlf = True
                             f_in.seek(0)
                             for line in f_in:
                                 f_out.write(line.replace(b'\r\n', b'\n'))
                 if has_crlf:
                     temp_path.replace(candidate)
+
             if not os.access(candidate, os.X_OK) and platform.system() != 'Windows':
                 logging.debug(f'Making "{candidate.name}" executable')
                 mode = os.stat(candidate).st_mode
                 os.chmod(candidate, mode | 0o111)
 
-            if candidate.parent == self.apath:
+            if candidate.parent == self.base_dir:
                 # we're not in lib. where we want to actually do stuff
                 continue
 
-            libs_path = candidate.parent/'lib'
-            librenpython_path = candidate.parent/'librenpython.so'
+            libs_path = candidate.parent / 'lib'
+            librenpython_path = candidate.parent / 'librenpython.so'
             if libs_path.is_dir() and librenpython_path.is_file():
                 shutil.rmtree(libs_path)
                 logging.debug(f'Patched {candidate.parent.name}')
@@ -287,11 +287,11 @@ class Game:
     def cleanup(self, playtime: float) -> None:
         self.config.read()
         total = self.config.get_value('playtime') or 0.0
-        assert(isinstance(total, float))
-        self.config['info']['playtime'] = str(playtime + total)
-        self.config['info']['last_played'] = str(time.time())
-        self.config.set('info', 'last_played', str(time.time()))
-        self.config.write()
+        if isinstance(total, float):
+            self.config['info']['playtime'] = str(playtime + total)
+            self.config['info']['last_played'] = str(time.time())
+            self.config.set('info', 'last_played', str(time.time()))
+            self.config.write()
 
     @property
     def name(self) -> str:
@@ -299,7 +299,7 @@ class Game:
         if isinstance(nickname, str):
             return nickname
         else:
-            return self.rpath.name
+            return self.top_dir.name
     @property
     def codename(self) -> str:
         return self.get_main_script().stem
@@ -309,7 +309,7 @@ class Game:
     @property
     def is_mod(self) -> bool:
         try:
-            py_files = get_py_files(self.apath)
+            py_files = get_py_files(self.base_dir)
         except FileNotFoundError:
             return False
         if len(py_files) > 1:

@@ -17,7 +17,7 @@ from rencher.gtk.game_item import GameItem
 from rencher.gtk.utils import sanitize_path
 from rencher.renpy.config import RencherConfig
 from rencher.renpy.game import Game
-from rencher.renpy.paths import get_py_files, get_script_files, get_script_path, validate_game_files
+from rencher.renpy.paths import get_game_path, get_py_files, get_script_files, validate_game_files
 
 
 class TaskError(Exception):
@@ -141,26 +141,26 @@ class RencherTask(GObject.Object):
         return self._warnings
 
 class DeleteGameTask(RencherTask):
-    rpath: Path
+    top_dir: Path
 
-    def __init__(self, rpath: Path | str):
-        super().__init__(str(rpath))
-        self.rpath = Path(rpath)
+    def __init__(self, top_dir: Path | str):
+        super().__init__(str(top_dir))
+        self.top_dir = Path(top_dir)
 
     @override
     def run(self) -> None:
         paths_to_delete: list[tuple[Path, bool]] = []  # `True` if directory, `False` if file
 
-        for root, dirs, files in self.rpath.walk(top_down=False):
+        for root, dirs, files in self.top_dir.walk(top_down=False):
             if self.is_cancelled:
                 return
 
             for filename in files:
                 paths_to_delete.append((root/filename, False))
             for dirname in dirs:
-                paths_to_delete.append((root/dirname, True))
+                paths_to_delete.append((root / dirname, True))
 
-        paths_to_delete.append((self.rpath, True))
+        paths_to_delete.append((self.top_dir, True))
 
         GLib.idle_add(self.set_property, 'max_progress', len(paths_to_delete))
 
@@ -182,11 +182,11 @@ class DeleteGameTask(RencherTask):
             self.advance()
 
         if not self.warnings:
-            self.message(_('"{}" has been deleted').format(self.rpath.name))
+            self.message(_('"{}" has been deleted').format(self.top_dir.name))
 
     @override
     def get_retry_task(self) -> 'RencherTask':
-        return DeleteGameTask(self.rpath)
+        return DeleteGameTask(self.top_dir)
 
     @override
     def get_cancel_task(self) -> None:
@@ -211,16 +211,16 @@ class NukeGamesTask(RencherTask):
 class ImportGameTask(RencherTask):
     source_path: Path
     nickname: str | None
-    target_entry: GameItem | None
+    target_item: GameItem | None
     game_path: Path | None  # is some by the end
     game: Game | None
 
-    def __init__(self, source_path: Path, nickname: str | None = None, target_entry: GameItem | None = None):
+    def __init__(self, source_path: Path, nickname: str | None = None, target_item: GameItem | None = None):
         label = nickname if nickname else source_path.name
         super().__init__(label)
         self.source_path = source_path
         self.nickname = nickname
-        self.target_entry = target_entry
+        self.target_item = target_item
         self.game_path = None
         self.game = None
 
@@ -264,7 +264,7 @@ class ImportGameTask(RencherTask):
         else:
             raise TaskError(_('The path does not exist!'), FileNotFoundError())
 
-        if not self.target_entry and not validate_game_files(archive_file_list or folder_file_list):
+        if not self.target_item and not validate_game_files(archive_file_list or folder_file_list):
             raise TaskError(_('The game supplied does not look like a valid Ren\'Py game'))
 
         """
@@ -307,8 +307,8 @@ class ImportGameTask(RencherTask):
             logging.info(f'Importing the game at "{game_path}/"')
             self.game_path = game_path
 
-        if self.target_entry:
-            game_files = self.target_entry.game.rpath.rglob('*')
+        if self.target_item:
+            game_files = self.target_item.game.top_dir.rglob('*')
             total_files = len(folder_file_list or archive_file_list) + len(list(game_files))
         else:
             total_files = len(folder_file_list or archive_file_list)
@@ -367,16 +367,16 @@ class ImportGameTask(RencherTask):
         Some R6 mods come with .rpa files in root and nothing else
         This tries to make a game/ directory and move them there
         """
-        if self.target_entry:
-            rpa_path = get_script_path(game_path)
+        if self.target_item:
+            rpa_path = get_game_path(game_path)
             if not rpa_path:
                 raise TaskError(_('No game files found; target game is corrupt'))
 
-            apath = game_path if rpa_path == game_path else rpa_path.parent
-            new_rpa_path = apath / 'game'
+            base_dir = game_path if rpa_path == game_path else rpa_path.parent
+            new_rpa_path = base_dir / 'game'
 
             if rpa_path != new_rpa_path:
-                for path in get_script_files(apath):
+                for path in get_script_files(base_dir):
                     if self.is_cancelled:
                         break
                     if path.is_relative_to(new_rpa_path):
@@ -390,12 +390,12 @@ class ImportGameTask(RencherTask):
                 # otherwise it will dump the game files outside the folder
                 # get_script_files.cache_clear()
 
-            for path in self.target_entry.game.apath.rglob('*'):
+            for path in self.target_item.game.base_dir.rglob('*'):
                 if self.is_cancelled:
                     break
 
-                relative_path = path.relative_to(self.target_entry.game.apath)
-                target_path = apath / relative_path
+                relative_path = path.relative_to(self.target_item.game.base_dir)
+                target_path = base_dir / relative_path
 
                 if target_path.exists():
                     continue
@@ -411,16 +411,16 @@ class ImportGameTask(RencherTask):
                 self.advance()
 
         if not self.is_cancelled:
-            game = Game(rpath=game_path)
+            game = Game(top_dir=game_path)
             self.game = game
             if self.nickname:
                 game.config.set('info', 'nickname', self.nickname)
             game.config.set('info', 'added_on', str(time.time()))
-            game_scripts = get_py_files(game.apath)
-            if len(game_scripts) == 2 and self.target_entry:
+            game_scripts = get_py_files(game.base_dir)
+            if len(game_scripts) == 2 and self.target_item:
                 try:
                     game_codenames = [script.stem for script in game_scripts]
-                    game_codenames.remove(self.target_entry.codename)
+                    game_codenames.remove(self.target_item.codename)
                     game.config.set('info', 'codename', game_codenames[0])
                 except ValueError as e:
                     self.warn(TaskError(_('Couldn\'t determine codename'), e))
@@ -451,7 +451,7 @@ class ImportGameTask(RencherTask):
 
     @override
     def get_retry_task(self) -> 'RencherTask | None':
-        return ImportGameTask(self.source_path, self.nickname, self.target_entry)
+        return ImportGameTask(self.source_path, self.nickname, self.target_item)
 
     @override
     def get_cancel_task(self) -> 'RencherTask | None':

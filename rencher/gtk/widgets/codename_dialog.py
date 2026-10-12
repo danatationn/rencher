@@ -10,13 +10,13 @@ from rencher.gtk.library import Library
 
 class CodenameDialog(Adw.AlertDialog):
     library: Library
-    entry: GameItem
+    game_item: GameItem
     codename_list_box: Gtk.ListBox
 
-    def __init__(self, library: Library, entry: GameItem):
+    def __init__(self, library: Library, game_item: GameItem):
         super().__init__()
         self.library = library
-        self.entry = entry
+        self.game_item = game_item
 
         self.codename_list_box = Gtk.ListBox()
         self.codename_list_box.add_css_class('boxed-list')
@@ -27,11 +27,11 @@ class CodenameDialog(Adw.AlertDialog):
         self.connect('response', self.on_response)
 
         self.set_heading(_('Select Mod Executable'))
-        self.set_body(f'The mod "{self.entry.name}" provides multiple executables.\n'+
+        self.set_body(f'The mod "{self.game_item.name}" provides multiple executables.\n'+
                        'Please choose the correct one below.\n'+
                        '(You can change this later in settings.)')
 
-        py_files = glob.glob(os.path.join(self.entry.apath, '*.py'))
+        py_files = glob.glob(os.path.join(self.game_item.base_dir, '*.py'))
         for path in py_files:
             name = os.path.splitext(os.path.basename(path))[0]
             row = Adw.ActionRow(title=name)
@@ -41,6 +41,6 @@ class CodenameDialog(Adw.AlertDialog):
         selected_row = self.codename_list_box.get_selected_row()
         if isinstance(selected_row, Adw.ActionRow):
             codename = selected_row.get_title()
-            self.entry.config.set('info', 'codename', codename)
-            self.entry.config.write()
-            self.library.add_game(self.entry.rpath)
+            self.game_item.config.set('info', 'codename', codename)
+            self.game_item.config.write()
+            self.library.add_game(self.game_item.top_dir)

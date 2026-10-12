@@ -70,19 +70,19 @@ class Library(GObject.Object):
         self._thread_pool = ThreadPoolExecutor()
 
         self.action_group = Gio.SimpleActionGroup.new()
-        # s = rpath
+        # s = top_dir
         delete_action = Gio.SimpleAction.new_stateful('delete-game', GLib.VariantType.new('s'), GLib.Variant('d', 0.0))
         delete_action.connect('activate', self._on_delete_game)
         self.action_group.add_action(delete_action)
-        # sss = rpath, nickname, game rpath
+        # sss = top_dir, nickname, game top_dir
         import_action = Gio.SimpleAction.new_stateful('import-game', GLib.VariantType('(sss)'), GLib.Variant('d', 0.0))
         import_action.connect('activate', self._on_import_game)
         self.action_group.add_action(import_action)
-        # s = rpath
+        # s = top_dir
         run_action = Gio.SimpleAction.new('run-game', GLib.VariantType.new('s'))
         run_action.connect('activate', self._run_game)
         self.action_group.add_action(run_action)
-        # s = rpath
+        # s = top_dir
         stop_action = Gio.SimpleAction.new('stop-game', GLib.VariantType.new('s'))
         stop_action.connect('activate', self._close_game)
         self.action_group.add_action(stop_action)
@@ -95,13 +95,13 @@ class Library(GObject.Object):
         cancel_action.connect('activate', self._cancel_task)
         self.action_group.add_action(cancel_action)
 
-    def find(self, rpath: str | Path) -> tuple[int, GameItem] | None:
-        rpath = os.path.normpath(rpath)
+    def find(self, top_dir: str | Path) -> tuple[int, GameItem] | None:
+        top_dir = os.path.normpath(top_dir)
         for game_item in self.store:
             if not game_item or not isinstance(game_item, GameItem):
                 continue
-            item_rpath = os.path.normpath(game_item.rpath)
-            if rpath == item_rpath or rpath.startswith(item_rpath + os.sep):
+            item_top_dir = os.path.normpath(game_item.top_dir)
+            if top_dir == item_top_dir or top_dir.startswith(item_top_dir + os.sep):
                 found, pos = self.store.find(game_item)
                 if found:
                     return pos, game_item
@@ -114,45 +114,45 @@ class Library(GObject.Object):
         logging.info(f'Loading games from "{data_dir}"')
         for item in list(self.store):
             if isinstance(item, GameItem):
-                self.remove_game(item.rpath)
+                self.remove_game(item.top_dir)
 
         self._pool_generation = uuid.uuid4()
         gen = self._pool_generation
 
-        for rpath in games_dir.iterdir():
-            self._thread_pool.submit(self._pool_add_game, str(rpath), gen)
+        for top_dir in games_dir.iterdir():
+            self._thread_pool.submit(self._pool_add_game, str(top_dir), gen)
 
     def _msg(self, _t: RencherTask, text: str) -> None:
         self.emit('message', text)
 
-    def _load_game(self, rpath: str) -> tuple[GameItem | None, Exception | None]:
+    def _load_game(self, top_dir: str) -> tuple[GameItem | None, Exception | None]:
         game_item = None
         try:
-            game_item = GameItem(rpath=rpath)
+            game_item = GameItem(top_dir=top_dir)
             game_item.game.get_main_script()
             return game_item, None
         except Exception as e:
             return game_item, e
 
-    def _pool_add_game(self, rpath: str, gen: uuid.UUID) -> None:
+    def _pool_add_game(self, top_dir: str, gen: uuid.UUID) -> None:
         if gen != self._pool_generation:
             return
 
-        game_item = self._load_game(rpath)
+        game_item = self._load_game(top_dir)
 
         def _finish() -> bool:
             if gen == self._pool_generation:
-                self.add_game(rpath, game_item)
+                self.add_game(top_dir, game_item)
             return GLib.SOURCE_REMOVE
 
         GLib.idle_add(_finish)
 
-    def add_game(self, rpath: str, pool_entry: tuple[GameItem | None, Exception | None] | None = None) -> None:
-        if self.find(rpath):
-            self.update_game(rpath)
+    def add_game(self, top_dir: str, pool_entry: tuple[GameItem | None, Exception | None] | None = None) -> None:
+        if self.find(top_dir):
+            self.update_game(top_dir)
             return
 
-        game_item, error = pool_entry or self._load_game(rpath)
+        game_item, error = pool_entry or self._load_game(top_dir)
         match error:
             case None:
                 pass
@@ -161,34 +161,34 @@ class Library(GObject.Object):
                     self.emit('game-unknown-exec', game_item)
                 return
             case GameInvalidError():
-                logging.warning(f'Couldn\'t load "{os.path.basename(rpath)}"')
+                logging.warning(f'Couldn\'t load "{os.path.basename(top_dir)}"')
                 return
             case _:
-                logging.error(f'Couldn\'t load "{os.path.basename(rpath)}" because of {error}')
+                logging.error(f'Couldn\'t load "{os.path.basename(top_dir)}" because of {error}')
                 return
 
         if game_item:
             self.store.append(game_item)
             self.emit('game-added', game_item)
 
-            logging.debug(f'Added: "{os.path.basename(rpath)}"')
+            logging.debug(f'Added: "{os.path.basename(top_dir)}"')
 
-    def remove_game(self, rpath: str) -> None:
-        result = self.find(rpath)
+    def remove_game(self, top_dir: str) -> None:
+        result = self.find(top_dir)
         if result:
             i, item = result
             self.store.remove(i)
             self.emit('game-removed', item)
-        logging.debug(f'Removed: "{os.path.basename(rpath)}"')
+        logging.debug(f'Removed: "{os.path.basename(top_dir)}"')
 
-    def update_game(self, rpath: str) -> None:
-        result = self.find(rpath)
+    def update_game(self, top_dir: str) -> None:
+        result = self.find(top_dir)
         if result:
             i, game_item = result
             game_item.update(game_item.game)
             self.store.items_changed(i, 1, 1)
             self.emit('game-changed', game_item)
-        logging.debug(f'Changed: "{os.path.basename(rpath)}"')
+        logging.debug(f'Changed: "{os.path.basename(top_dir)}"')
 
     def _task_started(self, task: RencherTask, game_item: GameItem | None = None):
         self.emit('task-started', task, game_item)
@@ -200,21 +200,21 @@ class Library(GObject.Object):
             self.tasks.pop(str(task.uuid), None)
 
     def _on_delete_game(self, _action: Gio.SimpleAction, parameter: GLib.Variant) -> None:
-        rpath = parameter.get_string()
-        task = DeleteGameTask(rpath)
+        top_dir = parameter.get_string()
+        task = DeleteGameTask(top_dir)
         self._delete_game(task)
 
     def _delete_game(self, task: DeleteGameTask) -> None:
-        if result := self.find(task.rpath):
+        if result := self.find(task.top_dir):
             self._task_started(task, result[1])
 
         def _on_finished(t: DeleteGameTask, _p: GObject.ParamSpec):
             try:
-                game = Game(task.rpath)
+                game = Game(task.top_dir)
                 if not game.validate():
-                    self.remove_game(str(task.rpath))
+                    self.remove_game(str(task.top_dir))
             except Exception:
-                self.remove_game(str(task.rpath))
+                self.remove_game(str(task.top_dir))
             # self.emit('task-finished', t, None)
             self._task_finished(t)
 
@@ -225,9 +225,9 @@ class Library(GObject.Object):
     def _on_import_game(self, _action: Gio.SimpleAction, parameter: GLib.Variant) -> None:
         file_path = parameter.get_child_value(0).get_string()
         nickname = parameter.get_child_value(1).get_string() or None
-        game_rpath = parameter.get_child_value(2).get_string()
+        game_top_dir = parameter.get_child_value(2).get_string()
 
-        target_item = self.find(game_rpath)
+        target_item = self.find(game_top_dir)
         task = ImportGameTask(Path(file_path), nickname, target_item[1] if target_item else None)
         self._import_game(task)
 
@@ -251,16 +251,16 @@ class Library(GObject.Object):
         task.start()
 
     def _run_game(self, _action: Gio.SimpleAction, param: GLib.Variant) -> None:
-        rpath = param.get_string()
-        if not (result := self.find(rpath)):
-            logging.error(f'No game found at "{rpath}"')
+        top_dir = param.get_string()
+        if not (result := self.find(top_dir)):
+            logging.error(f'No game found at "{top_dir}"')
             return
         game_item = result[1]
         if game_item in self.processes:
-            logging.error(f'Game "{rpath}" is already running')
+            logging.error(f'Game "{top_dir}" is already running')
             return
 
-        logging.info(f'Launching "{rpath}"...')
+        logging.info(f'Launching "{top_dir}"...')
 
         try:
             process = game_item.run()
@@ -291,8 +291,8 @@ class Library(GObject.Object):
 
         GLib.timeout_add(CHECK_PROCESS_MS, _watch_process)
 
-    def is_game_running(self, rpath: str) -> bool:
-        result = self.find(rpath)
+    def is_game_running(self, top_dir: str) -> bool:
+        result = self.find(top_dir)
         return result is not None and result[1] in self.processes
 
     def _read_stream(self, game_item: GameItem, stream: IO[bytes], is_stderr: bool) -> None:
@@ -300,15 +300,15 @@ class Library(GObject.Object):
             GLib.idle_add(self.emit, 'game-log', game_item, line.decode(errors='replace'), is_stderr)
 
     def _close_game(self, _action: Gio.SimpleAction, param: GLib.Variant) -> None:
-        rpath = param.get_string()
-        if not (result := self.find(rpath)):
-            logging.error(f'No game found at "{rpath}"')
+        top_dir = param.get_string()
+        if not (result := self.find(top_dir)):
+            logging.error(f'No game found at "{top_dir}"')
             return
         game_item = result[1]
         if game_item not in self.processes:
             return
 
-        logging.info(f'Closing "{rpath}"...')
+        logging.info(f'Closing "{top_dir}"...')
 
         process = self.processes[game_item][0]
         if process.poll() is not None:
