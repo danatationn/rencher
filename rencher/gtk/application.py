@@ -188,12 +188,7 @@ class MainApplication(Adw.Application):
             debug_info=debug_info,
             debug_info_filename='log.txt',
             release_notes="""<ul>
-                <li>New adaptive interface</li>
-                <li>Fixed log dialog appearing when stopping a game early</li>
-                <li>Completely reworked the tasks system</li>
-                <li>Removed file monitoring</li>
-                <li>Added refresh games button</li>
-                <li>Added a "Force Reduce Motion" option on Windows to counter visual lag</li>
+                <li>Added workarounds to scaling on Windows</li>
             </ul>""",
             release_notes_version=version,
         )
