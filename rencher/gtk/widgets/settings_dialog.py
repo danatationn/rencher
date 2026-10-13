@@ -27,6 +27,7 @@ class SettingsDialog(Adw.PreferencesDialog):
     windowficate_switch: Adw.SwitchRow = gtk_template_child()
     discord_rpc_switch: Adw.SwitchRow = gtk_template_child()
     reduce_motion_switch: Adw.SwitchRow = gtk_template_child()
+    disable_hidpi_switch: Adw.SwitchRow = gtk_template_child()
     switches_list: list[tuple[Adw.SwitchRow, str]]
 
     def __init__(self, window: 'MainWindow'):
@@ -41,6 +42,7 @@ class SettingsDialog(Adw.PreferencesDialog):
             (self.windowficate_switch, 'windowficate_filenames'),
             (self.discord_rpc_switch, 'discord_rpc'),
             (self.reduce_motion_switch, 'reduce_motion'),
+            (self.disable_hidpi_switch, 'disable_hidpi'),
         ]
 
         self.window = window
@@ -48,6 +50,7 @@ class SettingsDialog(Adw.PreferencesDialog):
         if sys.platform in ('win32', 'msys'):
             self.windowficate_switch.set_visible(False)  # force it on
             self.reduce_motion_switch.set_visible(True)
+            self.disable_hidpi_switch.set_visible(True)
 
     def on_show(self):
         self.config = RencherConfig()

@@ -1,4 +1,5 @@
 import os
+import sys
 from enum import Enum
 from gettext import gettext as _
 from pathlib import Path
@@ -59,6 +60,7 @@ class MainWindow(Adw.Window):
     library_view_stack: Adw.ViewStack = gtk_template_child()
     library_search_entry: Gtk.SearchEntry = gtk_template_child()
     library_search_button: Gtk.ToggleButton = gtk_template_child()
+    collapse_breakpoint: Adw.Breakpoint = gtk_template_child()
 
     def __init__(self, application: 'MainApplication'):
         super().__init__(application=application)
@@ -101,6 +103,16 @@ class MainWindow(Adw.Window):
         # add devel style if running from meson
         if os.environ.get('MESON_BUILD_ROOT', None):
             self.add_css_class('devel')
+
+        # gtk on windows CANNOT do hidpi yet (it does integer scaling but blah).
+        # it only scales up the font which is pathetic
+        # because of this, `sp` would break, as the font would be wayyy bigger,
+        # but the window would remain the same size.
+        # WORKAROUND: force `px` for now.
+        if sys.platform in ('win32', 'msys'):
+            self.collapse_breakpoint.set_condition(
+                Adw.BreakpointCondition.parse('max-width: 540px'),
+            )
 
     def _on_game_added(self, _library: Library, game_item: GameItem) -> None:
         row = GameRow(game_item)

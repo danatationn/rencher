@@ -83,6 +83,12 @@ template $SettingsDialog: Adw.PreferencesDialog {
         visible: false;
       }
 
+      Adw.SwitchRow disable_hidpi_switch {
+        title: _("Use Legacy Scaling");
+        subtitle: _("Scale the app to sizes like 150% through Windows. May look blurry. Requires restart");
+        visible: false;
+      }
+
       Adw.SwitchRow windowficate_switch {
         title: _("Restrict Filenames");
         subtitle: _("Restrict filenames to Windows-compatible characters");

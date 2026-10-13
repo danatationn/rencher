@@ -12,10 +12,6 @@ def launch() -> None:
     sys.excepthook = handle_global_exception
     gres_path: str
 
-    # some windows machines display square black borders when not using cairo
-    if sys.platform in ('win32', 'msys'):
-        os.environ['GSK_RENDERER'] = 'cairo'
-
     # check if running from meson
     if meson_root := os.environ.get('MESON_BUILD_ROOT', None):
         sys.path.insert(0, '@python_dir@')
@@ -42,6 +38,15 @@ def launch() -> None:
         gres_path = os.path.join(os.path.dirname(sys.executable), 'share', '@app_id@.gresource')
     else:
         gres_path = os.path.join('@pkgdata_dir@', '@app_id@.gresource')
+
+    if sys.platform in ('win32', 'msys'):
+        # some windows machines display square black borders when not using cairo
+        os.environ['GSK_RENDERER'] = 'cairo'
+
+        from rencher.renpy.config import RencherConfig
+        if RencherConfig()['settings']['disable_hidpi'] == 'true':
+            # forces win32 scaling (the blurry one)
+            os.environ['GDK_WIN32_DISABLE_HIDPI'] = '1'
 
     from gi.repository import Gio
 
