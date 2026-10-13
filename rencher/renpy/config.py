@@ -10,6 +10,10 @@ from rencher.renpy.paths import config_path, local_path
 if TYPE_CHECKING:
     from _typeshed import StrOrBytesPath, SupportsWrite
 
+# TODO this is all really bad code. redo itt
+# nothing should inherit from configparser
+# if i am going to hold the config in memory, i should just keep a copy of a configparser in the class
+# idk though. i'll see what i can do later
 
 class GameConfig(ConfigParser):
     game_config_path: Path
@@ -149,6 +153,7 @@ class RencherConfig(ConfigParser):
                 'discord_rpc': 'false',
                 'windowficate_filenames': 'true',
                 'reduce_motion': 'false' if sys.platform != 'win32' else 'true',
+                'disable_hidpi': 'false',
             },
         }
 
