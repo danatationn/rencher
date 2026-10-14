@@ -1,6 +1,4 @@
 import logging
-import platform
-import subprocess
 import typing
 from pathlib import Path
 
@@ -17,13 +15,13 @@ def gtk_template_child[T](name: str | None = None) -> T:  # pyright: ignore[repo
     return typing.cast(T, Gtk.Template.Child(name=name))
 
 def open_file_manager(path: str):
-    if platform.system() == 'Linux':
+    def _on_launched(launcher: Gtk.FileLauncher, result: Gio.AsyncResult) -> None:
         try:
-            Gio.AppInfo.launch_default_for_uri('file://' + path)
+            launcher.launch_finish(result)
         except GLib.Error as e:
             logging.error(f'Couldn\'t open {path}. ({e})')
-    elif platform.system() == 'Windows':
-        subprocess.run(['explorer', path.replace('/', '\\')])
+
+    Gtk.FileLauncher.new(Gio.File.new_for_path(path)).launch(None, None, _on_launched)
 
 def sanitize_path(path: Path) -> Path:
     # TODO make this universal
