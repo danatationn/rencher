@@ -1,4 +1,4 @@
-project('rencher', version: '1.3.1')
+project('rencher', version: '1.3.2')
 
 name = 'Rencher'
 app_id = 'com.github.danatationn.rencher'

@@ -188,7 +188,7 @@ class MainApplication(Adw.Application):
             debug_info=debug_info,
             debug_info_filename='log.txt',
             release_notes="""<ul>
-                <li>Added workarounds to scaling on Windows</li>
+                ...
             </ul>""",
             release_notes_version=version,
         )
