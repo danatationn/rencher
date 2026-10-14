@@ -15,8 +15,6 @@ from rencher.gtk.tasks import DeleteGameTask, ImportGameTask, RencherTask
 from rencher.renpy.config import RencherConfig
 from rencher.renpy.game import Game, GameInvalidError, GameNoExecutableError
 
-CHECK_PROCESS_MS: int = 250
-
 
 class Library(GObject.Object):
     """
