@@ -204,8 +204,10 @@ class MainApplication(Adw.Application):
                 timeout=10,
             )
         except requests.exceptions.ConnectionError:
-            logging.error('Couldn\'t check upstream version!')
+            logging.error('Couldn\'t connect to GitHub to check upstream version!')
             return
+        except Exception as e:
+            logging.error(f'Couldn\'t check upstream version! {e: e.message}')
         else:
             if response.status_code != 200:
                 logging.error(f'Unexpected status code while checking upstream version: {response.status_code}')
