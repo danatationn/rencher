@@ -183,10 +183,7 @@ class Game:
 
         return version if version else None
 
-    def run(self) -> subprocess.Popen[bytes] | None:
-        """
-            launches the game with the specified options
-        """
+    def get_process_args(self) -> tuple[list[str], dict[str, str]]:
         self.config.read()  # just to be SURE
 
         exec_path = self.get_exec_path()
@@ -207,10 +204,22 @@ class Game:
         if self.config['overwritten']['skip_main_menu'] == 'true':
             env['RENPY_SKIP_MAIN_MENU'] = ('Did you know you can put anything here and it still works '
                                            'like Ren\'Py doesn\'t even check for the value it\'s crazy')
-
         if self.config['overwritten']['forced_save_dir'] == 'true':
             save_dir = self.base_dir / 'game' / 'saves'
             args.extend(['--savedir', str(save_dir)])
+
+        config_dict = {}
+        for item in self.config['overwritten']:
+            config_dict[item] = self.config['overwritten'][item]
+        logging.debug(
+            f'"{self.top_dir.stem}" launch args:\n' +
+            f'args: {args}\n' +
+            f'config: {config_dict}',
+        )
+        return (args, env)
+
+    def run(self) -> subprocess.Popen[bytes] | None:
+        args, env = self.get_process_args()
 
         if os.environ.get('FLATPAK_ID'):
             args.insert(0, 'flatpak-spawn')
@@ -219,15 +228,8 @@ class Game:
             for key, value in env.items():
                 args.insert(2, f'--env={key}={value}')
 
-        config_dict = {}
-        for item in self.config['overwritten']:
-            config_dict[item] = self.config['overwritten'][item]
-        logging.info(f'Running "{os.path.basename(self.top_dir)}"...')
-        logging.debug(f'"{os.path.basename(self.top_dir)}" config: {config_dict}')
-        logging.debug(f'"{os.path.basename(self.top_dir)}" args: {args}')
+        logging.info(f'Running "{self.top_dir.stem}"...')
         return subprocess.Popen(args, env=os.environ | env, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-
-    # def run_wine()
 
     def setup(self) -> None:
         """

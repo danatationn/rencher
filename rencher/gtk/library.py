@@ -26,7 +26,7 @@ class Library(GObject.Object):
 
     also has actions for installing, deleting, running, closing games.
 
-    ---
+    ====
 
     everything akin to games happens here. any non-instant action that should be done upon a game, Should be made here
     """
@@ -80,21 +80,21 @@ class Library(GObject.Object):
         self.action_group.add_action(import_action)
         # s = top_dir
         run_action = Gio.SimpleAction.new('run-game', GLib.VariantType.new('s'))
-        run_action.connect('activate', self._run_game)
+        run_action.connect('activate', self._on_run_game)
         self.action_group.add_action(run_action)
         # s = top_dir
         stop_action = Gio.SimpleAction.new('stop-game', GLib.VariantType.new('s'))
-        stop_action.connect('activate', self._close_game)
+        stop_action.connect('activate', self._on_close_game)
         self.action_group.add_action(stop_action)
         # s = uuid
         retry_action = Gio.SimpleAction.new('retry-task', GLib.VariantType.new('s'))
-        retry_action.connect('activate', self._retry_task)
+        retry_action.connect('activate', self._on_retry_task)
         self.action_group.add_action(retry_action)
         # s = uuid
         cancel_action = Gio.SimpleAction.new('cancel-task', GLib.VariantType.new('s'))
-        cancel_action.connect('activate', self._cancel_task)
+        cancel_action.connect('activate', self._on_cancel_task)
         self.action_group.add_action(cancel_action)
-
+        
     def find(self, top_dir: str | Path) -> tuple[int, GameItem] | None:
         top_dir = os.path.normpath(top_dir)
         for game_item in self.store:
@@ -121,31 +121,6 @@ class Library(GObject.Object):
 
         for top_dir in games_dir.iterdir():
             self._thread_pool.submit(self._pool_add_game, str(top_dir), gen)
-
-    def _msg(self, _t: RencherTask, text: str) -> None:
-        self.emit('message', text)
-
-    def _load_game(self, top_dir: str) -> tuple[GameItem | None, Exception | None]:
-        game_item = None
-        try:
-            game_item = GameItem(top_dir=top_dir)
-            game_item.game.get_main_script()
-            return game_item, None
-        except Exception as e:
-            return game_item, e
-
-    def _pool_add_game(self, top_dir: str, gen: uuid.UUID) -> None:
-        if gen != self._pool_generation:
-            return
-
-        game_item = self._load_game(top_dir)
-
-        def _finish() -> bool:
-            if gen == self._pool_generation:
-                self.add_game(top_dir, game_item)
-            return GLib.SOURCE_REMOVE
-
-        GLib.idle_add(_finish)
 
     def add_game(self, top_dir: str, pool_entry: tuple[GameItem | None, Exception | None] | None = None) -> None:
         if self.find(top_dir):
@@ -190,37 +165,40 @@ class Library(GObject.Object):
             self.emit('game-changed', game_item)
         logging.debug(f'Changed: "{os.path.basename(top_dir)}"')
 
-    def _task_started(self, task: RencherTask, game_item: GameItem | None = None):
-        self.emit('task-started', task, game_item)
-        self.tasks[str(task.uuid)] = task
+    def is_game_running(self, top_dir: str) -> bool:
+        result = self.find(top_dir)
+        return result is not None and result[1] in self.processes
 
-    def _task_finished(self, task: RencherTask, game_item: GameItem | None = None):
-        self.emit('task-finished', task, game_item)
-        if not task.error and not task.warnings:
-            self.tasks.pop(str(task.uuid), None)
+    # ====
+    # loading
+    # ====
 
-    def _on_delete_game(self, _action: Gio.SimpleAction, parameter: GLib.Variant) -> None:
-        top_dir = parameter.get_string()
-        task = DeleteGameTask(top_dir)
-        self._delete_game(task)
+    def _load_game(self, top_dir: str) -> tuple[GameItem | None, Exception | None]:
+        game_item = None
+        try:
 
-    def _delete_game(self, task: DeleteGameTask) -> None:
-        if result := self.find(task.top_dir):
-            self._task_started(task, result[1])
+            game_item = GameItem(top_dir=top_dir)
+            game_item.game.get_main_script()
+            return game_item, None
+        except Exception as e:
+            return game_item, e
 
-        def _on_finished(t: DeleteGameTask, _p: GObject.ParamSpec):
-            try:
-                game = Game(task.top_dir)
-                if not game.validate():
-                    self.remove_game(str(task.top_dir))
-            except Exception:
-                self.remove_game(str(task.top_dir))
-            # self.emit('task-finished', t, None)
-            self._task_finished(t)
+    def _pool_add_game(self, top_dir: str, gen: uuid.UUID) -> None:
+        if gen != self._pool_generation:
+            return
 
-        task.connect('message', self._msg)
-        task.connect('notify::finished', _on_finished)
-        task.start()
+        game_item = self._load_game(top_dir)
+
+        def _finish() -> bool:
+            if gen == self._pool_generation:
+                self.add_game(top_dir, game_item)
+            return GLib.SOURCE_REMOVE
+
+        GLib.idle_add(_finish)
+
+    # ====
+    # importing
+    # ====
 
     def _on_import_game(self, _action: Gio.SimpleAction, parameter: GLib.Variant) -> None:
         file_path = parameter.get_child_value(0).get_string()
@@ -250,7 +228,38 @@ class Library(GObject.Object):
         task.connect('notify::finished', _on_finished)
         task.start()
 
-    def _run_game(self, _action: Gio.SimpleAction, param: GLib.Variant) -> None:
+    # ====
+    # deleting games
+    # ====
+
+    def _on_delete_game(self, _action: Gio.SimpleAction, parameter: GLib.Variant) -> None:
+        top_dir = parameter.get_string()
+        task = DeleteGameTask(top_dir)
+        self._delete_game(task)
+
+    def _delete_game(self, task: DeleteGameTask) -> None:
+        if result := self.find(task.top_dir):
+            self._task_started(task, result[1])
+
+        def _on_finished(t: DeleteGameTask, _p: GObject.ParamSpec):
+            try:
+                game = Game(task.top_dir)
+                if not game.validate():
+                    self.remove_game(str(task.top_dir))
+            except Exception:
+                self.remove_game(str(task.top_dir))
+            # self.emit('task-finished', t, None)
+            self._task_finished(t)
+
+        task.connect('message', self._msg)
+        task.connect('notify::finished', _on_finished)
+        task.start()
+
+    # ====
+    # running games
+    # ====
+
+    def _on_run_game(self, _action: Gio.SimpleAction, param: GLib.Variant) -> None:
         top_dir = param.get_string()
         if not (result := self.find(top_dir)):
             logging.error(f'No game found at "{top_dir}"')
@@ -281,25 +290,21 @@ class Library(GObject.Object):
         for stream, is_stderr in [(process.stdout, False), (process.stderr, True)]:
             threading.Thread(target=self._read_stream, args=(game_item, stream, is_stderr), daemon=True).start()
 
-        def _watch_process() -> bool:
-            if process in self._terminating_processes:
-                return GLib.SOURCE_REMOVE
-            if process.poll() is not None:
-                self._cleanup_game(game_item)
-                return GLib.SOURCE_REMOVE
-            return GLib.SOURCE_CONTINUE
+        threading.Thread(target=self._wait_process, args=(game_item, process), daemon=True).start()
 
-        GLib.timeout_add(CHECK_PROCESS_MS, _watch_process)
-
-    def is_game_running(self, top_dir: str) -> bool:
-        result = self.find(top_dir)
-        return result is not None and result[1] in self.processes
+    def _wait_process(self, game_item: GameItem, process: subprocess.Popen[bytes]) -> None:
+        process.wait()
+        GLib.idle_add(self._cleanup_game, game_item)
 
     def _read_stream(self, game_item: GameItem, stream: IO[bytes], is_stderr: bool) -> None:
         for line in stream:
             GLib.idle_add(self.emit, 'game-log', game_item, line.decode(errors='replace'), is_stderr)
 
-    def _close_game(self, _action: Gio.SimpleAction, param: GLib.Variant) -> None:
+    # ====
+    # closing games
+    # ====
+
+    def _on_close_game(self, _action: Gio.SimpleAction, param: GLib.Variant) -> None:
         top_dir = param.get_string()
         if not (result := self.find(top_dir)):
             logging.error(f'No game found at "{top_dir}"')
@@ -311,21 +316,9 @@ class Library(GObject.Object):
         logging.info(f'Closing "{top_dir}"...')
 
         process = self.processes[game_item][0]
-        if process.poll() is not None:
-            self._cleanup_game(game_item)
-        else:
-            process.terminate()
-
-            if process not in self._terminating_processes:
-                self._terminating_processes.append(process)
-
-                def _wait_to_term() -> bool:
-                    if process.poll() is not None:
-                        self._cleanup_game(game_item)
-                        return GLib.SOURCE_REMOVE
-                    return GLib.SOURCE_CONTINUE
-
-                GLib.timeout_add(CHECK_PROCESS_MS, _wait_to_term)
+        if process not in self._terminating_processes:
+            self._terminating_processes.append(process)
+        process.terminate()
 
     def _cleanup_game(self, game_item: GameItem) -> None:
         if not (info := self.processes.pop(game_item, None)):
@@ -341,7 +334,20 @@ class Library(GObject.Object):
 
         self.emit('game-closed', game_item, failed, None)
 
-    def _retry_task(self, _action: Gio.SimpleAction, uuid: GLib.Variant):
+    # ====
+    # tasks
+    # ====
+
+    def _task_started(self, task: RencherTask, game_item: GameItem | None = None):
+        self.emit('task-started', task, game_item)
+        self.tasks[str(task.uuid)] = task
+
+    def _task_finished(self, task: RencherTask, game_item: GameItem | None = None):
+        self.emit('task-finished', task, game_item)
+        if not task.error and not task.warnings:
+            self.tasks.pop(str(task.uuid), None)
+
+    def _on_retry_task(self, _action: Gio.SimpleAction, uuid: GLib.Variant):
         uuid_str = uuid.get_string()
         if not (old_task := self.tasks.get(uuid_str, None)):
             return
@@ -355,7 +361,7 @@ class Library(GObject.Object):
         elif isinstance(new_task, DeleteGameTask):
             self._delete_game(new_task)
 
-    def _cancel_task(self, _action: Gio.SimpleAction, uuid: GLib.Variant):
+    def _on_cancel_task(self, _action: Gio.SimpleAction, uuid: GLib.Variant):
         # ugh
         uuid_str = uuid.get_string()
         if not (old_task := self.tasks.get(uuid_str, None)):
@@ -370,3 +376,7 @@ class Library(GObject.Object):
             self._import_game(new_task)
         elif isinstance(new_task, DeleteGameTask):
             self._delete_game(new_task)
+
+    def _msg(self, _t: RencherTask, text: str) -> None:
+        self.emit('message', text)
+        
