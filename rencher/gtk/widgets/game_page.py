@@ -14,7 +14,7 @@ from rencher.renpy.game import GameNoExecutableError
 @Gtk.Template.from_resource('/com/github/danatationn/rencher/ui/game_page.ui')
 class GamePage(Gtk.Box):
     __gtype_name__: str = 'GamePage'
-    
+
     title_status_page: Adw.StatusPage = gtk_template_child()
     last_played_row: Adw.ActionRow = gtk_template_child()
     playtime_row: Adw.ActionRow = gtk_template_child()
@@ -28,6 +28,7 @@ class GamePage(Gtk.Box):
     game_item: GameItem
     row: Adw.ActionRow | Gtk.ListBoxRow
     log_buf: Gtk.TextBuffer
+    log_end_mark: Gtk.TextMark
     _handler_ids: list[int]
     library: Library
 
@@ -66,6 +67,7 @@ class GamePage(Gtk.Box):
 
         self.log_buf = self.log_text_view.get_buffer()
         self.log_buf.create_tag('stderr', foreground='orange')
+        self.log_end_mark = self.log_buf.create_mark(None, self.log_buf.get_end_iter(), False)
         self.log_buf.connect('changed', lambda b: self.log_row.set_sensitive(b.get_char_count() > 0))
 
     @gtk_template_callback
@@ -133,23 +135,54 @@ class GamePage(Gtk.Box):
         if self.game_item != game_item:
             return
 
+        # removes empty line at the beginning
+        line = line.rstrip('\r\n')
+        if self.log_buf.get_char_count() == 0:
+            if not line:
+                return
+        else:
+            line = '\n' + line
+
         if is_stderr:
             self.log_buf.insert_with_tags_by_name(self.log_buf.get_end_iter(), line, 'stderr')
         else:
             self.log_buf.insert(self.log_buf.get_end_iter(), line)
-        self.log_text_view.scroll_to_iter(self.log_buf.get_end_iter(), 0, False, 0, 0)
+        self.log_text_view.scroll_to_mark(self.log_end_mark, 0, False, 0, 0)
 
     def _on_error_dialog_response(self, _dialog: Adw.AlertDialog, id: str) -> None:
         if id == 'show':
             GLib.idle_add(self.log_row.set_expanded, True)
             GLib.idle_add(self.log_text_view.grab_focus)
+            GLib.idle_add(self._scroll_to_log)
 
-    # TODO scroll to the *bottom* of the log view . not the top
     def _scroll_to_log(self) -> None:
-        scrolled_window = self.log_text_view.get_parent()
-        if isinstance(scrolled_window, Gtk.ScrolledWindow):
-            adj = scrolled_window.get_vadjustment()
-            adj.set_value(adj.get_upper() - adj.get_page_size())
+        self.log_buf.place_cursor(self.log_buf.get_start_iter())
+        self.log_text_view.scroll_to_iter(self.log_buf.get_start_iter(), 0, False, 0, 0)
+
+        revealer = self.log_text_view.get_ancestor(Gtk.Revealer)
+        if revealer and not revealer.get_child_revealed():
+            # wait for the expand animation, otherwise the page isn't tall enough to scroll yet
+            def _on_revealed(revealer: Gtk.Revealer, _pspec: GObject.ParamSpec) -> None:
+                if revealer.get_child_revealed():
+                    revealer.disconnect(handler_id)
+                    self._scroll_to_log()
+            handler_id = revealer.connect('notify::child-revealed', _on_revealed)
+            return
+
+        page_scroll = self.log_row.get_ancestor(Gtk.ScrolledWindow)
+        if not page_scroll:
+            return
+        ok, bounds = self.log_row.compute_bounds(page_scroll)
+        if not ok:
+            return
+
+        adj = page_scroll.get_vadjustment()
+        row_y = adj.get_value() + bounds.get_y()  # bounds are relative to the visible area
+        row_h, page_h = bounds.get_height(), adj.get_page_size()
+        if row_h >= page_h:
+            adj.set_value(row_y)  # taller than the screen: put the row at the top
+        else:
+            adj.set_value(row_y - (page_h - row_h) / 2)  # otherwise center it
 
     @gtk_template_callback
     def on_dir_clicked(self, _widget: Gtk.Button) -> None:
