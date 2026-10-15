@@ -152,7 +152,8 @@ class GamePage(Gtk.Box):
     def _on_error_dialog_response(self, _dialog: Adw.AlertDialog, id: str) -> None:
         if id == 'show':
             GLib.idle_add(self.log_row.set_expanded, True)
-            GLib.idle_add(self.log_text_view.grab_focus)
+            # grab_focus returns true, making this repeat forever. forcefully return False (SOURCE_REMOVE)
+            GLib.idle_add(lambda: self.log_text_view.grab_focus and GLib.SOURCE_REMOVE)
             GLib.idle_add(self._scroll_to_log)
 
     def _scroll_to_log(self) -> None:
