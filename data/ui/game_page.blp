@@ -47,6 +47,7 @@ template $GamePage: Box {
 
           Adw.ActionRow last_played_row {
             title: _("Last Played");
+            icon-name: "clock-symbolic";
 
             styles [
               "property",
@@ -55,7 +56,7 @@ template $GamePage: Box {
 
           Adw.ActionRow playtime_row {
             title: _("Playtime");
-            // icon-name: "hourglass-symbolic";
+            icon-name: "hourglass-symbolic";
 
             styles [
               "property",
@@ -64,6 +65,7 @@ template $GamePage: Box {
 
           Adw.ActionRow added_on_row {
             title: _("Added On");
+            icon-name: "calendar";
 
             styles [
               "property",
@@ -81,7 +83,7 @@ template $GamePage: Box {
           Adw.ActionRow rpath_row {
             subtitle-selectable: true;
             title: _("Folder Location");
-            // icon-name: "folder-visiting-symbolic";
+            icon-name: "folder-symbolic";
 
             [suffix]
             Button {
@@ -102,7 +104,7 @@ template $GamePage: Box {
           Adw.ActionRow version_row {
             subtitle-selectable: true;
             title: _("Engine Version");
-            // icon-name: "branch-symbolic";
+            icon-name: "tag-symbolic";
 
             [suffix]
             MenuButton {
@@ -126,6 +128,7 @@ template $GamePage: Box {
 
           Adw.ActionRow codename_row {
             subtitle-selectable: true;
+            icon-name: "code-symbolic";
             title: _("Codename");
 
             [suffix]
@@ -151,7 +154,7 @@ template $GamePage: Box {
           Adw.ExpanderRow log_row {
             sensitive: false;
             title: _("Logs");
-            // icon-name: "logs-symbolic";
+            icon-name: "logs-symbolic";
 
             ScrolledWindow {
               height-request: 200;
