@@ -81,7 +81,8 @@ class GamePage(Gtk.Box):
     def _game_launched(self, _library: Library, game_item: GameItem, _process: subprocess.Popen[bytes]) -> None:
         if self.game_item != game_item:
             return
-        self.activate_action('rpc.update', GLib.Variant('a(ss)', [('state', game_item.name)]))
+        if game_item.config.effective().discord_rpc:
+            self.activate_action('rpc.update', GLib.Variant('a(ss)', [('state', game_item.name)]))
         self._set_running_ui(True)
         self.log_row.set_expanded(False)
         self.log_buf.set_text('')
