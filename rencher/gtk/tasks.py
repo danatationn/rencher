@@ -15,7 +15,7 @@ from gi.repository import GLib, GObject
 
 from rencher.gtk.game_item import GameItem
 from rencher.gtk.utils import sanitize_path
-from rencher.renpy.config import RencherConfig
+from rencher.renpy.config import get_rencher_settings
 from rencher.renpy.game import Game
 from rencher.renpy.paths import get_game_path, get_py_files, get_script_files, validate_game_files
 
@@ -200,7 +200,7 @@ class NukeGamesTask(RencherTask):
     @override
     def __init__(self, data_dir: Path | str | None = None):
         if not data_dir:
-            data_dir = RencherConfig().get_data_dir()
+            data_dir = get_rencher_settings().data_path
         self.data_dir = Path(data_dir)
 
         label = _('Deleting all games from "{}"').format(data_dir)
@@ -226,8 +226,8 @@ class ImportGameTask(RencherTask):
 
     @override
     def run(self) -> None:
-        config = RencherConfig()
-        data_dir = Path(config.get_data_dir())
+        config = get_rencher_settings()
+        data_dir = config.data_path
         archive: zipfile.ZipFile | rarfile.RarFile | None = None
         folder_file_list: list[Path] = []  # all the files in the archive/folder
         archive_file_list: list[str] = []
@@ -288,7 +288,7 @@ class ImportGameTask(RencherTask):
             folder_count += 1
 
             for path in possible_paths:
-                if config.get('settings', 'windowficate_filenames') == 'true' or platform.system() == 'Windows':
+                if config.windowficate_filenames or platform.system() == 'Windows':
                     new_path = sanitize_path(path)
                 else:
                     new_path = path
@@ -411,26 +411,27 @@ class ImportGameTask(RencherTask):
                 self.advance()
 
         if not self.is_cancelled:
+            # TODO think abt behavior
             game = Game(top_dir=game_path)
             self.game = game
             if self.nickname:
-                game.config.set('info', 'nickname', self.nickname)
-            game.config.set('info', 'added_on', str(time.time()))
+                game.config.info.nickname = self.nickname
+            game.config.info.added_on = time.time()
             game_scripts = get_py_files(game.base_dir)
             if len(game_scripts) == 2 and self.target_item:
                 try:
                     game_codenames = [script.stem for script in game_scripts]
                     game_codenames.remove(self.target_item.codename)
-                    game.config.set('info', 'codename', game_codenames[0])
+                    game.config.info.codename = game_codenames[0]
                 except ValueError as e:
                     self.warn(TaskError(_('Couldn\'t determine codename'), e))
-            game.config.write()
+            game.config.save()
 
             if archive:
                 archive.close()
 
             logging.info(f'Importing done in {time.perf_counter() - start_time:.2f}s')
-            if config.get('settings', 'delete_on_import') == 'true':
+            if config.delete_on_import:
                 try:
                     if archive:
                         self.source_path.unlink()

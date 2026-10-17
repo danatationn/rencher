@@ -12,7 +12,7 @@ from gi.repository import Gio, GLib, GObject
 
 from rencher.gtk.game_item import GameItem
 from rencher.gtk.tasks import DeleteGameTask, ImportGameTask, RencherTask
-from rencher.renpy.config import RencherConfig
+from rencher.renpy.config import get_rencher_settings
 from rencher.renpy.game import Game, GameInvalidError, GameNoExecutableError
 
 
@@ -92,7 +92,7 @@ class Library(GObject.Object):
         cancel_action = Gio.SimpleAction.new('cancel-task', GLib.VariantType.new('s'))
         cancel_action.connect('activate', self._on_cancel_task)
         self.action_group.add_action(cancel_action)
-        
+
     def find(self, top_dir: str | Path) -> tuple[int, GameItem] | None:
         top_dir = os.path.normpath(top_dir)
         for game_item in self.store:
@@ -106,8 +106,8 @@ class Library(GObject.Object):
         return None
 
     def load_games(self) -> None:
-        data_dir = RencherConfig().get_data_dir()
-        games_dir = Path(data_dir) / 'games'
+        data_dir = get_rencher_settings().data_path
+        games_dir = data_dir / 'games'
         games_dir.mkdir(exist_ok=True, parents=True)
         logging.info(f'Loading games from "{data_dir}"')
         for item in list(self.store):
@@ -377,4 +377,3 @@ class Library(GObject.Object):
 
     def _msg(self, _t: RencherTask, text: str) -> None:
         self.emit('message', text)
-        

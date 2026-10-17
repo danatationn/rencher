@@ -19,7 +19,7 @@ from rencher.gtk.widgets.import_dialog import ImportDialog
 from rencher.gtk.widgets.settings_dialog import SettingsDialog
 from rencher.gtk.widgets.task_alert_dialog import TaskAlertDialog
 from rencher.gtk.widgets.traceback_dialog import TaskTracebackDialog
-from rencher.renpy.config import RencherConfig
+from rencher.renpy.config import get_rencher_settings
 
 if TYPE_CHECKING:
     from rencher.gtk.application import MainApplication
@@ -85,7 +85,7 @@ class MainWindow(Adw.Window):
         self.rpc = Rpc(1485229562123124818)
         self.insert_action_group('rpc', self.rpc.action_group)
 
-        if RencherConfig().get('settings', 'discord_rpc') == 'true':
+        if get_rencher_settings().discord_rpc:
             self.activate_action('rpc.start')
 
         self.ascending_order = False
@@ -364,14 +364,14 @@ class MainWindow(Adw.Window):
                 one_value = item_one.name.lower()
                 two_value = item_two.name.lower()
             elif self.combo_index == SortComboEnum.LAST_PLAYED:
-                one_value = item_one.game.config.get_value('last_played') or 0.0
-                two_value = item_two.game.config.get_value('last_played') or 0.0
+                one_value = item_one.game.config.info.last_played
+                two_value = item_two.game.config.info.last_played
             elif self.combo_index == SortComboEnum.PLAYTIME:
-                one_value = item_one.game.config.get_value('playtime') or 0.0
-                two_value = item_two.game.config.get_value('playtime') or 0.0
+                one_value = item_one.game.config.info.playtime
+                two_value = item_two.game.config.info.playtime
             elif self.combo_index == SortComboEnum.ADDED_ON:
-                one_value = item_one.game.config.get_value('added_on') or 0.0
-                two_value = item_two.game.config.get_value('added_on') or 0.0
+                one_value = item_one.game.config.info.added_on
+                two_value = item_two.game.config.info.added_on
             else:
                 return 0
 

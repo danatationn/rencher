@@ -1,11 +1,12 @@
 import sys
 import threading
+from gettext import gettext as _
 from typing import TYPE_CHECKING, override
 
 from gi.repository import Adw, Gio, GLib, Gtk
 
 from rencher.gtk.utils import gtk_template_callback, gtk_template_child, open_file_manager
-from rencher.renpy.config import RencherConfig
+from rencher.renpy.config import RencherConfig, get_rencher_settings
 from rencher.renpy.paths import local_path
 
 if TYPE_CHECKING:
@@ -46,6 +47,7 @@ class SettingsDialog(Adw.PreferencesDialog):
         ]
 
         self.window = window
+        self.config = get_rencher_settings()
 
         if sys.platform in ('win32', 'msys'):
             self.windowficate_switch.set_visible(False)  # force it on
@@ -53,38 +55,43 @@ class SettingsDialog(Adw.PreferencesDialog):
             self.disable_hidpi_switch.set_visible(True)
 
     def on_show(self):
-        self.config = RencherConfig()
+        self.config = get_rencher_settings()
 
-        if self.config['settings']['data_dir'] == '':
+        if self.config.data_dir == '':
             self.data_dir_entry.set_text(str(local_path))
         else:
-            self.data_dir_entry.set_text(self.config['settings']['data_dir'])
+            self.data_dir_entry.set_text(self.config.data_dir)
 
         for switch, key in self.switches_list:
-            if self.config['settings'][key] == 'true':
+            if getattr(self.config, key, None):
                 switch.set_active(True)
 
     @override
     def do_closed(self):
-        old_data_dir = self.config['settings']['data_dir']
+        old_data_dir = self.config.data_dir
 
         if self.data_dir_entry.get_text() == str(local_path):
-            self.config['settings']['data_dir'] = ''
+            self.config.data_dir = ''
         else:
-            self.config['settings']['data_dir'] = self.data_dir_entry.get_text()
+            self.config.data_dir = self.data_dir_entry.get_text()
 
         for switch, key in self.switches_list:
             if switch.get_active():
-                self.config['settings'][key] = 'true'
+                setattr(self.config, key, True)
             else:
-                self.config['settings'][key] = 'false'
+                setattr(self.config, key, False)
 
-        self.config.write()
+        try:
+            self.config.save()
+        except OSError:
+            self.window.toast_overlay.add_toast(
+                Adw.Toast(title=_('Couldn\'t save settings!'))
+            )
 
-        if self.config['settings']['data_dir'] != old_data_dir:
+        if self.config.data_dir != old_data_dir:
             self.window.library.load_games()
 
-        if self.config.get('settings', 'discord_rpc') == 'true':
+        if self.config.discord_rpc:
             self.activate_action('rpc.start')
         else:
             self.activate_action('rpc.stop')
@@ -127,8 +134,7 @@ class SettingsDialog(Adw.PreferencesDialog):
         if switch:
             value = switch.get_active()
         else:
-            self.config = RencherConfig()
-            value = self.config.get('settings', 'reduce_motion') == 'true'
+            value = self.config.reduce_motion
 
         if value:
             if settings := Gtk.Settings.get_default():

@@ -11,7 +11,7 @@ import gi
 import requests
 from rich.logging import RichHandler
 
-from rencher.renpy.config import RencherConfig
+from rencher.renpy.config import RencherConfig, get_rencher_settings
 
 gi.require_version('Gtk', '4.0')
 gi.require_version('Adw', '1')
@@ -22,7 +22,7 @@ from rencher.renpy.paths import local_path  # noqa: E402
 
 
 class MainApplication(Adw.Application):
-    config: ConfigParser
+    config: RencherConfig
     window: MainWindow
     action_info: list[tuple[str, Callable[[Gio.SimpleAction, GLib.Variant | None], None], list[str]]]
     simple_actions: dict[str, Gio.SimpleAction]
@@ -95,7 +95,7 @@ class MainApplication(Adw.Application):
         elif os.environ.get('container', None):
             logging.debug('Running from Flatpak')
 
-        self.config = RencherConfig()
+        self.config = get_rencher_settings()
         self.window = MainWindow(application=self)
         self.window.present()
 
@@ -105,7 +105,7 @@ class MainApplication(Adw.Application):
         event_controller_key.connect('key-released', self.on_key_released)
         self.window.add_controller(event_controller_key)
 
-        if self.config['settings']['suppress_updates'] != 'true':
+        if not self.config.suppress_updates:
             version_thread = threading.Thread(target=self.check_version, daemon=True)
             version_thread.start()
 

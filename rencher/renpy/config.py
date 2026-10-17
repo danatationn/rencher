@@ -1,186 +1,148 @@
-import os.path
+import os
 import sys
-from collections.abc import Iterable
+from collections.abc import Mapping
 from configparser import ConfigParser
+from dataclasses import asdict, dataclass, field, fields
 from pathlib import Path
-from typing import TYPE_CHECKING, override
+from types import UnionType
+from typing import TYPE_CHECKING, cast, get_type_hints
+
+if TYPE_CHECKING:
+    from _typeshed import DataclassInstance
 
 from rencher.renpy.paths import config_path, local_path
 
-if TYPE_CHECKING:
-    from _typeshed import StrOrBytesPath, SupportsWrite
+type IniValue = str | float | int | bool | None
 
-# TODO this is all really bad code. redo itt
-# nothing should inherit from configparser
-# if i am going to hold the config in memory, i should just keep a copy of a configparser in the class
-# idk though. i'll see what i can do later
+def _parse(raw: str, type: type | UnionType, default: IniValue) -> IniValue:
+    """converts the ini's string to the correct type expected by the config"""
+    raw = raw.strip()
+    try:
+        if type is bool:
+            return ConfigParser.BOOLEAN_STATES[raw.lower()]
+        if type == bool | None:
+            return None if raw == '' else ConfigParser.BOOLEAN_STATES[raw.lower()]
+        if type is float:
+            return float(raw)
+        if type is int:
+            return int(raw)
+        return raw
+    except (KeyError, ValueError):
+        return default
 
-class GameConfig(ConfigParser):
-    game_config_path: Path
-    structure: dict[str, dict[str, str | float]] = {
-        'info': {
-            'nickname': '',
-            'last_played': 0.0,
-            'playtime': 0.0,
-            'added_on': 0.0,
-            'codename': '',
-            # TODO 'is_mod': '',
-        },
-        'options': {
-            'skip_splash_scr': '',
-            'skip_main_menu': '',
-            'forced_save_dir': '',
-            'discord_rpc': '',
-            # 'save_slot': 1,
-        },
-        'overwritten': {
-            'skip_splash_scr': '',
-            'skip_main_menu': '',
-            'forced_save_dir': '',
-            'discord_rpc': '',
-        },
-    }
+def _format(value: IniValue) -> str:
+    """converts the value to a string"""
+    if value is None:
+        return ''
+    if isinstance(value, bool):
+        return 'true' if value else 'false'
+    return str(value)
 
-    def __init__(self, game_config_path: Path | str):
-        super().__init__()
-        self.game_config_path = Path(game_config_path)
-        self.read(game_config_path)
+def _fill_section(parser: ConfigParser, section: str, object: 'DataclassInstance') -> None:
+    if not parser.has_section(section):
+        return
 
-    @override
-    def read(
-        self, filenames: 'StrOrBytesPath | Iterable[StrOrBytesPath] | None' = None, encoding: str | None = None
-    ) -> list[str]:
-        if not filenames:
-            filenames = self.game_config_path
-        read_ok = super().read(filenames, encoding='utf-8')
-        self.validate()
-        return read_ok
+    hints: dict[str, type | UnionType] = get_type_hints(type(object))
 
-    def validate(self):
-        rencher_config = RencherConfig()
+    for f in fields(object):
+        raw = parser[section].get(f.name)
+        if raw is not None:
+            current = cast(IniValue, getattr(object, f.name))
+            setattr(object, f.name, _parse(raw, hints[f.name], current))
 
-        for section, keys in self.structure.items():
-            if section not in self:
-                self.add_section(section)
+def _read_ini(config_path: Path) -> ConfigParser:
+    parser = ConfigParser(interpolation=None)
+    parser.read(config_path, encoding='utf-8')
+    return parser
 
-            for key, values in keys.items():
-                if key not in self[section]:
-                    self[section][key] = str(values)
+def _write_ini(config_path: Path, sections: Mapping[str, 'DataclassInstance']) -> None:
+    """this can raise OSError"""
+    parser = ConfigParser(interpolation=None)
+    for name, object in sections.items():
+        values: dict[str, IniValue] = asdict(object)
+        parser[name] = {key: _format(value) for key, value in values.items()}
 
-                if values and self[section][key]:
-                    if isinstance(values, bool):
-                        value = self.getboolean(section, key, fallback='')
-                    elif isinstance(values, int):
-                        value = self.getint(section, key, fallback=values)
-                    elif isinstance(values, float):
-                        value = self.getfloat(section, key, fallback=values)
-                    else:
-                        value = ''
+    config_path.parent.mkdir(parents=True, exist_ok=True)
 
-                    self[section][key] = str(value)
+    tmp_path = config_path.with_name(config_path.name + '.tmp')
+    with open(tmp_path, 'w', encoding='utf-8') as f:
+        parser.write(f)
+    os.replace(tmp_path, config_path)
 
-        for key, _ in self.structure['overwritten'].items():
-            if self['options'][key]:
-                self['overwritten'][key] = self['options'][key]
-            else:
-                self['overwritten'][key] = rencher_config['settings'][key]
+@dataclass
+class RencherConfig:
+    data_dir: str = ''
+    suppress_updates: bool = False
+    delete_on_import: bool = False
+    skip_splash_scr: bool = False
+    skip_main_menu: bool = False
+    forced_save_dir: bool = False
+    discord_rpc: bool = False
+    windowficate_filenames: bool = True
+    reduce_motion: bool = sys.platform == 'win32'
+    disable_hidpi: bool = False
 
-    @override
-    def write(self, fp: 'SupportsWrite[str] | None' = None, space_around_delimiters: bool = True):
-        new_config = ConfigParser()
-        for section in ['info', 'options']:
-            new_config.add_section(section)
-            for key, values in self[section].items():
-                new_config[section][key] = values
+    def __post_init__(self) -> None:
+        self.refresh()
 
-        game_config_dir = self.game_config_path.parent
-        game_config_dir.mkdir(parents=True, exist_ok=True)
-        open(self.game_config_path, 'a').close()
-        if not fp:
-            fp = open(self.game_config_path, 'w', encoding='utf-8')
-        new_config.write(fp, space_around_delimiters)
-        fp.close()
+    @property
+    def data_path(self) -> Path:
+        return Path(self.data_dir) if self.data_dir else local_path
 
-    def get_value(self, key: str, overwritten: bool = False) -> str | float | bool | None:
-        if key in self['info']:
-            try:
-                return self['info'].getfloat(key)
-            except ValueError:
-                return self['info'][key]
+    def refresh(self) -> None:
+        _fill_section(_read_ini(config_path), 'settings', self)
 
-        if key in self['options']:
-            if key in self.structure['overwritten'].keys() and overwritten:
-                value = self['overwritten'][key]
-            else:
-                try:
-                    value = self['options'].getint(key)
-                except ValueError:
-                    value = self['options'][key]
+    def save(self) -> None:
+        _write_ini(config_path, {'settings': self})
 
-            if value == 'true':
-                return True
-            elif value == 'false':
-                return False
-            else:
-                return value
-        return None
+_settings: RencherConfig | None = None
+def get_rencher_settings() -> RencherConfig:
+    """call this instead of making new instances for stupid stuff"""
+    global _settings
+    if _settings is None:
+        _settings = RencherConfig()
+    return _settings
 
+@dataclass
+class GameInfo:
+    nickname: str = ''
+    last_played: float = 0.0
+    playtime: float = 0.0
+    added_on: float = 0.0
+    codename: str = ''
+    # TODO is_mod: bool = False,
 
-class RencherConfig(ConfigParser):
-    def __init__(self):
-        super().__init__()
-        self.read()
+@dataclass
+class GameOptions:
+    skip_splash_scr: bool | None = None
+    skip_main_menu: bool | None = None
+    forced_save_dir: bool | None = None
+    discord_rpc: bool | None = None
+    # save_slot: int = 1
 
-    @override
-    def read(
-        self, filenames: 'StrOrBytesPath | Iterable[StrOrBytesPath] | None' = None, encoding: str | None = None
-    ) -> list[str]:
-        if not filenames:
-            filenames = config_path
-        read_ok = super().read(filenames, encoding='utf-8')
-        self.validate()
-        return read_ok
+@dataclass
+class GameConfig:
+    path: Path
+    info: GameInfo = field(init=False, default_factory=GameInfo)
+    options: GameOptions = field(init=False, default_factory=GameOptions)
 
-    def validate(self) -> None:
-        structure = {
-            'settings': {
-                'data_dir': '',
-                'suppress_updates': 'false',
-                'delete_on_import': 'false',
-                'skip_splash_scr': 'false',
-                'skip_main_menu': 'false',
-                'forced_save_dir': 'false',
-                'discord_rpc': 'false',
-                'windowficate_filenames': 'true',
-                'reduce_motion': 'false' if sys.platform != 'win32' else 'true',
-                'disable_hidpi': 'false',
-            },
-        }
+    def __post_init__(self) -> None:
+        self.refresh()
 
-        for section, keys in structure.items():
-            if section not in self:
-                self.add_section(section)
+    def save(self) -> None:
+        _write_ini(self.path, {'info': self.info, 'options': self.options})
 
-            for key, values in keys.items():
-                if key not in self[section]:
-                    self[section][key] = values
+    def refresh(self) -> None:
+        parser = _read_ini(self.path)
+        _fill_section(parser, 'info', self.info)
+        _fill_section(parser, 'options', self.options)
 
-        if not os.path.isfile(config_path):
-            self.write()
-
-    @override
-    def write(self, fp: 'SupportsWrite[str] | None' = None, space_around_delimiters: bool = True) -> None:
-        config_dir = Path(config_path).parent
-        config_dir.mkdir(parents=True, exist_ok=True)
-
-        open(config_path, 'a').close()
-        if not fp:
-            fp = open(config_path, 'w', encoding='utf-8')
-        super().write(fp, space_around_delimiters)
-        fp.close()
-
-    def get_data_dir(self) -> str:
-        if self['settings']['data_dir'] == '':
-            return str(local_path)
-        else:
-            return self['settings']['data_dir']
+    def effective(self) -> GameOptions:
+        """meant to be read-only! do not assign this to self.options"""
+        settings = get_rencher_settings()
+        options = GameOptions()
+        for f in fields(GameOptions):
+            override = cast(IniValue, getattr(self.options, f.name))
+            default = cast(IniValue, getattr(settings, f.name))
+            setattr(options, f.name, default if override is None else override)
+        return options

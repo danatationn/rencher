@@ -41,6 +41,6 @@ class CodenameDialog(Adw.AlertDialog):
         selected_row = self.codename_list_box.get_selected_row()
         if isinstance(selected_row, Adw.ActionRow):
             codename = selected_row.get_title()
-            self.game_item.config.set('info', 'codename', codename)
-            self.game_item.config.write()
+            self.game_item.config.info.codename = codename
+            self.game_item.config.save()
             self.library.add_game(self.game_item.top_dir)

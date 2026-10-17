@@ -115,15 +115,15 @@ class GameItem(GObject.Object):
         self.update(self.game)
 
     def update(self, game: Game) -> None:
-        game.config.read()
+        game.config.refresh()
 
         property_map: dict[str, Callable[[], str | float | bool | None | Path]] = {
             'name': lambda: game.name,
             'top_dir': lambda: game.top_dir,
             'base_dir': lambda: game.base_dir,
-            'last_played': lambda: game.config.get_value('last_played'),
-            'added_on': lambda: game.config.get_value('added_on'),
-            'playtime': lambda: game.config.get_value('playtime'),
+            'last_played': lambda: game.config.info.last_played,
+            'added_on': lambda: game.config.info.added_on,
+            'playtime': lambda: game.config.info.playtime,
             'version': lambda: '.'.join(str(i) for i in game.get_renpy_version() or []),
             'codename': lambda: game.codename,
         }
@@ -163,7 +163,7 @@ class GameItem(GObject.Object):
         return self._game.is_launchable
     @property
     def has_nickname(self) -> bool:
-        return self._game.config.get_value('nickname') != ''
+        return self._game.config.info.nickname != ''
     @property
     def process(self) -> subprocess.Popen[bytes] | None:
         if self._process and self._process.poll() is not None:

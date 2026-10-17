@@ -72,7 +72,7 @@ class Game:
             returns a path based off of the .py scripts located in base_dir
         """
         py_files = get_py_files(self.base_dir)
-        codename = self.config.get_value('codename')
+        codename = self.config.info.codename
 
         if codename != '':
             return self.base_dir/f'{codename}.py'
@@ -184,7 +184,7 @@ class Game:
         return version if version else None
 
     def get_process_args(self) -> tuple[list[str], dict[str, str]]:
-        self.config.read()  # just to be SURE
+        self.config.refresh()  # just to be SURE
 
         exec_path = self.get_exec_path()
         if not exec_path:
@@ -198,23 +198,21 @@ class Game:
 
         self.setup()
         env: dict[str, str] = {}
+        effective = self.config.effective()
 
-        if self.config['overwritten']['skip_splash_scr'] == 'true':
+        if effective.skip_splash_scr:
             env['RENPY_SKIP_SPLASHSCREEN'] = '1'
-        if self.config['overwritten']['skip_main_menu'] == 'true':
+        if effective.skip_main_menu:
             env['RENPY_SKIP_MAIN_MENU'] = ('Did you know you can put anything here and it still works '
                                            'like Ren\'Py doesn\'t even check for the value it\'s crazy')
-        if self.config['overwritten']['forced_save_dir'] == 'true':
+        if effective.forced_save_dir:
             save_dir = self.base_dir / 'game' / 'saves'
             args.extend(['--savedir', str(save_dir)])
 
-        config_dict = {}
-        for item in self.config['overwritten']:
-            config_dict[item] = self.config['overwritten'][item]
         logging.debug(
             f'"{self.top_dir.stem}" launch args:\n' +
             f'args: {args}\n' +
-            f'config: {config_dict}',
+            f'config: {effective}',
         )
         return (args, env)
 
@@ -287,18 +285,17 @@ class Game:
                 logging.debug(f'Patched {candidate.parent.name}')
 
     def cleanup(self, playtime: float) -> None:
-        self.config.read()
-        total = self.config.get_value('playtime') or 0.0
+        self.config.refresh()
+        total = self.config.info.playtime
         if isinstance(total, float):
-            self.config['info']['playtime'] = str(playtime + total)
-            self.config['info']['last_played'] = str(time.time())
-            self.config.set('info', 'last_played', str(time.time()))
-            self.config.write()
+            self.config.info.playtime = playtime + total
+            self.config.info.last_played = time.time()
+            self.config.save()
 
     @property
     def name(self) -> str:
-        nickname = self.config.get_value('nickname')
-        if isinstance(nickname, str):
+        nickname = self.config.info.nickname
+        if nickname != '':
             return nickname
         else:
             return self.top_dir.name

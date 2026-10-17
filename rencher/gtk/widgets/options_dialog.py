@@ -1,6 +1,5 @@
 import logging
 import os
-from configparser import ConfigParser
 from gettext import gettext as _
 from pathlib import Path
 from typing import override
@@ -9,7 +8,7 @@ from gi.repository import Adw, GLib, Gtk
 
 from rencher.gtk.game_item import GameItem
 from rencher.gtk.utils import gtk_template_callback, gtk_template_child, open_file_manager
-from rencher.renpy.config import RencherConfig
+from rencher.renpy.config import RencherConfig, get_rencher_settings
 from rencher.renpy.paths import get_py_files
 
 
@@ -33,7 +32,7 @@ class OptionsDialog(Adw.PreferencesDialog):
     # options_save_slot: Adw.SpinRow = gtk_template_child()
 
     game_item: GameItem
-    rencher_config: ConfigParser
+    rencher_config: RencherConfig
 
     def __init__(self, game_item: GameItem):
         super().__init__()
@@ -62,7 +61,7 @@ class OptionsDialog(Adw.PreferencesDialog):
         string_list = Gtk.StringList()
         self.codename_combo.set_model(string_list)
 
-        self.rencher_config = RencherConfig()
+        self.rencher_config = get_rencher_settings()
 
         if game_item.has_nickname:
             self.nickname_entry.set_text(game_item.name)
@@ -75,7 +74,7 @@ class OptionsDialog(Adw.PreferencesDialog):
         for i, path in enumerate(py_files):
             codename = os.path.splitext(os.path.basename(path))[0]
             string_list.append(codename)
-            if codename == game_item.config['info']['codename']:
+            if codename == game_item.config.info.codename:
                 codename_index = i
 
         self.codename_combo.set_model(string_list)
@@ -83,13 +82,13 @@ class OptionsDialog(Adw.PreferencesDialog):
             self.codename_combo.set_selected(codename_index)
 
         for overwrite_switch, switch, key in self.switches_list:
-            if game_item.config['options'][key] != '':  # overwritten
+            if getattr(game_item.config.options, key) is not None:  # overwritten
                 overwrite_switch.set_active(True)
-                if game_item.config['options'][key] == 'true':
+                if getattr(game_item.config.options, key) is True:
                     switch.set_active(True)
                 else:
                     switch.set_active(False)
-            elif self.rencher_config['settings'][key] == 'true':  # default
+            elif getattr(self.rencher_config, key) is True:  # default
                 switch.set_active(True)
                 overwrite_switch.set_active(False)
             else:
@@ -107,32 +106,28 @@ class OptionsDialog(Adw.PreferencesDialog):
             return
 
         if self.game_item.name != self.nickname_entry.get_text():
-            self.game_item.config['info']['nickname'] = self.nickname_entry.get_text()
+            self.game_item.config.info.nickname = self.nickname_entry.get_text()
         if self.game_item.codename != sel_codename.get_string():
-            self.game_item.config['info']['codename'] = sel_codename.get_string()
-        # self.game.config['options']['save_slot'] = self.options_save_slot.get_text()
+            self.game_item.config.info.codename = sel_codename.get_string()
+        # self.game.config.options.save_slot = self.options_save_slot.get_text()
 
         for overwrite_switch, switch, key in self.switches_list:
             if overwrite_switch.get_active():
                 if switch.get_active():
-                    self.game_item.config['options'][key] = 'true'
-                    self.game_item.config['overwritten'][key] = 'true'
+                    setattr(self.game_item.config.options, key, True)
                 else:
-                    self.game_item.config['options'][key] = 'false'
-                    self.game_item.config['overwritten'][key] = 'false'
+                    setattr(self.game_item.config.options, key, False)
             else:
-                self.game_item.config['options'][key] = ''
-                self.game_item.config['overwritten'][key] = self.rencher_config['settings'][key]
+                setattr(self.game_item.config.options, key, None)
 
-        self.game_item.config.write()
+        self.game_item.config.save()
         self.game_item.refresh()
 
     @gtk_template_callback
     def on_switch_changed(self, _widget: Gtk.Switch | Adw.SwitchRow, _):
         for overwrite_switch, switch, key in self.switches_list:
             if _widget == overwrite_switch:
-                current_value = self.rencher_config['settings'][key]
-                if current_value == 'true':
+                if getattr(self.rencher_config, key) is True:
                     switch.set_active(True)
                 else:
                     switch.set_active(False)
@@ -159,15 +154,15 @@ class OptionsDialog(Adw.PreferencesDialog):
     def on_clear_info_response(self, _dialog: Adw.AlertDialog, response: str):
         if response == 'ok':
             # slaughter time
-            # self.entry.config['info']['nickname'] = ''
-            self.game_item.config['info']['last_played'] = ''
-            self.game_item.config['info']['playtime'] = '0.0'
+            # self.entry.config.info.nickname = ''
+            self.game_item.config.info.last_played = 0.0
+            self.game_item.config.info.playtime = 0.0
 
-            # self.entry.config['options']['skip_splash_scr'] = ''
-            # self.entry.config['options']['skip_main_menu'] = ''
-            # self.entry.config['options']['forced_save_dir'] = ''
+            # self.entry.config.options.skip_splash_scr = None
+            # self.entry.config.options.skip_main_menu = None
+            # self.entry.config.options.forced_save_dir = None
 
-            # self.game.config.write_config()
+            self.game_item.config.save()
 
             toast = Adw.Toast(
                 title=_('"{}" stats have been reset').format(self.game_item.name),
