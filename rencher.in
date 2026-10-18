@@ -43,8 +43,8 @@ def launch() -> None:
         # some windows machines display square black borders when not using cairo
         os.environ['GSK_RENDERER'] = 'cairo'
 
-        from rencher.renpy.config import RencherConfig
-        if RencherConfig()['settings']['disable_hidpi'] == 'true':
+        from rencher.renpy.config import get_rencher_settings
+        if get_rencher_settings().disable_hidpi:
             # forces win32 scaling (the blurry one)
             os.environ['GDK_WIN32_DISABLE_HIDPI'] = '1'
 
