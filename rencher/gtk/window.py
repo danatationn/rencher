@@ -144,6 +144,9 @@ class MainWindow(Adw.Window):
         if game_item:
             self.rows.pop(game_item, None)
             if view := self.game_views.pop(game_item, None):
+                # line below is required because of https://gitlab.gnome.org/GNOME/libadwaita/-/work_items/1163
+                # also i love how the issue was instaclosed just because it was made with ai . At Least fix it please
+                view.set_visible(False)
                 self.library_view_stack.remove(view)
         self.games.pop(row, None)
 
