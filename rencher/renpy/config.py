@@ -74,6 +74,7 @@ class RencherConfig:
     data_dir: str = ''
     suppress_updates: bool = False
     delete_on_import: bool = False
+    use_trash: bool = False
     skip_splash_scr: bool = False
     skip_main_menu: bool = False
     forced_save_dir: bool = False

@@ -14,7 +14,7 @@ import rarfile
 from gi.repository import GLib, GObject
 
 from rencher.gtk.game_item import GameItem
-from rencher.gtk.utils import sanitize_path
+from rencher.gtk.utils import sanitize_path, trash_path
 from rencher.renpy.config import get_rencher_settings
 from rencher.renpy.game import Game
 from rencher.renpy.paths import get_game_path, get_py_files, get_script_files, validate_game_files
@@ -149,6 +149,15 @@ class DeleteGameTask(RencherTask):
 
     @override
     def run(self) -> None:
+        if get_rencher_settings().use_trash:
+            try:
+                trash_path(str(self.top_dir))
+            except GLib.Error as e:
+                self.warn(TaskError(_('Failed to trash "{}"').format(self.top_dir), e))
+            else:
+                self.message(_('"{}" has been moved to trash').format(self.top_dir.name))
+            return
+
         paths_to_delete: list[tuple[Path, bool]] = []  # `True` if directory, `False` if file
 
         for root, dirs, files in self.top_dir.walk(top_down=False):
@@ -433,12 +442,16 @@ class ImportGameTask(RencherTask):
             logging.info(f'Importing done in {time.perf_counter() - start_time:.2f}s')
             if config.delete_on_import:
                 try:
-                    if archive:
+                    if config.use_trash:
+                        trash_path(str(self.source_path))
+                    elif archive:
                         self.source_path.unlink()
                     else:
                         shutil.rmtree(self.source_path)
                 except PermissionError as e:
                     self.warn(TaskError(_('Couldn\'t delete source!'), e))
+                except GLib.Error as e:
+                    self.warn(TaskError(_('Couldn\'t trash source!'), e))
                 except Exception as e:
                     self.warn(TaskError(_('Couldn\'t delete source!'), e))
                 else:

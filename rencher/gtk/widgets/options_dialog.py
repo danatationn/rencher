@@ -172,6 +172,10 @@ class OptionsDialog(Adw.PreferencesDialog):
 
     @gtk_template_callback
     def on_delete_game(self, _widget: Adw.ButtonRow):
+        if self.rencher_config.use_trash:
+            self.on_delete_game_response(None, 'ok')
+            return
+
         dialog = Adw.AlertDialog(
             heading=_('Are you sure?'),
             body=_('This will permanently delete "{}".\nThis action cannot be undone.').format(self.game_item.name),
@@ -184,7 +188,7 @@ class OptionsDialog(Adw.PreferencesDialog):
         dialog.choose(self)
         dialog.connect('response', self.on_delete_game_response)
 
-    def on_delete_game_response(self, _dialog: Adw.AlertDialog, response: str):
+    def on_delete_game_response(self, _dialog: Adw.AlertDialog | None, response: str):
         if response == 'ok':
             self.activate_action('library.delete-game', GLib.Variant('s', self.game_item.top_dir))
             self.close()

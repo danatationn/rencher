@@ -6,7 +6,7 @@ template $SettingsDialog: Adw.PreferencesDialog {
 
   Adw.PreferencesPage {
     Adw.PreferencesGroup {
-      title: _("Data Preferences");
+      title: _("Data");
 
       Adw.EntryRow data_dir_entry {
         title: _("Data Directory");
@@ -50,14 +50,14 @@ template $SettingsDialog: Adw.PreferencesDialog {
     }
 
     Adw.PreferencesGroup {
-      title: _("Online Features");
+      title: _("Online");
 
       Adw.SwitchRow discord_rpc_switch {
         title: _("Enable Discord RPC");
       }
 
       Adw.SwitchRow updates_switch {
-        title: _("Suppress Update Notifications");
+        title: _("Suppress Update Toasts");
       }
 
       Adw.ButtonRow {
@@ -67,10 +67,18 @@ template $SettingsDialog: Adw.PreferencesDialog {
     }
 
     Adw.PreferencesGroup {
-      title: _("Import Preferences");
+      title: _("Files");
 
       Adw.SwitchRow delete_import_switch {
         title: _("Delete Source After Importing");
+      }
+      Adw.SwitchRow windowficate_switch {
+        title: _("Restrict Filenames");
+        subtitle: _("Restrict filenames to Windows-compatible characters");
+      }
+      Adw.SwitchRow use_trash_switch {
+        title: _("Move to Trash");
+        subtitle: _("Instead of deleting permanently");
       }
     }
 
@@ -88,16 +96,11 @@ template $SettingsDialog: Adw.PreferencesDialog {
         subtitle: _("Scale the app to sizes like 150% through Windows. May look blurry. Requires restart");
         visible: false;
       }
-
-      Adw.SwitchRow windowficate_switch {
-        title: _("Restrict Filenames");
-        subtitle: _("Restrict filenames to Windows-compatible characters");
-      }
     }
 
     Adw.PreferencesGroup {
       description: _("These might break some games. Here be dragons!");
-      title: _("Config Defaults");
+      title: _("Game Defaults");
 
       Adw.SwitchRow skip_splash_scr_switch {
         title: _("Skip Splash Screen");

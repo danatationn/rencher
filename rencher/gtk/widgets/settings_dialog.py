@@ -29,6 +29,7 @@ class SettingsDialog(Adw.PreferencesDialog):
     discord_rpc_switch: Adw.SwitchRow = gtk_template_child()
     reduce_motion_switch: Adw.SwitchRow = gtk_template_child()
     disable_hidpi_switch: Adw.SwitchRow = gtk_template_child()
+    use_trash_switch: Adw.SwitchRow = gtk_template_child()
     switches_list: list[tuple[Adw.SwitchRow, str]]
 
     def __init__(self, window: 'MainWindow'):
@@ -44,6 +45,7 @@ class SettingsDialog(Adw.PreferencesDialog):
             (self.discord_rpc_switch, 'discord_rpc'),
             (self.reduce_motion_switch, 'reduce_motion'),
             (self.disable_hidpi_switch, 'disable_hidpi'),
+            (self.use_trash_switch, 'use_trash'),
         ]
 
         self.window = window

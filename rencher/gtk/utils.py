@@ -23,6 +23,15 @@ def open_file_manager(path: str):
 
     Gtk.FileLauncher.new(Gio.File.new_for_path(path)).launch(None, None, _on_launched)
 
+def trash_path(path: str) -> None:
+    """
+    a helper for the `use_trash` config option
+
+    this can raise GLib.Error, code Gio.IOErrorEnum.NOT_SUPPORTED if the fs doesn't have trash
+    """
+
+    Gio.File.new_for_path(path).trash()
+
 def sanitize_path(path: Path) -> Path:
     # TODO make this universal
     """
