@@ -1,9 +1,9 @@
 import importlib.metadata
 import logging
 import os
+import sys
 import threading
 from collections.abc import Callable
-from configparser import ConfigParser
 from gettext import gettext as _
 from typing import Any, NotRequired, TypedDict, cast, override
 
@@ -90,6 +90,7 @@ class MainApplication(Adw.Application):
     def do_activate(self):
         Adw.Application.do_activate(self)
 
+        logging.debug(f'Current OS: "{sys.platform}"')
         if os.environ.get('MESON_BUILD_ROOT', None):
             logging.debug('Running from Meson')
         elif os.environ.get('container', None):
