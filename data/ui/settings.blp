@@ -5,7 +5,7 @@ template $SettingsDialog: Adw.PreferencesDialog {
   title: _("Settings");
 
   Adw.PreferencesPage {
-    Adw.PreferencesGroup {
+    Adw.PreferencesGroup data_group {
       title: _("Data");
 
       Adw.EntryRow data_dir_entry {
@@ -49,7 +49,7 @@ template $SettingsDialog: Adw.PreferencesDialog {
       }
     }
 
-    Adw.PreferencesGroup {
+    Adw.PreferencesGroup online_group {
       title: _("Online");
 
       Adw.SwitchRow discord_rpc_switch {
@@ -66,7 +66,7 @@ template $SettingsDialog: Adw.PreferencesDialog {
       }
     }
 
-    Adw.PreferencesGroup {
+    Adw.PreferencesGroup files_group {
       title: _("Files");
 
       Adw.SwitchRow delete_import_switch {
@@ -82,23 +82,22 @@ template $SettingsDialog: Adw.PreferencesDialog {
       }
     }
 
-    Adw.PreferencesGroup {
+    Adw.PreferencesGroup comp_group {
       title: _("Compatibility");
+      visible: false;  // currently windows only
 
       Adw.SwitchRow reduce_motion_switch {
         title: _("Force Reduce Motion");
         subtitle: _("Disable animations to reduce lag on Windows");
-        visible: false;
       }
 
       Adw.SwitchRow disable_hidpi_switch {
         title: _("Use Legacy Scaling");
         subtitle: _("Scale the app to sizes like 150% through Windows. May look blurry. Requires restart");
-        visible: false;
       }
     }
 
-    Adw.PreferencesGroup {
+    Adw.PreferencesGroup config_group {
       description: _("These might break some games. Here be dragons!");
       title: _("Game Defaults");
 

@@ -1,3 +1,4 @@
+import os
 import sys
 import threading
 from gettext import gettext as _
@@ -30,6 +31,9 @@ class SettingsDialog(Adw.PreferencesDialog):
     reduce_motion_switch: Adw.SwitchRow = gtk_template_child()
     disable_hidpi_switch: Adw.SwitchRow = gtk_template_child()
     use_trash_switch: Adw.SwitchRow = gtk_template_child()
+
+    comp_group: Adw.PreferencesGroup = gtk_template_child()
+
     switches_list: list[tuple[Adw.SwitchRow, str]]
 
     def __init__(self, window: 'MainWindow'):
@@ -52,9 +56,13 @@ class SettingsDialog(Adw.PreferencesDialog):
         self.config = get_rencher_settings()
 
         if sys.platform in ('win32', 'msys'):
-            self.windowficate_switch.set_visible(False)  # force it on
-            self.reduce_motion_switch.set_visible(True)
-            self.disable_hidpi_switch.set_visible(True)
+            self.windowficate_switch.set_visible(False)
+            self.config.windowficate_filenames = True
+            self.comp_group.set_visible(True)
+        if os.environ.get('container', None):
+            # trying to trash directories on flatpak results in an error
+            self.use_trash_switch.set_visible(False)
+            self.config.use_trash = False
 
     def on_show(self):
         self.config = get_rencher_settings()
