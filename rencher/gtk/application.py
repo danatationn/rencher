@@ -190,6 +190,7 @@ class MainApplication(Adw.Application):
             debug_info_filename='log.txt',
             release_notes="""<ul>
                 <li>Fixed issues with game configs</li>
+                <li>Added trash toggle (only on Windows)</li>
             </ul>""",
             release_notes_version=version,
         )
