@@ -17,29 +17,31 @@
 	<file alias="icons/256x256/apps/com.github.danatationn.rencher.png" compressed="true">assets/rencher-icon256.png</file>
 
     <file compressed="true">icons/scalable/apps/rencher-icon-symbolic.svg</file>
-    <file compressed="true">icons/scalable/actions/xbox-controller-symbolic.svg</file>
+
+    <file compressed="true">icons/scalable/actions/arrow-circular-top-right-symbolic.svg</file>
+    <file compressed="true">icons/scalable/actions/branch-symbolic.svg</file>
+    <file compressed="true">icons/scalable/actions/calendar-symbolic.svg</file>
+    <file compressed="true">icons/scalable/actions/clock-symbolic.svg</file>
+    <file compressed="true">icons/scalable/actions/code-symbolic.svg</file>
     <file compressed="true">icons/scalable/actions/cogged-wheel-symbolic.svg</file>
-    <file compressed="true">icons/scalable/actions/object-flip-vertical-symbolic.svg</file>
-    <file compressed="true">icons/scalable/actions/list-add-symbolic.svg</file>
-    <file compressed="true">icons/scalable/actions/loupe-large-symbolic.svg</file>
-    <file compressed="true">icons/scalable/actions/folder-open-symbolic.svg</file>
+    <file compressed="true">icons/scalable/actions/document-edit-symbolic.svg</file>
+    <file compressed="true">icons/scalable/actions/error-outline-symbolic.svg</file>
+    <file compressed="true">icons/scalable/actions/exclamation-mark-symbolic.svg</file>
     <file compressed="true">icons/scalable/actions/external-link-symbolic.svg</file>
     <file compressed="true">icons/scalable/actions/file-cabinet-symbolic.svg</file>
-    <file compressed="true">icons/scalable/actions/document-edit-symbolic.svg</file>
-    <file compressed="true">icons/scalable/actions/menu-large-symbolic.svg</file>
-    <file compressed="true">icons/scalable/actions/harddisk-symbolic.svg</file>
-    <file compressed="true">icons/scalable/actions/branch-symbolic.svg</file>
-    <file compressed="true">icons/scalable/actions/logs-symbolic.svg</file>
-    <file compressed="true">icons/scalable/actions/hourglass-symbolic.svg</file>
+    <file compressed="true">icons/scalable/actions/folder-open-symbolic.svg</file>
     <file compressed="true">icons/scalable/actions/folder-symbolic.svg</file>
-    <file compressed="true">icons/scalable/actions/paper-symbolic.svg</file>
+    <file compressed="true">icons/scalable/actions/hourglass-symbolic.svg</file>
+    <file compressed="true">icons/scalable/actions/info-outline-symbolic.svg</file>
     <file compressed="true">icons/scalable/actions/left-symbolic.svg</file>
-    <file compressed="true">icons/scalable/actions/exclamation-mark-symbolic.svg</file>
-    <file compressed="true">icons/scalable/actions/warning-outline-symbolic.svg</file>
-    <file compressed="true">icons/scalable/actions/error-outline-symbolic.svg</file>
+    <file compressed="true">icons/scalable/actions/list-add-symbolic.svg</file>
+    <file compressed="true">icons/scalable/actions/logs-symbolic.svg</file>
+    <file compressed="true">icons/scalable/actions/loupe-large-symbolic.svg</file>
+    <file compressed="true">icons/scalable/actions/menu-large-symbolic.svg</file>
+    <file compressed="true">icons/scalable/actions/object-flip-vertical-symbolic.svg</file>
     <file compressed="true">icons/scalable/actions/tag-symbolic.svg</file>
-    <file compressed="true">icons/scalable/actions/clock-symbolic.svg</file>
-    <file compressed="true">icons/scalable/actions/calendar-symbolic.svg</file>
-    <file compressed="true">icons/scalable/actions/code-symbolic.svg</file>
+    <file compressed="true">icons/scalable/actions/warning-outline-symbolic.svg</file>
+    <file compressed="true">icons/scalable/actions/window-maximize-symbolic.svg</file>
+    <file compressed="true">icons/scalable/actions/xbox-controller-symbolic.svg</file>
   </gresource>
 </gresources>
