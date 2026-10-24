@@ -93,7 +93,7 @@ class MainApplication(Adw.Application):
         logging.debug(f'Current OS: "{sys.platform}"')
         if os.environ.get('MESON_BUILD_ROOT', None):
             logging.debug('Running from Meson')
-        elif os.environ.get('container', None):
+        elif os.environ.get('FLATPAK_ID', None):
             logging.debug('Running from Flatpak')
 
         self.config = get_rencher_settings()
@@ -191,6 +191,7 @@ class MainApplication(Adw.Application):
             release_notes="""<ul>
                 <li>Fixed issues with game configs</li>
                 <li>Added trash toggle (only on Windows)</li>
+                <li>Fixed icons on Windows</li>
             </ul>""",
             release_notes_version=version,
         )

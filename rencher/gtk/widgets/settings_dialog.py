@@ -59,7 +59,7 @@ class SettingsDialog(Adw.PreferencesDialog):
             self.windowficate_switch.set_visible(False)
             self.config.windowficate_filenames = True
             self.comp_group.set_visible(True)
-        if os.environ.get('container', None):
+        if os.environ.get('FLATPAK_ID', None):
             # trying to trash directories on flatpak results in an error
             self.use_trash_switch.set_visible(False)
             self.config.use_trash = False
