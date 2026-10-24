@@ -1,6 +1,5 @@
 import logging
 import os
-import platform
 import shutil
 import threading
 import time
@@ -297,10 +296,7 @@ class ImportGameTask(RencherTask):
             folder_count += 1
 
             for path in possible_paths:
-                if config.windowficate_filenames or platform.system() == 'Windows':
-                    new_path = sanitize_path(path)
-                else:
-                    new_path = path
+                new_path = sanitize_path(path, config.windowficate_filenames)
                 if not new_path.exists():
                     try:
                         new_path.mkdir(parents=True)

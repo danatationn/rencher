@@ -1,4 +1,5 @@
 import logging
+import sys
 import typing
 from pathlib import Path
 
@@ -32,20 +33,23 @@ def trash_path(path: str) -> None:
 
     Gio.File.new_for_path(path).trash()
 
-def sanitize_path(path: Path) -> Path:
+def sanitize_path(path: Path, use_win_rules: bool = False) -> Path:
     # TODO make this universal
     """
-    returns a file that abides by the Windows file naming conventions
-
-    Args:
-        path (str): is used
-    Returns:
-        str: the new path
+    returns a file path with a fjdkfglo TODO think of string
     """
-    forbidden_chars = ['<', '>', ':', '"', '/', '\\', '|', '?', '*']
-    forbidden_names = ['CON', 'PRN', 'AUX', 'NUL', 'COM1', 'COM2', 'COM3', 'COM4', 'COM5', 'COM6', 'COM7', 'COM8',
-                       'COM9', 'COM¹', 'COM²', 'COM³', 'LPT1', 'LPT2', 'LPT3', 'LPT4', 'LPT5', 'LPT6', 'LPT7', 'LPT8',
-                       'LPT9', 'LPT¹', 'LPT²', 'LPT³']
+
+    if sys.platform in ('msys', 'win32'):
+        use_win_rules = True
+
+    if use_win_rules:
+        forbidden_chars = ['<', '>', ':', '"', '/', '\\', '|', '?', '*']
+        forbidden_names = ['CON', 'PRN', 'AUX', 'NUL', 'COM1', 'COM2', 'COM3', 'COM4', 'COM5', 'COM6', 'COM7', 'COM8',
+                           'COM9', 'COM¹', 'COM²', 'COM³', 'LPT1', 'LPT2', 'LPT3', 'LPT4', 'LPT5', 'LPT6', 'LPT7', 
+                           'LPT8', 'LPT9', 'LPT¹', 'LPT²', 'LPT³']
+    else:
+        forbidden_chars = ['/']
+        forbidden_names = []
 
     new_name: str = ''
     for char in path.name:
