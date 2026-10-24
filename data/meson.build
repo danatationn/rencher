@@ -29,7 +29,7 @@ blueprint = custom_target('blueprint',
 	output: '.',
 	build_always_stale: true,
 	build_by_default: true,
-	command: [find_program('blueprint-compiler'), 'batch-compile', '@OUTPUT@', '@CURRENT_SOURCE_DIR@', '@INPUT@'],
+	command: [python_install, find_program('blueprint-compiler'), 'batch-compile', '@OUTPUT@', '@CURRENT_SOURCE_DIR@', '@INPUT@'],
 )
 
 ### ICONS ###
