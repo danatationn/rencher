@@ -9,15 +9,18 @@
  	<file compressed="true" preprocess="xml-stripblanks">ui/game_page.ui</file>
 
     <!-- not needed on linux but it is on windows -->
-	<file alias="icons/16x16/apps/com.github.danatationn.rencher.png" compressed="true">assets/rencher-icon16.png</file>
-	<file alias="icons/32x32/apps/com.github.danatationn.rencher.png" compressed="true">assets/rencher-icon32.png</file>
-	<file alias="icons/48x48/apps/com.github.danatationn.rencher.png" compressed="true">assets/rencher-icon48.png</file>
-	<file alias="icons/64x64/apps/com.github.danatationn.rencher.png" compressed="true">assets/rencher-icon64.png</file>
-	<file alias="icons/128x128/apps/com.github.danatationn.rencher.png" compressed="true">assets/rencher-icon128.png</file>
-	<file alias="icons/256x256/apps/com.github.danatationn.rencher.png" compressed="true">assets/rencher-icon256.png</file>
+	<file compressed="true">icons/16x16/apps/com.github.danatationn.rencher.png</file>
+	<file compressed="true">icons/32x32/apps/com.github.danatationn.rencher.png</file>
+	<file compressed="true">icons/48x48/apps/com.github.danatationn.rencher.png</file>
+	<file compressed="true">icons/64x64/apps/com.github.danatationn.rencher.png</file>
+	<file compressed="true">icons/128x128/apps/com.github.danatationn.rencher.png</file>
+	<file compressed="true">icons/256x256/apps/com.github.danatationn.rencher.png</file>
 
     <file compressed="true">icons/scalable/apps/rencher-icon-symbolic.svg</file>
 
+    <file compressed="true">icons/scalable/actions/window-maximize-symbolic.svg</file>
+    <file compressed="true">icons/scalable/actions/window-restore-symbolic.svg</file>
+    
     <file compressed="true">icons/scalable/actions/arrow-circular-top-right-symbolic.svg</file>
     <file compressed="true">icons/scalable/actions/branch-symbolic.svg</file>
     <file compressed="true">icons/scalable/actions/calendar-symbolic.svg</file>
@@ -41,7 +44,6 @@
     <file compressed="true">icons/scalable/actions/object-flip-vertical-symbolic.svg</file>
     <file compressed="true">icons/scalable/actions/tag-symbolic.svg</file>
     <file compressed="true">icons/scalable/actions/warning-outline-symbolic.svg</file>
-    <file compressed="true">icons/scalable/actions/window-maximize-symbolic.svg</file>
     <file compressed="true">icons/scalable/actions/xbox-controller-symbolic.svg</file>
   </gresource>
 </gresources>
