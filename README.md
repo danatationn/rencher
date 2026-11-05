@@ -4,9 +4,9 @@
 <p/>
 
 <p>
-	Rencher is a manager for Ren'Py games, designed for DDLC mods
+Rencher is a manager for Ren'Py games, designed for DDLC mods
 	
-	it has support for Ren'Py 7 DDLC mods, and also fixes many bugs when trying to launch mods on Linux
+it has support for Ren'Py 7 DDLC mods, and also fixes many bugs when trying to launch mods on Linux
 </p>
 
 main features:
